@@ -1031,7 +1031,7 @@ git commit -m "feat: add date and campaign dimensions"
 
 **Interfaces:**
 - Produces:
-  - `dim_customer`: `customer_id` (PK), `customer_email`, `has_valid_email`, `is_marketable BOOLEAN`, `email_consent_state`, `signup_date`, `first_order_date DATE`, `first_order_month DATE`, `acquisition_channel VARCHAR`, `source_order_count`, `source_total_spent`.
+  - `dim_customer`: `customer_id` (PK), `customer_email`, `has_valid_email`, `is_marketable BOOLEAN`, `email_consent_state`, `signup_date`, `first_order_date DATE`, `first_order_month DATE`, `acquisition_channel VARCHAR`, `accepts_marketing`, `source_order_count`, `source_total_spent`.
   - `dim_product`: `variant_id` (PK), `product_id`, `product_title`, `product_type`, `sku`, `variant_title`, `price`, `unit_cost`, `margin_pct`, `inventory_quantity`, `status`, `vendor`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -1376,7 +1376,7 @@ select
 from {{ ref('fct_order_line') }} where not is_cancelled"
 ```
 
-Expected: `incl_vat` ≈ 1,453,925 (the VAT-inclusive line total for non-cancelled orders), `ex_vat` ≈ `incl_vat / 1.2`, and `margin_pct` between 0.64 and 0.82 — landing near 0.72.
+Expected: `incl_vat` = **1453925.32** exactly, `margin_pct` ≈ **0.706**, and `ex_vat` ≈ **1211690** — note this is about £86 ABOVE `incl_vat / 1.2` (1211604.43), which is correct and expected. `net_revenue` is rounded to pence per line, and because almost every price ends in .99 those roundings are systematically upward (31,514 lines up vs 9,542 down). Per-line rounding is what an invoice actually shows, so it is the right behaviour. Do NOT try to make `ex_vat` equal `incl_vat / 1.2`.
 
 If `margin_pct` comes out above 0.82 the VAT divisor is missing.
 
@@ -2727,34 +2727,61 @@ git commit -m "feat: add weekly email flow mart with trailing engagement means"
 Create `dbt/tests/assert_revenue_reconciles_to_source.sql`:
 
 ```sql
--- Total net revenue in the mart must equal total line revenue in the raw
--- CSV for non-cancelled orders. Any drift means a join is fanning out or
--- a filter is dropping rows.
+-- Revenue must reconcile from the raw CSVs all the way to the mart. Any
+-- drift means a join is fanning out or a filter is dropping rows.
 --
--- The source is VAT-INCLUSIVE and the mart is ex-VAT, so the source side
--- is divided by (1 + vat_rate) to compare like with like.
+-- This deliberately reconciles in TWO exact hops rather than one lossy one.
+--
+-- Reconciling the mart's ex-VAT total directly against the source would
+-- require dividing the source by 1.2, and that comparison can never be
+-- exact: net_revenue is rounded to pence PER LINE, and because almost
+-- every price ends in .99, those roundings are systematically upward
+-- (31,514 lines round up vs 9,542 down, a net +£85.94 on £1.21m, 0.007%).
+-- Per-line rounding is the correct behaviour -- it is what an invoice and
+-- a tax authority actually see -- so the fix is to compare quantities that
+-- SHOULD be identical, not to widen a tolerance until a lossy comparison
+-- passes. A tolerance wide enough to absorb £86 would also absorb a real
+-- fan-out bug.
+--
+-- Hop 1: source -> fct_order_line, on the untransformed VAT-inclusive
+--        value. Exact, because no arithmetic has been applied yet.
+-- Hop 2: fct_order_line -> mart_daily_trading, on ex-VAT net_revenue.
+--        Exact, because the mart only sums what the fact already computed.
 
-with from_mart as (
-    select sum(net_revenue) as total
-    from {{ ref('mart_daily_trading') }}
+with hop1_fact as (
+    select sum(net_revenue_incl_vat) as total
+    from {{ ref('fct_order_line') }}
+    where not is_cancelled
 ),
 
-from_source as (
-    select sum(l.price * l.quantity - l.total_discount)
-           / (1 + {{ var('vat_rate') }}) as total
+hop1_source as (
+    select sum(l.price * l.quantity - l.total_discount) as total
     from {{ source('raw', 'order_lines') }} l
     inner join {{ source('raw', 'orders') }} o
         on o.id = l.order_id
     where o.cancelled_at is null
+),
+
+hop2_fact as (
+    select sum(net_revenue) as total
+    from {{ ref('fct_order_line') }}
+    where not is_cancelled
+),
+
+hop2_mart as (
+    select sum(net_revenue) as total
+    from {{ ref('mart_daily_trading') }}
 )
 
-select
-    m.total as mart_total,
-    s.total as source_total,
-    m.total - s.total as difference
-from from_mart m
-cross join from_source s
-where abs(m.total - s.total) > 1.00
+select 'hop1_source_to_fact' as hop, f.total as a, s.total as b, f.total - s.total as difference
+from hop1_fact f cross join hop1_source s
+where abs(f.total - s.total) > 0.01
+
+union all
+
+select 'hop2_fact_to_mart', m.total, f.total, m.total - f.total
+from hop2_mart m cross join hop2_fact f
+where abs(m.total - f.total) > 0.01
 ```
 
 - [ ] **Step 2: Write the identity-safety test**
