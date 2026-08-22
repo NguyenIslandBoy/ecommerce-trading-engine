@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Date spine from the first order date through var('as_of_date')."
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: is_peak_season
+        description: "November and December, the observed demand peak."
+        data_tests: [not_null]
+
+  - name: dim_campaign
+    description: "One row per platform campaign, with funnel stage parsed from the name."
+    columns:
+      - name: campaign_key
+        data_tests: [unique, not_null]
+      - name: funnel_stage
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['prospecting', 'retargeting', 'catalogue', 'brand', 'non_brand', 'shopping', 'pmax', 'other']
