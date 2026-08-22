@@ -20,3 +20,56 @@ models:
                 values: ['meta', 'google', 'tiktok', 'unattributed']
       - name: is_cancelled
         data_tests: [not_null]
+
+  - name: stg_order_lines
+    description: "Order line items. Availability inherited from the parent order."
+    columns:
+      - name: order_line_id
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: variant_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: variant_id
+      - name: quantity
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                inclusive: true
+
+  - name: stg_customers
+    description: "Customer profiles. NOTE source_order_count includes cancelled orders."
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: has_valid_email
+        description: "False for the 623 customers with a blank email string."
+        data_tests: [not_null]
+      - name: email_consent_state
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['subscribed', 'not_subscribed']
+
+  - name: stg_products
+    description: "Product catalogue at variant grain."
+    columns:
+      - name: variant_id
+        data_tests: [unique, not_null]
+      - name: unit_cost
+        data_tests: [not_null]
+      - name: margin_pct
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
