@@ -6,16 +6,17 @@ models:
     columns:
       - name: order_id
         description: "Shopify order id. Primary key."
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: customer_id
         description: "FK to stg_customers. Never null in this dataset."
-        tests: [not_null]
+        data_tests: [not_null]
       - name: order_date
-        tests: [not_null]
+        data_tests: [not_null]
       - name: channel
         description: "Last-click channel derived from referring_site."
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['meta', 'google', 'tiktok', 'unattributed']
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unattributed']
       - name: is_cancelled
-        tests: [not_null]
+        data_tests: [not_null]
