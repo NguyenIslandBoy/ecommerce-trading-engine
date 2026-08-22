@@ -82,8 +82,19 @@ target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
 vars:
-  # Point-in-time cursor. Every staging model filters row availability to <= this date.
-  as_of_date: '2025-06-30'
+  # Point-in-time cursor: the date the engine RUNS, not the last date of data.
+  #
+  # Set to 2025-07-01 (the day after the period closes) deliberately. Ad and
+  # email rows carry a 1-day ingestion lag: _weld_synced for the 2025-06-30
+  # event date is 2025-07-01T00:00. Orders sync same-day. So an engine running
+  # ON 2025-06-30 genuinely cannot see 2025-06-30's ad spend, and every mart's
+  # final day would show orders with NULL spend and NULL CAC.
+  #
+  # Running the day after the period closes is both the natural operating
+  # pattern and the first moment the complete 12 months is actually available.
+  # Point-in-time correctness is fully preserved — backtests at earlier
+  # cursors still exclude rows that had not synced by then.
+  as_of_date: '2025-07-01'
   # Path to the raw CSVs, relative to the dbt project directory.
   data_dir: '../data'
   # Horizon used for CAC comparison in the LTV mart.
@@ -864,8 +875,13 @@ Expected: FAIL — models not found.
 
 with bounds as (
     select
-        min(order_date)                             as first_day,
-        cast('{{ var("as_of_date") }}' as date)     as last_day
+        min(order_date)                                     as first_day,
+        -- Clamp to the last day that actually has data. The as_of cursor sits
+        -- one day past the period close (see dbt_project.yml), so using it
+        -- directly would append a trailing empty day to the spine and to every
+        -- mart built on it.
+        least(cast('{{ var("as_of_date") }}' as date),
+              max(order_date))                              as last_day
     from {{ ref('stg_orders') }}
 ),
 
