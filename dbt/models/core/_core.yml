@@ -20,3 +20,24 @@ models:
           - accepted_values:
               arguments:
                 values: ['prospecting', 'retargeting', 'catalogue', 'brand', 'non_brand', 'shopping', 'pmax', 'other']
+
+  - name: dim_customer
+    description: "One row per customer. Acquisition channel is the channel of their FIRST NON-CANCELLED order."
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: acquisition_channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unattributed']
+      - name: is_marketable
+        description: "Has a valid email AND has consented. Excludes the 623 blank-email records."
+        data_tests: [not_null]
+
+  - name: dim_product
+    columns:
+      - name: variant_id
+        data_tests: [unique, not_null]
+      - name: margin_pct
+        data_tests: [not_null]
