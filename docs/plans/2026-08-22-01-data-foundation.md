@@ -35,7 +35,7 @@
 | `dbt/macros/as_of_filter.sql` | Availability filter shared by all staging models |
 | `dbt/macros/channel_from_referrer.sql` | Referrer → channel mapping, used in staging and tests |
 | `dbt/models/staging/_sources.yml` | External CSV source definitions |
-| `dbt/models/staging/stg_*.sql` | One view per source; casting and renaming only |
+| `dbt/models/staging/stg_*.sql` | One view per source; casts, renames, and single-column deterministic derivations. No joins across sources, no aggregation. |
 | `dbt/models/staging/_staging.yml` | Column docs and schema tests for staging |
 | `dbt/models/core/dim_*.sql`, `fct_*.sql` | Star schema |
 | `dbt/models/core/_core.yml` | Keys, relationships, accepted values |
