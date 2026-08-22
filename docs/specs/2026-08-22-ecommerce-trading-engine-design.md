@@ -32,12 +32,15 @@ These were established by profiling before any code was written. They are the re
 | Vitamin D3 breakout | 219 → 701 units/month (3.2×), sustained from 2025-02, while all 11 other products stayed flat. Combined inventory 812 units vs ~620/month run rate ≈ 5.7 weeks cover. Stockout risk. |
 | AOV erosion | £61.36 → £55.07 (−10%). Discount rate is flat at ~3.2%, so this is mix shift (D3 sells at £12.99–16.99 vs CBD Oil at £29.99–109.99), not promotional dependency. |
 | Blended CAC rise | £9.68 → £14.84 (+53%). Attribution-free. |
+| Cohort retention collapse | 90-day repeat rate falls monotonically across cohorts that ALL have full 90-day exposure: 31.8% (2024-07) → 15.8% (2024-09) → 2.4% (2024-11) → 0.2% (2025-01) → 0.0% (2025-03). Not a censoring artifact. Verified against the CSVs. |
+| Unit-economics compression | 60-day contribution-margin LTV £42.80 → £30.24 (−29%) while blended CAC rose 53%. LTV/CAC **4.4× → 2.1×** — more than halved in twelve months. This is the headline commercial finding. |
 
 ### 2.3 Traps — things that look like signals but are not
 
 | Trap | Why it is not a commercial event |
 |---|---|
-| "Retention collapse" | Cohort m1–m5 repeat rate falls to 0.00 for cohorts from 2024-11 onward. This is right-censoring: median gap to 2nd order is 100 days (p75 = 195), so recent cohorts have not had time to repeat. The monthly repeat-order rate is stable at ~24% all year. This is the single largest trap in the dataset. |
+| "Stable repeat rate" | The monthly repeat-order rate is genuinely stable at ~24% all year — and it is deeply misleading. It is carried almost entirely by the Jul–Nov 2024 cohorts continuing to buy. Essentially no customer acquired in 2025 ever returns. The blended metric looks healthy while the cohort quality underneath it collapsed. This is the single largest trap in the dataset, and it points the opposite way to the obvious reading. |
+| Censoring on recent cohorts | Right-censoring IS real, but it explains only the most recent two to three cohorts (2025-04 onward at 90 days). Median gap to a 2nd order is 100 days (p75 = 195). Cohorts through 2025-03 have full 90-day exposure, so their near-zero retention is NOT a censoring artifact. A censoring guard is still required, or recent cohorts get reported as final when they are only partly observed. |
 | Email engagement decay | Open and click rates fall across all six flows from ~2025-03 (Welcome open 52% → 40%), but conversion rates are flat (Welcome 3.37% → 3.23%, Cart 4.05% → 3.86%). Engagement degradation with intact monetisation indicates a deliverability or measurement change, not lost demand. |
 | Meta "spend crash" | 2025-03-15 and 2025-03-16 are simply missing rows in `meta_ads_daily.csv` (363 dates vs Google's 365). A naive daily detector reports spend going to zero. |
 | Email identity | `orders.email` differs from `customers.email` for 22,810 of 26,553 orders (86%) — same local-part, different domain. Joining or deduplicating on email corrupts every customer-level metric. Must join on `customer_id`. |
@@ -177,7 +180,7 @@ Thresholds live in `config/detectors.yml`, not in code.
 5. `inventory_cover` — days of cover vs velocity, stockout risk.
 6. `aov_decomposition` — separates mix, price and discount effects.
 7. `email_engagement_decay` — engagement trend with a conversion co-movement check.
-8. `cohort_retention_shift` — compares cohorts only at equal exposure age with sufficient `n_at_risk`.
+8. `cohort_retention_shift` — compares cohorts only at equal exposure age with sufficient `n_at_risk`. Fires COMMERCIAL on the fully-exposed decline (31.8% → 0.0% at 90 days) and stays silent only on genuinely censored cohorts.
 9. `channel_cvr_shift` — orders per click by channel (no session data available).
 10. `data_completeness` — missing dates per source.
 11. `attribution_divergence` — platform conversions vs Shopify-attributed; fires only when the *ratio* breaks trend.
@@ -194,7 +197,7 @@ Four mechanisms, all required:
 ### 5.4 Three-way classification
 
 - **DATA_QUALITY** — `mart_data_quality` flags an incident overlapping the signal window. Catches the Meta missing days.
-- **ARTIFACT** — explained by a known structural cause: insufficient cohort exposure (censoring), the seasonal component, or a stable attribution ratio. Catches the retention "collapse" and the 2.0× Google conversion gap.
+- **ARTIFACT** — explained by a known structural cause: insufficient cohort exposure (censoring), the seasonal component, or a stable attribution ratio. Catches the 2.0× Google conversion gap and the near-zero retention of the two most recent cohorts. It must NOT suppress the genuine retention collapse in fully-exposed cohorts — the guard exists to make that distinction, not to explain the whole decline away.
 - **COMMERCIAL** — survives both, persists, and clears FDR.
 
 **The discriminating rule:** does the downstream commercial metric co-move with the engagement metric?
@@ -296,7 +299,7 @@ python -m engine backtest
 | 1 | git init, dbt scaffold | `dbt debug` and `dbt build` run clean |
 | 2 | staging + core + tests | Date-completeness test fails on Meta, proving the test works |
 | 3 | Metric spine | Mart revenue reconciles to raw CSV totals |
-| 4 | Detectors + classifier | Retention detector stays silent; email classifies ARTIFACT; Meta classifies COMMERCIAL |
+| 4 | Detectors + classifier | Retention detector fires COMMERCIAL on fully-exposed cohorts and silent only on censored ones; email classifies ARTIFACT; Meta classifies COMMERCIAL |
 | 5 | Recommendations + Monte Carlo + autonomy gate | CLI prints the recommendation brief |
 | 6 | Backtest | Precision / recall / lead-time table produced |
 | 7 | Notebook + README | Walkthrough runs top to bottom |
