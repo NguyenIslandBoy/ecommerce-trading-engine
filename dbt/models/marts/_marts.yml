@@ -39,3 +39,21 @@ models:
                 values: ['meta', 'google', 'tiktok', 'unattributed']
       - name: contribution_margin
         data_tests: [not_null]
+
+  - name: mart_product_daily
+    description: >
+      Daily product velocity with trailing windows and inventory cover.
+      velocity_7d and velocity_28d are trailing mean units per day.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [date_day, variant_id]
+    columns:
+      - name: variant_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: variant_id
+      - name: units
+        data_tests: [not_null]
