@@ -596,7 +596,7 @@ git commit -m "feat: add order line, customer and product staging models"
 **Interfaces:**
 - Produces:
   - `stg_ads_daily`: `platform VARCHAR`, `campaign_id`, `campaign_name`, `account_name`, `ad_date DATE`, `impressions BIGINT`, `clicks BIGINT`, `spend DECIMAL(12,2)`, `reach BIGINT`, `frequency DOUBLE`, `platform_conversions DOUBLE` (NULL for Meta), `platform_conversion_value DECIMAL(12,2)` (NULL for Meta), `synced_at`.
-  - `stg_email_flows`: `flow_id`, `flow_name`, `message_id`, `message_name`, `week_start DATE`, `status`, `recipients BIGINT`, `unique_opens BIGINT`, `unique_clicks BIGINT`, `unique_unsubscribes BIGINT`, `unique_orders BIGINT`, `total_orders BIGINT`, `order_value DECIMAL(12,2)`, `tags`, `synced_at`.
+  - `stg_email_flows`: `flow_id`, `flow_name`, `message_id`, `message_name`, `message_channel`, `week_start DATE`, `flow_status`, `message_status`, `recipients BIGINT`, `unique_opens BIGINT`, `unique_clicks BIGINT`, `unique_unsubscribes BIGINT`, `unique_orders BIGINT`, `total_orders BIGINT`, `order_value DECIMAL(12,2)`, `tags`, `synced_at`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -805,6 +805,57 @@ Expected exactly:
 - `google`: 5 campaigns × 365 days = 1825 rows, **365** distinct days, `non_null_conv = 1825`
 
 Meta showing 363 days rather than 365 is the planted gap (2025-03-15 and 2025-03-16). It must survive into staging — Task 9 depends on it.
+
+- [ ] **Step 6a: Add a regression test for the NULL-vs-zero invariant**
+
+The NULL-not-zero rule is the most important requirement in this task, and a one-off
+verification query does not protect it. Someone "helpfully" wrapping the rollup in
+`coalesce(..., 0)` later would reintroduce the exact defect while the suite stayed green.
+
+Create `dbt/tests/assert_meta_reports_no_conversions.sql`:
+
+```sql
+-- Meta reports NO conversion data at all. Its conversion columns must be
+-- NULL, never 0: zero means "measured, and it was none", NULL means
+-- "not measured". Coercing to zero makes Meta's ROAS read as 0.0 rather
+-- than unknown and silently corrupts every cross-platform comparison
+-- the engine makes downstream.
+--
+-- Guards the invariant in BOTH directions, because a union that silently
+-- dropped Google's conversions would be just as wrong.
+
+select
+    'meta_has_conversion_data' as violation,
+    platform,
+    campaign_id,
+    ad_date
+from {{ ref('stg_ads_daily') }}
+where platform = 'meta'
+  and (platform_conversions is not null or platform_conversion_value is not null)
+
+union all
+
+select
+    'google_missing_conversion_data' as violation,
+    platform,
+    campaign_id,
+    ad_date
+from {{ ref('stg_ads_daily') }}
+where platform = 'google'
+  and (platform_conversions is null or platform_conversion_value is null)
+```
+
+Run it and confirm it PASSES (zero rows):
+
+```bash
+cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
+../venv/Scripts/dbt.exe test --profiles-dir . --select assert_meta_reports_no_conversions
+```
+
+Then confirm it actually bites: temporarily change `cast(null as double) as platform_conversions`
+in the meta CTE to `cast(0 as double)`, re-run the test, and verify it FAILS with 2178 rows.
+Revert the change immediately and re-run to confirm it passes again. A test that cannot fail
+is not a test.
 
 - [ ] **Step 7: Commit**
 
