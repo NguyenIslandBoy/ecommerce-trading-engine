@@ -218,19 +218,20 @@ models:
     columns:
       - name: order_id
         description: "Shopify order id. Primary key."
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: customer_id
         description: "FK to stg_customers. Never null in this dataset."
-        tests: [not_null]
+        data_tests: [not_null]
       - name: order_date
-        tests: [not_null]
+        data_tests: [not_null]
       - name: channel
         description: "Last-click channel derived from referring_site."
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['meta', 'google', 'tiktok', 'unattributed']
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unattributed']
       - name: is_cancelled
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -381,49 +382,54 @@ Append to `dbt/models/staging/_staging.yml`:
     description: "Order line items. Availability inherited from the parent order."
     columns:
       - name: order_line_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: order_id
-        tests:
+        data_tests:
           - not_null
           - relationships:
-              to: ref('stg_orders')
-              field: order_id
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
       - name: variant_id
-        tests:
+        data_tests:
           - relationships:
-              to: ref('stg_products')
-              field: variant_id
+              arguments:
+                to: ref('stg_products')
+                field: variant_id
       - name: quantity
-        tests:
+        data_tests:
           - dbt_utils.accepted_range:
-              min_value: 1
-              inclusive: true
+              arguments:
+                min_value: 1
+                inclusive: true
 
   - name: stg_customers
     description: "Customer profiles. NOTE source_order_count includes cancelled orders."
     columns:
       - name: customer_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: has_valid_email
         description: "False for the 623 customers with a blank email string."
-        tests: [not_null]
+        data_tests: [not_null]
       - name: email_consent_state
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['subscribed', 'not_subscribed']
+              arguments:
+                values: ['subscribed', 'not_subscribed']
 
   - name: stg_products
     description: "Product catalogue at variant grain."
     columns:
       - name: variant_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: unit_cost
-        tests: [not_null]
+        data_tests: [not_null]
       - name: margin_pct
-        tests:
+        data_tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 1
+              arguments:
+                min_value: 0
+                max_value: 1
 ```
 
 This introduces `dbt_utils`. Create `dbt/packages.yml`:
@@ -588,33 +594,37 @@ Append to `dbt/models/staging/_staging.yml`:
 ```yaml
   - name: stg_ads_daily
     description: "Meta and Google daily spend unioned to one grain. Meta reports NO conversions."
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [platform, campaign_id, ad_date]
+          arguments:
+            combination_of_columns: [platform, campaign_id, ad_date]
     columns:
       - name: platform
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['meta', 'google']
+              arguments:
+                values: ['meta', 'google']
       - name: spend
-        tests:
+        data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 0
-              inclusive: true
+              arguments:
+                min_value: 0
+                inclusive: true
       - name: ad_date
-        tests: [not_null]
+        data_tests: [not_null]
 
   - name: stg_email_flows
     description: "Klaviyo flow engagement. WEEKLY grain - do not join to daily facts without dim_date.week_start."
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [flow_id, message_id, week_start]
+          arguments:
+            combination_of_columns: [flow_id, message_id, week_start]
     columns:
       - name: recipients
-        tests: [not_null]
+        data_tests: [not_null]
       - name: week_start
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -692,8 +702,14 @@ unioned as (
     select * from google
 )
 
--- google_ads_daily carries device and ad_network_type, so a campaign-day
--- appears on multiple rows. Roll up to the declared grain.
+-- Roll up to the declared grain. google_ads_daily carries device and
+-- ad_network_type columns, but they do NOT fan out the grain: the file has
+-- 1825 rows and 1825 distinct campaign-days (5 campaigns x 365 days), each
+-- row simply tagged with one device/network label. This GROUP BY is
+-- therefore a no-op on the current data. It is kept deliberately so the
+-- declared grain is enforced in code rather than assumed, which is what
+-- gives the uniqueness test something real to assert. Device and network
+-- are dropped; no detector uses them.
 select
     platform,
     campaign_id,
@@ -811,20 +827,21 @@ models:
     description: "Date spine from the first order date through var('as_of_date')."
     columns:
       - name: date_day
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: is_peak_season
         description: "November and December, the observed demand peak."
-        tests: [not_null]
+        data_tests: [not_null]
 
   - name: dim_campaign
     description: "One row per platform campaign, with funnel stage parsed from the name."
     columns:
       - name: campaign_key
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: funnel_stage
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['prospecting', 'retargeting', 'catalogue', 'brand', 'non_brand', 'shopping', 'pmax', 'other']
+              arguments:
+                values: ['prospecting', 'retargeting', 'catalogue', 'brand', 'non_brand', 'shopping', 'pmax', 'other']
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -959,21 +976,22 @@ Append to `dbt/models/core/_core.yml`:
     description: "One row per customer. Acquisition channel is the channel of their FIRST NON-CANCELLED order."
     columns:
       - name: customer_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: acquisition_channel
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['meta', 'google', 'tiktok', 'unattributed']
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unattributed']
       - name: is_marketable
         description: "Has a valid email AND has consented. Excludes the 623 blank-email records."
-        tests: [not_null]
+        data_tests: [not_null]
 
   - name: dim_product
     columns:
       - name: variant_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: margin_pct
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -1073,7 +1091,9 @@ select count(*) as customers,
 from {{ ref('dim_customer') }}"
 ```
 
-Expected: `customers = 20817`, `blank_email = 623`, `marketable` strictly less than 9071 (the raw subscribed count), because subscribed customers with blank emails are excluded.
+Expected exactly: `customers = 20817`, `blank_email = 623`, `marketable = 9071`.
+
+Note: `marketable` equals the raw subscribed count here because all 623 blank-email customers are already `not_subscribed`. Verified against the CSV. Do not treat the equality as a bug.
 
 - [ ] **Step 7: Commit**
 
@@ -1105,30 +1125,33 @@ Append to `dbt/models/core/_core.yml`:
   - name: fct_order
     columns:
       - name: order_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: customer_id
-        tests:
+        data_tests:
           - relationships:
-              to: ref('dim_customer')
-              field: customer_id
+              arguments:
+                to: ref('dim_customer')
+                field: customer_id
       - name: order_date
-        tests:
+        data_tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_day
+              arguments:
+                to: ref('dim_date')
+                field: date_day
 
   - name: fct_order_line
     description: "Line grain with COGS and contribution margin. All downstream value metrics are margin-based."
     columns:
       - name: order_line_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: variant_id
-        tests:
+        data_tests:
           - relationships:
-              to: ref('dim_product')
-              field: variant_id
+              arguments:
+                to: ref('dim_product')
+                field: variant_id
       - name: contribution_margin
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 Create `dbt/tests/assert_margin_not_above_revenue.sql`:
@@ -1318,32 +1341,37 @@ Append to `dbt/models/core/_core.yml`:
 ```yaml
   - name: fct_ad_spend_daily
     description: "Daily campaign spend with derived efficiency metrics. CPC = CPM / (1000 * CTR)."
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [campaign_key, ad_date]
+          arguments:
+            combination_of_columns: [campaign_key, ad_date]
     columns:
       - name: campaign_key
-        tests:
+        data_tests:
           - relationships:
-              to: ref('dim_campaign')
-              field: campaign_key
+              arguments:
+                to: ref('dim_campaign')
+                field: campaign_key
       - name: ad_date
-        tests:
+        data_tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_day
+              arguments:
+                to: ref('dim_date')
+                field: date_day
 
   - name: fct_email_flow_weekly
     description: "Weekly flow engagement with derived rates."
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [flow_id, message_id, week_start]
+          arguments:
+            combination_of_columns: [flow_id, message_id, week_start]
     columns:
       - name: open_rate
-        tests:
+        data_tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 1
+              arguments:
+                min_value: 0
+                max_value: 1
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -1505,11 +1533,12 @@ models:
       overlaps a known incident.
     columns:
       - name: source_name
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['orders', 'meta_ads_daily', 'google_ads_daily']
+              arguments:
+                values: ['orders', 'meta_ads_daily', 'google_ads_daily']
       - name: date_day
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -1664,22 +1693,25 @@ Append to `dbt/models/marts/_marts.yml`:
       Daily trading metrics by last-click channel. channel_cac and
       channel_roas are Tier C (attribution-dependent); blended_cac is
       Tier B and is repeated on every row of a given day.
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_day, channel]
+          arguments:
+            combination_of_columns: [date_day, channel]
     columns:
       - name: date_day
-        tests:
+        data_tests:
           - not_null
           - relationships:
-              to: ref('dim_date')
-              field: date_day
+              arguments:
+                to: ref('dim_date')
+                field: date_day
       - name: channel
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['meta', 'google', 'tiktok', 'unattributed']
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unattributed']
       - name: contribution_margin
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -1887,17 +1919,19 @@ Append to `dbt/models/marts/_marts.yml`:
     description: >
       Daily product velocity with trailing windows and inventory cover.
       velocity_7d and velocity_28d are trailing mean units per day.
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [date_day, variant_id]
+          arguments:
+            combination_of_columns: [date_day, variant_id]
     columns:
       - name: variant_id
-        tests:
+        data_tests:
           - relationships:
-              to: ref('dim_product')
-              field: variant_id
+              arguments:
+                to: ref('dim_product')
+                field: variant_id
       - name: units
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -2078,14 +2112,15 @@ Append to `dbt/models/marts/_marts.yml`:
       NULL wherever the observation window has not fully elapsed as of
       var('as_of_date'). raw_retention_rate is always populated and exists
       only to demonstrate the artifact the guard prevents.
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [cohort_month, months_since]
+          arguments:
+            combination_of_columns: [cohort_month, months_since]
     columns:
       - name: cohort_size
-        tests: [not_null]
+        data_tests: [not_null]
       - name: has_full_exposure
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -2303,16 +2338,18 @@ Append to `dbt/models/marts/_marts.yml`:
       Contribution-margin LTV by acquisition cohort and channel at 30, 60
       and 90 day horizons. Censoring-aware: has_full_exposure is false
       where the horizon extends past var('as_of_date').
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [cohort_month, acquisition_channel, horizon_days]
+          arguments:
+            combination_of_columns: [cohort_month, acquisition_channel, horizon_days]
     columns:
       - name: horizon_days
-        tests:
+        data_tests:
           - accepted_values:
-              values: [30, 60, 90]
+              arguments:
+                values: [30, 60, 90]
       - name: cohort_size
-        tests: [not_null]
+        data_tests: [not_null]
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
@@ -2466,19 +2503,22 @@ Append to `dbt/models/marts/_marts.yml`:
       Flow-level weekly engagement, rolled up from message grain, with
       8-week trailing means. The decay detector compares the engagement
       trend against the conversion trend.
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [flow_id, week_start]
+          arguments:
+            combination_of_columns: [flow_id, week_start]
     columns:
       - name: flow_name
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['Welcome Series', 'Cart Abandonment', 'Browse Abandonment', 'Post-Purchase', 'Replenishment', 'Win-Back']
+              arguments:
+                values: ['Welcome Series', 'Cart Abandonment', 'Browse Abandonment', 'Post-Purchase', 'Replenishment', 'Win-Back']
       - name: conversion_rate
-        tests:
+        data_tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 1
+              arguments:
+                min_value: 0
+                max_value: 1
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
