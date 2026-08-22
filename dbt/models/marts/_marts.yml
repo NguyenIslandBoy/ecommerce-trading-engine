@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: mart_data_quality
+    description: >
+      Per-source, per-day completeness and drift audit. Detectors join to
+      this table to reclassify a signal as DATA_QUALITY when its window
+      overlaps a known incident.
+    columns:
+      - name: source_name
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['orders', 'meta_ads_daily', 'google_ads_daily']
+      - name: date_day
+        data_tests: [not_null]
