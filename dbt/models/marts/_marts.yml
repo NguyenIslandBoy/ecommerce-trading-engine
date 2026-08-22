@@ -14,3 +14,28 @@ models:
                 values: ['orders', 'meta_ads_daily', 'google_ads_daily']
       - name: date_day
         data_tests: [not_null]
+
+  - name: mart_daily_trading
+    description: >
+      Daily trading metrics by last-click channel. channel_cac and
+      channel_roas are Tier C (attribution-dependent); blended_cac is
+      Tier B and is repeated on every row of a given day.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [date_day, channel]
+    columns:
+      - name: date_day
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unattributed']
+      - name: contribution_margin
+        data_tests: [not_null]
