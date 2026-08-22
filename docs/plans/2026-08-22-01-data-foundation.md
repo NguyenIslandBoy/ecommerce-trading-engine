@@ -459,7 +459,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select stg_order_lines stg_customers stg_products
 ```
 
-Expected: FAIL — models not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/staging/stg_order_lines.sql`**
 
@@ -645,7 +649,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select stg_ads_daily stg_email_flows
 ```
 
-Expected: FAIL — models not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/staging/stg_ads_daily.sql`**
 
@@ -913,7 +921,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select dim_date dim_campaign
 ```
 
-Expected: FAIL — models not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/core/dim_date.sql`**
 
@@ -1068,7 +1080,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select dim_customer dim_product
 ```
 
-Expected: FAIL — models not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/core/dim_customer.sql`**
 
@@ -1241,7 +1257,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select fct_order fct_order_line
 ```
 
-Expected: FAIL — models not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/core/fct_order.sql`**
 
@@ -1448,7 +1468,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select fct_ad_spend_daily fct_email_flow_weekly
 ```
 
-Expected: FAIL — models not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/core/fct_ad_spend_daily.sql`**
 
@@ -1615,7 +1639,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select mart_data_quality
 ```
 
-Expected: FAIL — model not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/marts/mart_data_quality.sql`**
 
@@ -1788,7 +1816,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select mart_daily_trading
 ```
 
-Expected: FAIL — model not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/marts/mart_daily_trading.sql`**
 
@@ -2008,7 +2040,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select mart_product_daily
 ```
 
-Expected: FAIL — model not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/marts/mart_product_daily.sql`**
 
@@ -2201,7 +2237,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select mart_cohort_retention
 ```
 
-Expected: FAIL — model not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/marts/mart_cohort_retention.sql`**
 
@@ -2438,7 +2478,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select mart_ltv
 ```
 
-Expected: FAIL — model not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/marts/mart_ltv.sql`**
 
@@ -2607,7 +2651,11 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe test --profiles-dir . --select mart_email_flow_weekly
 ```
 
-Expected: FAIL — model not found.
+Expected: the test does NOT pass. dbt will do one of two things depending on how the
+reference resolves: raise a compilation error naming the missing model, or emit
+`WARNING: Did not find matching node for patch` and report "Nothing to do" (NO-OP).
+Either outcome confirms the test cannot pass before the model exists. What matters is that
+it does not report PASS — do not treat a NO-OP as a failure of this step.
 
 - [ ] **Step 3: Create `dbt/models/marts/mart_email_flow_weekly.sql`**
 
