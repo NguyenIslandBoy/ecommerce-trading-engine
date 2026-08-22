@@ -2159,7 +2159,7 @@ Expected: roughly 219 units in 2024-07 rising to roughly 701 in 2025-03 and hold
 ../venv/Scripts/dbt.exe show --profiles-dir . --inline "
 select sku, round(velocity_28d,1) as v28, inventory_quantity, round(days_of_cover,1) as cover
 from {{ ref('mart_product_daily') }}
-where date_day = cast('{{ var(\"as_of_date\") }}' as date)
+where date_day = (select max(date_day) from {{ ref('dim_date') }})
 order by cover"
 ```
 
@@ -2262,6 +2262,11 @@ it does not report PASS — do not treat a NO-OP as a failure of this step.
   is 100 days (p75 = 195), so cohorts acquired within ~3 months of the
   as_of cursor cannot yet have repeated.
 
+  Exposure is measured against the LAST DATE WITH DATA (max(dim_date.date_day)),
+  NOT against var('as_of_date'). The cursor deliberately sits one day past the
+  period close to absorb ad/email ingestion lag, so comparing to it directly
+  would credit a cohort with a day of observation that does not exist.
+
   IMPORTANT: censoring explains only the MOST RECENT cohorts. Cohorts
   through 2025-03 have full 90-day exposure and their retention decline
   (31.8% -> 0.0%) is genuine, not an artifact. The monthly repeat-order
@@ -2345,11 +2350,11 @@ select
     cohort_size,
     active_customers                                    as repeat_customers,
     window_end,
-    window_end <= cast('{{ var("as_of_date") }}' as date)    as has_full_exposure,
+    window_end <= (select max(date_day) from {{ ref('dim_date') }})  as has_full_exposure,
 
     -- The guarded metric. NULL where the window has not elapsed.
     case
-        when window_end <= cast('{{ var("as_of_date") }}' as date)
+        when window_end <= (select max(date_day) from {{ ref('dim_date') }})
         then active_customers * 1.0 / nullif(cohort_size, 0)
     end                                                 as retention_rate,
 
@@ -2552,7 +2557,7 @@ select
     -- The last-acquired customer in the cohort must have had the full
     -- horizon to spend, or the cohort's LTV is understated.
     (s.last_acquisition_date + h.horizon_days)
-        <= cast('{{ var("as_of_date") }}' as date)      as has_full_exposure,
+        <= (select max(date_day) from {{ ref('dim_date') }})  as has_full_exposure,
 
     coalesce(w.cum_net_revenue, 0)                      as cum_net_revenue,
     coalesce(w.cum_contribution_margin, 0)              as cum_contribution_margin,
