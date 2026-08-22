@@ -41,3 +41,34 @@ models:
         data_tests: [unique, not_null]
       - name: margin_pct
         data_tests: [not_null]
+
+  - name: fct_order
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_id
+      - name: order_date
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+
+  - name: fct_order_line
+    description: "Line grain with COGS and contribution margin. All downstream value metrics are margin-based."
+    columns:
+      - name: order_line_id
+        data_tests: [unique, not_null]
+      - name: variant_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: variant_id
+      - name: contribution_margin
+        data_tests: [not_null]
