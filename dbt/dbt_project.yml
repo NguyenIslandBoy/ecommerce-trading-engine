@@ -1,0 +1,32 @@
+name: trading_engine
+version: 1.0.0
+config-version: 2
+profile: trading_engine
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Point-in-time cursor. Every staging model filters row availability to <= this date.
+  as_of_date: '2025-06-30'
+  # Path to the raw CSVs, relative to the dbt project directory.
+  data_dir: '../data'
+  # Horizon used for CAC comparison in the LTV mart.
+  ltv_horizon_days: 60
+  # UK VAT. Source prices are VAT-inclusive; product costs are not.
+  vat_rate: 0.20
+
+models:
+  trading_engine:
+    staging:
+      +materialized: view
+      +schema: staging
+    core:
+      +materialized: view
+      +schema: core
+    marts:
+      +materialized: table
+      +schema: marts
