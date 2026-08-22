@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Provided CSV extracts. Read in place by DuckDB; never copied into the warehouse."
+    meta:
+      external_location: "read_csv_auto('{{ var('data_dir') }}/{name}.csv')"
+    tables:
+      - name: orders
+        description: "Order-level data, Shopify schema. 26,553 rows."
+      - name: order_lines
+        description: "Line-item detail per order. 42,779 rows."
+      - name: customers
+        description: "Customer profiles and marketing consent. 20,817 rows."
+      - name: products
+        description: "Product catalogue at variant grain. 24 rows."
+      - name: meta_ads_daily
+        description: "Meta Ads daily campaign performance. 2,178 rows. Reports NO conversions."
+      - name: google_ads_daily
+        description: "Google Ads daily campaign performance. 1,825 rows."
+      - name: email_flows
+        description: "Klaviyo flow engagement, WEEKLY grain (53 run dates). 636 rows."
