@@ -73,3 +73,37 @@ models:
               arguments:
                 min_value: 0
                 max_value: 1
+
+  - name: stg_ads_daily
+    description: "Meta and Google daily spend unioned to one grain. Meta reports NO conversions."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [platform, campaign_id, ad_date]
+    columns:
+      - name: platform
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google']
+      - name: spend
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: ad_date
+        data_tests: [not_null]
+
+  - name: stg_email_flows
+    description: "Klaviyo flow engagement. WEEKLY grain - do not join to daily facts without dim_date.week_start."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [flow_id, message_id, week_start]
+    columns:
+      - name: recipients
+        data_tests: [not_null]
+      - name: week_start
+        data_tests: [not_null]
