@@ -1,0 +1,36 @@
+{
+  "version": "0.2",
+  "language": "en-GB,en",
+  "words": [
+    "backtest",
+    "backtests",
+    "Benjamini",
+    "dedup",
+    "duckdb",
+    "dbt",
+    "Hochberg",
+    "ipynb",
+    "Klaviyo",
+    "numpy",
+    "pytest",
+    "ROAS",
+    "scikit",
+    "scipy",
+    "Shopify",
+    "Theil",
+    "touchpoint",
+    "uncomputable",
+    "unsubs",
+    "venv",
+    "weld",
+    "Ashwagandha",
+    "Vitalis"
+  ],
+  "ignorePaths": [
+    "venv/**",
+    "data/**",
+    "*.csv",
+    "dbt/target/**",
+    "dbt/logs/**"
+  ]
+}

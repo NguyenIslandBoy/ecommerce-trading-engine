@@ -20,28 +20,28 @@ These were established by profiling before any code was written. They are the re
 - Clean 12-month window: 2024-07-01 to 2025-06-30.
 - UK / GBP only. `source_name` is `web` for all 26,553 orders — single sales channel.
 - Referential integrity is perfect: zero orphan order lines, zero unknown customers, zero unknown variants. Every planted problem is behavioural, not structural.
-- Grain differs by source: orders and ads are **daily**; email flows are **weekly** (53 run dates).
+- Grain differs by source: orders and ads are daily; email flows are weekly (53 run dates).
 
 ### 2.2 Genuine commercial events
 
 | Event | Evidence |
 |---|---|
-| Meta cost inflation | CPC £0.42 → £1.02 (+143%) from 2025-04, all 6 campaigns simultaneously. Decomposes into CPM £10.00 → £15.50 (+55%, auction pressure) and CTR 2.36% → 1.52% (−36%, creative relevance). Frequency flat ~1.22 all year, so **not** audience saturation. Google CPC flat at ~£0.19 all year. |
+| Meta cost inflation | CPC £0.42 → £1.02 (+143%) from 2025-04, all 6 campaigns simultaneously. Decomposes into CPM £10.00 → £15.50 (+55%, auction pressure) and CTR 2.36% → 1.52% (−36%, creative relevance). Frequency flat ~1.22 all year, so not audience saturation. Google CPC flat at ~£0.19 all year. |
 | Vitamin D3 breakout | 219 → 701 units/month (3.2×), sustained from 2025-02, while all 11 other products stayed flat. Combined inventory 812 units vs ~620/month run rate ≈ 5.7 weeks cover. Stockout risk. |
-| AOV erosion | £61.36 → £55.07 (−10%). Discount rate is flat at ~3.2%, so this is **mix shift** (D3 sells at £12.99–16.99 vs CBD Oil at £29.99–109.99), not promotional dependency. |
+| AOV erosion | £61.36 → £55.07 (−10%). Discount rate is flat at ~3.2%, so this is mix shift (D3 sells at £12.99–16.99 vs CBD Oil at £29.99–109.99), not promotional dependency. |
 | Blended CAC rise | £9.68 → £14.84 (+53%). Attribution-free. |
 
 ### 2.3 Traps — things that look like signals but are not
 
 | Trap | Why it is not a commercial event |
 |---|---|
-| "Retention collapse" | Cohort m1–m5 repeat rate falls to 0.00 for cohorts from 2024-11 onward. This is **right-censoring**: median gap to 2nd order is 100 days (p75 = 195), so recent cohorts have not had time to repeat. The monthly repeat-order rate is **stable at ~24%** all year. This is the single largest trap in the dataset. |
-| Email engagement decay | Open and click rates fall across all six flows from ~2025-03 (Welcome open 52% → 40%), but **conversion rates are flat** (Welcome 3.37% → 3.23%, Cart 4.05% → 3.86%). Engagement degradation with intact monetisation indicates a deliverability or measurement change, not lost demand. |
-| Meta "spend crash" | 2025-03-15 and 2025-03-16 are simply **missing rows** in `meta_ads_daily.csv` (363 dates vs Google's 365). A naive daily detector reports spend going to zero. |
-| Email identity | `orders.email` differs from `customers.email` for **22,810 of 26,553 orders (86%)** — same local-part, different domain. Joining or deduplicating on email corrupts every customer-level metric. Must join on `customer_id`. |
-| Google conversion gap | Platform-reported conversions are a stable **~2.0×** the Shopify-attributed order count all year. A consistent ratio is an attribution methodology difference, not a fault. |
+| "Retention collapse" | Cohort m1–m5 repeat rate falls to 0.00 for cohorts from 2024-11 onward. This is right-censoring: median gap to 2nd order is 100 days (p75 = 195), so recent cohorts have not had time to repeat. The monthly repeat-order rate is stable at ~24% all year. This is the single largest trap in the dataset. |
+| Email engagement decay | Open and click rates fall across all six flows from ~2025-03 (Welcome open 52% → 40%), but conversion rates are flat (Welcome 3.37% → 3.23%, Cart 4.05% → 3.86%). Engagement degradation with intact monetisation indicates a deliverability or measurement change, not lost demand. |
+| Meta "spend crash" | 2025-03-15 and 2025-03-16 are simply missing rows in `meta_ads_daily.csv` (363 dates vs Google's 365). A naive daily detector reports spend going to zero. |
+| Email identity | `orders.email` differs from `customers.email` for 22,810 of 26,553 orders (86%) — same local-part, different domain. Joining or deduplicating on email corrupts every customer-level metric. Must join on `customer_id`. |
+| Google conversion gap | Platform-reported conversions are a stable ~2.0× the Shopify-attributed order count all year. A consistent ratio is an attribution methodology difference, not a fault. |
 | Blank emails | 623 customers (3.0%) have an empty email string, overstating the marketable base. |
-| `order_count` drift | 825 customers' `order_count` disagrees with derived counts, because the source field **includes cancelled orders** while `total_spent` excludes them. Definitional, not corrupt. |
+| `order_count` drift | 825 customers' `order_count` disagrees with derived counts, because the source field includes cancelled orders while `total_spent` excludes them. Definitional, not corrupt. |
 | Seasonality | November/December peak, January trough. Any non-seasonal baseline flags January as a crisis. |
 
 ### 2.4 Attribution constraint (validated)
@@ -56,7 +56,7 @@ There is no richer attribution available than last-click referrer:
 | Google | 9,705 | 36.5% | yes |
 | Meta | 7,313 | 27.5% | yes |
 | Unattributed | 7,139 | 26.9% | n/a |
-| TikTok | 2,396 | 9.0% | **none supplied** |
+| TikTok | 2,396 | 9.0% | none supplied |
 
 Two consequences:
 
@@ -113,7 +113,7 @@ One model per source. Casting, renaming and light cleaning only; no business log
 | `dim_date` | date | full spine, `is_weekend`, `iso_week`, `is_peak_season` |
 | `dim_campaign` | platform + campaign_id | `funnel_stage` parsed from campaign name (Prospecting / Retargeting / DPA / Brand / Non-Brand / PMax / Shopping) |
 | `fct_order` | order_id | revenue, discount, tax, shipping, is_cancelled, channel |
-| `fct_order_line` | order_line_id | quantity, gross, discount, net, **COGS**, **contribution_margin** |
+| `fct_order_line` | order_line_id | quantity, gross, discount, net, COGS, contribution_margin |
 | `fct_ad_spend_daily` | platform × campaign × date | spend, impressions, clicks, platform_conversions (nullable) |
 | `fct_email_flow_weekly` | flow × message × week | recipients, opens, clicks, unsubs, orders, revenue |
 
@@ -290,7 +290,7 @@ python -m engine backtest
 | # | Step | Verification |
 |---|---|---|
 | 1 | git init, dbt scaffold | `dbt debug` and `dbt build` run clean |
-| 2 | staging + core + tests | Date-completeness test **fails** on Meta, proving the test works |
+| 2 | staging + core + tests | Date-completeness test fails on Meta, proving the test works |
 | 3 | Metric spine | Mart revenue reconciles to raw CSV totals |
 | 4 | Detectors + classifier | Retention detector stays silent; email classifies ARTIFACT; Meta classifies COMMERCIAL |
 | 5 | Recommendations + Monte Carlo + autonomy gate | CLI prints the recommendation brief |
