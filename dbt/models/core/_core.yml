@@ -72,3 +72,37 @@ models:
                 field: variant_id
       - name: contribution_margin
         data_tests: [not_null]
+
+  - name: fct_ad_spend_daily
+    description: "Daily campaign spend with derived efficiency metrics. CPC = CPM / (1000 * CTR)."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [campaign_key, ad_date]
+    columns:
+      - name: campaign_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_campaign')
+                field: campaign_key
+      - name: ad_date
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+
+  - name: fct_email_flow_weekly
+    description: "Weekly flow engagement with derived rates."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [flow_id, message_id, week_start]
+    columns:
+      - name: open_rate
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
