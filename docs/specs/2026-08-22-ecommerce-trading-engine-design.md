@@ -21,6 +21,8 @@ These were established by profiling before any code was written. They are the re
 - UK / GBP only. `source_name` is `web` for all 26,553 orders — single sales channel.
 - Referential integrity is perfect: zero orphan order lines, zero unknown customers, zero unknown variants. Every planted problem is behavioural, not structural.
 - Grain differs by source: orders and ads are daily; email flows are weekly (53 run dates).
+- Prices are VAT-inclusive. `taxes_included` is true on every order, `total_price = subtotal_price + shipping` exactly, and `total_tax = subtotal_price / 6` exactly on all 25,720 non-cancelled orders — 20% UK VAT already inside the listed price. `products.cost` is an ex-VAT cost price, so revenue must be divided by 1.2 before margin is taken. See section 4.2.
+- Line-level totals reconcile to order-level totals exactly: summed `price × quantity` equals `total_line_items_price` and summed `total_discount` equals `total_discounts` for all 26,553 orders, with zero variance.
 
 ### 2.2 Genuine commercial events
 
@@ -117,7 +119,9 @@ One model per source. Casting, renaming and light cleaning only; no business log
 | `fct_ad_spend_daily` | platform × campaign × date | spend, impressions, clicks, platform_conversions (nullable) |
 | `fct_email_flow_weekly` | flow × message × week | recipients, opens, clicks, unsubs, orders, revenue |
 
-`fct_order_line` carries COGS and contribution margin so that **every downstream metric is margin-based, not revenue-based**. Product margins range 71.7% to 84.7%, so revenue-based and margin-based recommendations diverge materially.
+`fct_order_line` carries COGS and contribution margin so that **every downstream metric is margin-based, not revenue-based**. Ex-VAT product margins range 64.0% to 82.0%, so revenue-based and margin-based recommendations diverge materially.
+
+**VAT handling is a correctness requirement, not a refinement.** Order and line values are VAT-inclusive while `products.cost` is ex-VAT, so `net_revenue` divides the discounted line value by `1 + vat_rate` before COGS is subtracted. Taking margin on the VAT-inclusive figure overstates it by roughly 6 to 8 percentage points per variant (CBD Oil 10ml reads 71.7% instead of its true 66.0%) and would inflate every LTV, ROAS and simulated margin impact in the engine. `vat_rate` is a dbt var defaulting to `0.20`.
 
 The daily/weekly grain mismatch is explicit: `dim_date.iso_week` is the only bridge, and no model fan-joins email to orders.
 
@@ -300,7 +304,7 @@ python -m engine backtest
 ## 11. Assumptions
 
 1. Last-click referrer attribution is the only option available and is used as the primary channel basis, with blended CAC as the attribution-free cross-check.
-2. LTV is contribution-margin based, not revenue based.
+2. LTV is contribution-margin based, not revenue based, and computed on ex-VAT revenue at a 20% rate (`vat_rate` var). All headline revenue and AOV figures quoted in section 2 are VAT-inclusive, matching the source; the warehouse reports ex-VAT.
 3. Cancelled orders (833, all also refunded) are excluded from revenue and retention; `customers.order_count` includes them, which explains the 825-row drift.
 4. Customers are joined on `customer_id` only. Email is never a join or dedup key.
 5. The 60-day LTV horizon from the brief's worked example is the default CAC comparison window; configurable in `config/economics.yml`.
