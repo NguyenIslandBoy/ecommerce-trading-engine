@@ -102,7 +102,17 @@ Each source carries `_weld_synced`, the ingestion timestamp, distinct from event
 
 ### 4.1 Staging
 
-One model per source. Casting, renaming and light cleaning only; no business logic.
+One model per source. Staging may cast, rename, normalise a single column, and derive a
+column from **one** source column deterministically (`channel` from `referring_site`,
+`has_valid_email` from `email`, `margin_pct` from `price` and `cost`). Staging may NOT
+join across sources, aggregate, or encode a rule that spans more than one row.
+
+This wording is deliberate and was tightened after review. The original phrasing was
+"casting and renaming only; no business logic", which the staging models genuinely violate:
+a LIKE-based channel taxonomy and a VAT-adjusted margin ratio are neither casts nor renames.
+Rather than pretend otherwise or scatter those derivations across every downstream consumer,
+the constraint now states the real intent — the boundary that matters is joins and
+aggregation, not arithmetic.
 
 - `stg_orders` — cast timestamps and money, derive `is_cancelled`, map `referring_site` to `channel`.
 - `stg_order_lines`, `stg_customers` (flag blank email), `stg_products` (derive margin).
