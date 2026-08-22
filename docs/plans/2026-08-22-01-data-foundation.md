@@ -2082,7 +2082,11 @@ git commit -m "feat: add product velocity mart with inventory cover"
 **Interfaces:**
 - Produces: `mart_cohort_retention`, grain `cohort_month` × `months_since`. Columns: `cohort_month DATE`, `months_since INT`, `cohort_size BIGINT`, `repeat_customers BIGINT`, `has_full_exposure BOOLEAN`, `retention_rate DOUBLE` (NULL when exposure is incomplete), `raw_retention_rate DOUBLE` (always populated, for contrast).
 
-This is the most important model in the plan. A naive cohort table reports retention collapsing to zero from November 2024 onward; the truth is that recent cohorts have not had time to repeat (median gap to second order is 100 days). `has_full_exposure` is what stops the detection layer from firing on an artifact.
+This is the most important model in the plan, and its purpose is subtler than "hide the collapse".
+
+Verified against the CSVs: the retention decline is REAL for every cohort that has full exposure — 90-day repeat rate falls monotonically 31.8% (2024-07), 15.8% (2024-09), 2.4% (2024-11), 0.2% (2025-01), 0.0% (2025-03), all fully observed. Censoring explains ONLY the last two to three cohorts (2025-04 onward at 90 days), because the median gap to a second order is 100 days.
+
+So `has_full_exposure` does not exist to explain the collapse away. It exists to separate the cohorts whose zero is a fact from the cohorts whose zero is merely unobserved — without it, the engine cannot tell a real collapse from an artifact, and would be wrong in one direction or the other.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2148,9 +2152,16 @@ Expected: FAIL — model not found.
   evidence, not evidence of absence.
 
   Concretely: the median gap between a customer's first and second order
-  is 100 days (p75 = 195). A naive table reports retention collapsing to
-  0.00 from the 2024-11 cohort onward. The real monthly repeat-order rate
-  is stable at roughly 24% across the entire year.
+  is 100 days (p75 = 195), so cohorts acquired within ~3 months of the
+  as_of cursor cannot yet have repeated.
+
+  IMPORTANT: censoring explains only the MOST RECENT cohorts. Cohorts
+  through 2025-03 have full 90-day exposure and their retention decline
+  (31.8% -> 0.0%) is genuine, not an artifact. The monthly repeat-order
+  rate does stay near 24% all year, but that is carried by the Jul-Nov
+  2024 cohorts still buying and MASKS the collapse rather than refuting
+  it. This guard separates observed zeros from unobserved ones; it does
+  not explain the decline away.
 #}
 
 with customers as (
@@ -2279,7 +2290,7 @@ Expected, and this is the whole point of the task:
 - Early cohorts (2024-07, 2024-08) show `has_full_exposure = true` with both `raw` and `guarded` populated and non-trivial.
 - Late cohorts (2025-04 onward at `months_since = 3`) show `has_full_exposure = false`, `raw = 0.0`, and `guarded = NULL`.
 
-The `raw` column collapsing to zero while `guarded` goes NULL is the artifact being caught. Screenshot this output for the notebook.
+Where `raw` is 0.0 AND `has_full_exposure` is false, `guarded` must be NULL — that is the censoring guard working. Where `raw` is near 0.0 and `has_full_exposure` is TRUE (cohorts 2024-10 through 2025-03), `guarded` must be populated with that low value — that is a real collapse the guard must NOT hide. Capture this output for the notebook; both behaviours matter.
 
 - [ ] **Step 6: Verify the true repeat rate is stable, as the contrast**
 
@@ -2299,7 +2310,9 @@ select strftime(order_date, '%Y-%m') as ym,
 from ranked group by 1 order by 1"
 ```
 
-Expected: `repeat_rate` climbing from ~0.03 in 2024-07 (no prior customers exist yet) and stabilising at roughly 0.24 from 2024-10 onward. This is the number that proves retention did not collapse.
+Expected: `repeat_rate` climbing from ~0.03 in 2024-07 (no prior customers exist yet) and stabilising at roughly 0.24 from 2024-10 onward.
+
+This number does NOT prove retention held up — it is the trap. The rate is stable only because the Jul-Nov 2024 cohorts keep buying; essentially no 2025-acquired customer returns. Record both this figure and the per-cohort rates from Step 5 side by side: the contrast between them is the finding.
 
 - [ ] **Step 7: Commit**
 
@@ -2309,10 +2322,9 @@ git add -A
 git commit -m "feat: add censoring-aware cohort retention mart
 
 retention_rate is NULL wherever the observation window has not elapsed
-as of the as_of cursor. raw_retention_rate is retained alongside it to
-demonstrate the artifact the guard prevents: the naive metric collapses
-to zero from the 2024-11 cohort while the true monthly repeat rate is
-stable at ~24%."
+as of the as_of cursor, separating cohorts whose zero is observed fact
+from cohorts whose zero is merely unobserved. The decline itself is real:
+90-day repeat rate falls 31.8% to 0.0% across fully-exposed cohorts."
 ```
 
 ---
@@ -2817,16 +2829,21 @@ than "unknown".
 
 ## The retention trap
 
-A naive cohort table reports retention collapsing to zero from the
-2024-11 cohort onward. It has not. The median gap between a customer's
-first and second order is 100 days, so recent cohorts have not had time
-to repeat — they are right-censored.
+Cohort retention really does collapse: the 90-day repeat rate falls
+monotonically from 31.8% (2024-07 cohort) to 0.0% (2025-03 cohort), and
+every one of those cohorts has full 90-day exposure. Censoring explains
+only the most recent two to three cohorts, where the median 100-day gap
+to a second order means the window has not closed yet.
 
 `mart_cohort_retention` carries `has_full_exposure` and returns NULL for
 `retention_rate` wherever the observation window has not elapsed.
-`raw_retention_rate` is kept alongside it purely to demonstrate the
-artifact. The true monthly repeat-order rate is stable at roughly 24%
-across the entire year.
+`raw_retention_rate` is kept alongside it to show the difference.
+
+The trap runs the other way from the obvious reading: the monthly
+repeat-order rate IS stable at roughly 24% all year, but that stability
+is carried by the Jul-Nov 2024 cohorts continuing to buy. Essentially no
+customer acquired in 2025 returns. The blended metric looks healthy while
+the cohort quality underneath it collapsed.
 
 ## What I would build next
 
