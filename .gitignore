@@ -19,5 +19,6 @@ data_viz/
 *.pbix
 Support_Service*
 
-# PBIP per-user state: DPAPI-encrypted credential bindings, machine-specific
-.pbi/localSettings.json
+# PBIP per-user / per-machine state - never share these
+**/.pbi/localSettings.json   # DPAPI-encrypted credential bindings
+**/.pbi/cache.abf            # binary model data cache (748KB and grows)
