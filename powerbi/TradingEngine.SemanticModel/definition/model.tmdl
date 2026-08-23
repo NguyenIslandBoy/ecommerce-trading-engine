@@ -28,3 +28,5 @@ ref table FactDataQuality
 ref table CohortRetention
 ref table CohortLTV
 
+ref cultureInfo en-GB
+
