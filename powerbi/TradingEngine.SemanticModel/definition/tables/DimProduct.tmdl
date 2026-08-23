@@ -1,0 +1,137 @@
+/// Product catalogue at variant grain (24 rows). Carries unit cost, so margin is computable.
+table DimProduct
+	lineageTag: 5fd38e4b-c2ec-4d59-bac2-62a944a493ad
+
+	/// Shopify variant id. Primary key.
+	column variant_id
+		dataType: int64
+		isKey
+		formatString: #,0
+		lineageTag: 4d05ba50-2864-4c40-8f55-4475f5c22a83
+		summarizeBy: sum
+		sourceColumn: variant_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id
+		dataType: int64
+		formatString: #,0
+		lineageTag: f9169f63-2c33-468e-8f55-a30c820bcf78
+		summarizeBy: sum
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_title
+		dataType: string
+		lineageTag: e0fc3c19-35a5-43ea-b6d4-1336b29fd736
+		summarizeBy: none
+		sourceColumn: product_title
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_type
+		dataType: string
+		lineageTag: ab4a1165-79fa-4425-b3fb-0bbb9e95c4f7
+		summarizeBy: none
+		sourceColumn: product_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column sku
+		dataType: string
+		lineageTag: fdd6c0e4-a262-4a30-b287-4e97a4572fdd
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = Automatic
+
+	column variant_title
+		dataType: string
+		lineageTag: 0a132c94-0598-489f-b8b2-083745460a17
+		summarizeBy: none
+		sourceColumn: variant_title
+
+		annotation SummarizationSetBy = Automatic
+
+	column price
+		dataType: decimal
+		formatString: \£#,0.00;-\£#,0.00;\£#,0.00
+		lineageTag: fa1871d5-804b-4dc3-beb8-41a8059fbcca
+		summarizeBy: sum
+		sourceColumn: price
+
+		annotation SummarizationSetBy = Automatic
+
+	column compare_at_price
+		dataType: decimal
+		formatString: \£#,0.00;-\£#,0.00;\£#,0.00
+		lineageTag: ab1b6f1c-0e7e-4ee6-adc9-b645fdeb1eaa
+		summarizeBy: sum
+		sourceColumn: compare_at_price
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit_cost
+		dataType: decimal
+		formatString: \£#,0.00;-\£#,0.00;\£#,0.00
+		lineageTag: 4ef1ae61-7eed-440b-a643-8aaba19a10bc
+		summarizeBy: sum
+		sourceColumn: unit_cost
+
+		annotation SummarizationSetBy = Automatic
+
+	/// EX-VAT margin. Source prices are VAT-inclusive and cost is not, so this divides price by 1.20 first. Range 0.640-0.820.
+	column margin_pct
+		dataType: decimal
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: bfbd2850-9ac0-477a-b024-23840c377c0a
+		summarizeBy: none
+		sourceColumn: margin_pct
+
+		annotation SummarizationSetBy = Automatic
+
+	column weight_grams
+		dataType: int64
+		formatString: #,0
+		lineageTag: 7f4e7d03-8f0f-43d5-8a12-5682e2cc180a
+		summarizeBy: sum
+		sourceColumn: weight_grams
+
+		annotation SummarizationSetBy = Automatic
+
+	/// CURRENT stock snapshot. There is no inventory history, so days-of-cover is meaningful only at the latest date.
+	column inventory_quantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: be1f734d-9e99-46f7-9072-8c075c3c99c8
+		summarizeBy: sum
+		sourceColumn: inventory_quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 01d14565-b1db-4fd8-9782-91dc11fced87
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column vendor
+		dataType: string
+		lineageTag: af48fb73-7eb9-4cfc-9902-1bafd3c8ea9a
+		summarizeBy: none
+		sourceColumn: vendor
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\dim_product.parquet"))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

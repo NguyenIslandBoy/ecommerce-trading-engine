@@ -1,0 +1,113 @@
+/// Date dimension. One row per day from the first order date to the last date with data (365 rows). Marked as the model date table.
+table DimDate
+	lineageTag: 0e9a3220-829c-47d9-b513-81bf82374ec3
+	dataCategory: Time
+
+	/// Calendar day. Primary key and the relationship column for every daily fact.
+	column date_day
+		dataType: dateTime
+		isKey
+		formatString: dd/MM/yyyy
+		lineageTag: d437e5d0-1d89-4ebe-b4b3-0267df86d4fa
+		summarizeBy: none
+		sourceColumn: date_day
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		formatString: #,0
+		lineageTag: b2cc2449-15ff-411b-b4f4-3b4ad451e753
+		summarizeBy: sum
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column month
+		dataType: int64
+		formatString: #,0
+		lineageTag: af95344c-59de-4f10-b6d8-2c72595cb090
+		summarizeBy: sum
+		sourceColumn: month
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_month
+		dataType: string
+		lineageTag: 140d6968-bf5c-4961-a085-19b3bc25cd8a
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column iso_dow
+		dataType: int64
+		formatString: #,0
+		lineageTag: 72658fd5-b920-4d33-8210-868f30f6bbce
+		summarizeBy: sum
+		sourceColumn: iso_dow
+
+		annotation SummarizationSetBy = Automatic
+
+	column iso_week
+		dataType: int64
+		formatString: #,0
+		lineageTag: de4eedd5-831b-4828-9251-e99bf680d39c
+		summarizeBy: sum
+		sourceColumn: iso_week
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Monday of the ISO week. The ONLY valid bridge to the weekly email fact.
+	column week_start
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 799937cd-1fe0-4878-9563-a6778e6a4830
+		summarizeBy: none
+		sourceColumn: week_start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column month_start
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 425b74a5-59da-454e-bfcb-1dcf72411de7
+		summarizeBy: none
+		sourceColumn: month_start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column is_weekend
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6318822e-fa05-4415-a0e8-7c14517b3a83
+		summarizeBy: none
+		sourceColumn: is_weekend
+
+		annotation SummarizationSetBy = Automatic
+
+	/// November and December — the observed demand peak. Baselines must be seasonal or January reads as a crisis.
+	column is_peak_season
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 3db4d89f-2c7d-448f-89b7-1461c73a1558
+		summarizeBy: none
+		sourceColumn: is_peak_season
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimDate = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\dim_date.parquet"))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

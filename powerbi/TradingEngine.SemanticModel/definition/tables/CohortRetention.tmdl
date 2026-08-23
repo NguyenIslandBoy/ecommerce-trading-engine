@@ -1,0 +1,121 @@
+/// Cohort retention, censoring-aware (12 cohorts x 11 ages = 132 rows). NOT related to DimDate: cohort_month is month-grain and answers a different question.
+table CohortRetention
+	lineageTag: 63d3acf0-1467-4d28-a0a9-dbc2b948459c
+
+	column cohort_month
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 461143ca-1731-483d-83a3-641c381b7755
+		summarizeBy: none
+		sourceColumn: cohort_month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column months_since
+		dataType: int64
+		formatString: #,0
+		lineageTag: 0d874d92-08bd-475a-9490-d4308c584cb8
+		summarizeBy: sum
+		sourceColumn: months_since
+
+		annotation SummarizationSetBy = Automatic
+
+	column cohort_size
+		dataType: int64
+		formatString: #,0
+		lineageTag: 5acc1ca1-98c0-4d6e-a4c3-7137f755e1fc
+		summarizeBy: sum
+		sourceColumn: cohort_size
+
+		annotation SummarizationSetBy = Automatic
+
+	column repeat_customers
+		dataType: int64
+		formatString: #,0
+		lineageTag: 5fb6d79c-7131-4649-9b64-e14a2e28ad20
+		summarizeBy: sum
+		sourceColumn: repeat_customers
+
+		annotation SummarizationSetBy = Automatic
+
+	column window_end
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 8a550015-ab35-40b8-ac2d-e72c7e12d887
+		summarizeBy: none
+		sourceColumn: window_end
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// FALSE where the calendar-month window has not closed. A zero with FALSE here is unobserved, not observed.
+	column has_full_exposure
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 9890cc61-aaa8-4eb6-b024-a51adce987bc
+		summarizeBy: none
+		sourceColumn: has_full_exposure
+
+		annotation SummarizationSetBy = Automatic
+
+	/// CALENDAR-MONTH bucketed. NULL where the observation window has not elapsed as of the last date with data.
+	column retention_rate
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: ddf057eb-df18-41c5-b7fc-476f968ebf12
+		summarizeBy: none
+		sourceColumn: retention_rate
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Unguarded. Retained ONLY to demonstrate the artifact the guard prevents. Never use in a visual.
+	column raw_retention_rate
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d3e53f5c-e3ef-499d-97eb-0643853c088e
+		summarizeBy: none
+		sourceColumn: raw_retention_rate
+
+		annotation SummarizationSetBy = Automatic
+
+	column repeat_within_90d
+		dataType: int64
+		formatString: #,0
+		lineageTag: c8f954fa-f6c6-43d9-a207-36a9e4d46ed9
+		summarizeBy: sum
+		sourceColumn: repeat_within_90d
+
+		annotation SummarizationSetBy = Automatic
+
+	/// FALSE where the 90-day window has not closed (2025-04 onward).
+	column has_full_90d_exposure
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: cc7e98fb-8d4e-4b49-83d7-5d5ace6aa5ba
+		summarizeBy: none
+		sourceColumn: has_full_90d_exposure
+
+		annotation SummarizationSetBy = Automatic
+
+	/// ROLLING 90-day window from each customer own first order. Different question to retention_rate. Falls 31.8% to 0.0% across fully-observed cohorts.
+	column repeat_rate_90d
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: ceff5b9a-c8bf-405f-8b88-baccb5dbade9
+		summarizeBy: none
+		sourceColumn: repeat_rate_90d
+
+		annotation SummarizationSetBy = Automatic
+
+	partition CohortRetention = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\mart_cohort_retention.parquet"))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,161 @@
+/// Klaviyo flow engagement at flow x week grain (6 flows x 53 weeks = 318 rows). WEEKLY — relates to DimDate via week_start.
+table FactEmailFlowWeekly
+	lineageTag: 44460943-d091-4d7c-92c7-b46aeaa94eea
+
+	column flow_name
+		dataType: string
+		lineageTag: 200ede9a-e0d3-46c0-982b-0b8351a8cd85
+		summarizeBy: none
+		sourceColumn: flow_name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Monday of the ISO week. This fact is WEEKLY: filtering DimDate to a single day will return blank for six days out of seven.
+	column week_start
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: a534a40d-2e64-4e17-b72b-5ce91af154d1
+		summarizeBy: none
+		sourceColumn: week_start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column recipients
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 3ff3ccb9-f27b-4da3-ae6e-b32cf46fb306
+		summarizeBy: sum
+		sourceColumn: recipients
+
+		annotation SummarizationSetBy = Automatic
+
+	column unique_opens
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 19f9cd33-7b99-4cb9-ade2-fa8a3017f23f
+		summarizeBy: sum
+		sourceColumn: unique_opens
+
+		annotation SummarizationSetBy = Automatic
+
+	column unique_clicks
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 48f965f4-310b-4902-a2d4-4edd64e4dd51
+		summarizeBy: sum
+		sourceColumn: unique_clicks
+
+		annotation SummarizationSetBy = Automatic
+
+	column unique_unsubscribes
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 66e8afed-5292-4f33-a081-943067349e31
+		summarizeBy: sum
+		sourceColumn: unique_unsubscribes
+
+		annotation SummarizationSetBy = Automatic
+
+	column unique_orders
+		dataType: double
+		formatString: #,0.00
+		lineageTag: be163d8a-110a-475b-9221-9e1f33822105
+		summarizeBy: sum
+		sourceColumn: unique_orders
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_value
+		dataType: decimal
+		formatString: \£#,0.00;-\£#,0.00;\£#,0.00
+		lineageTag: 28135a72-79f2-4bf3-b344-2486a4db946d
+		summarizeBy: sum
+		sourceColumn: order_value
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Recomputed from summed numerators, never averaged from message-level rates.
+	column open_rate
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 72f194d1-fd92-49f8-ab90-e64b7ca84143
+		summarizeBy: none
+		sourceColumn: open_rate
+
+		annotation SummarizationSetBy = Automatic
+
+	column click_rate
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 07cf404d-d090-446b-a18c-19f96dcedd1d
+		summarizeBy: none
+		sourceColumn: click_rate
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Orders per recipient. The discriminator: engagement falling while THIS stays flat means a measurement artifact, not lost demand.
+	column conversion_rate
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 7e3dc961-e6c3-4816-a396-9f9350ee0865
+		summarizeBy: none
+		sourceColumn: conversion_rate
+
+		annotation SummarizationSetBy = Automatic
+
+	column unsubscribe_rate
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 0e1c8ac1-04bb-49b2-829e-8febf12bbc9e
+		summarizeBy: none
+		sourceColumn: unsubscribe_rate
+
+		annotation SummarizationSetBy = Automatic
+
+	column revenue_per_recipient
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a0e2407c-3e81-4cc0-8c7b-6afe94cb66fa
+		summarizeBy: sum
+		sourceColumn: revenue_per_recipient
+
+		annotation SummarizationSetBy = Automatic
+
+	column open_rate_8w
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: f2241ad0-29d2-49c0-873d-4c0934089c8a
+		summarizeBy: none
+		sourceColumn: open_rate_8w
+
+		annotation SummarizationSetBy = Automatic
+
+	column click_rate_8w
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 6569f3f0-c19c-4ca8-9d4b-95d9c752d26e
+		summarizeBy: none
+		sourceColumn: click_rate_8w
+
+		annotation SummarizationSetBy = Automatic
+
+	column conversion_rate_8w
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 85e57c28-7727-49ac-ad91-a2d4b6e4ddb2
+		summarizeBy: none
+		sourceColumn: conversion_rate_8w
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactEmailFlowWeekly = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\mart_email_flow_weekly.parquet"))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

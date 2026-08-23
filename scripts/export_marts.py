@@ -38,6 +38,9 @@ EXPORTS = [
     ("main_core", "dim_date"),
     ("main_core", "dim_product"),
     ("main_core", "dim_campaign"),
+    # Campaign-grain ad fact. Without it dim_campaign has nothing to join to,
+    # and the CPC decomposition could only be shown at channel level.
+    ("main_core", "fct_ad_spend_daily"),
 ]
 
 

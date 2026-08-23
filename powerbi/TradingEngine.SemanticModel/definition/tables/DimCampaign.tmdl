@@ -1,0 +1,56 @@
+/// Ad campaigns across both platforms (11 rows: 6 Meta, 5 Google). Funnel stage is parsed from the campaign name.
+table DimCampaign
+	lineageTag: 2c688820-b774-409b-b0bb-591a896d9d3b
+
+	/// platform:campaign_id. Primary key.
+	column campaign_key
+		dataType: string
+		isKey
+		lineageTag: 975f6dca-3f0c-4811-bcc4-747185228d06
+		summarizeBy: none
+		sourceColumn: campaign_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column platform
+		dataType: string
+		lineageTag: e4cef794-e351-4533-b9eb-82467a80a8b1
+		summarizeBy: none
+		sourceColumn: platform
+
+		annotation SummarizationSetBy = Automatic
+
+	column campaign_id
+		dataType: string
+		lineageTag: 55998e88-ad74-4883-aadf-c1ed4e90f070
+		summarizeBy: none
+		sourceColumn: campaign_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column campaign_name
+		dataType: string
+		lineageTag: 6a746d7f-7b0d-4cec-9fa7-5dd49d840b24
+		summarizeBy: none
+		sourceColumn: campaign_name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Prospecting / Retargeting / Catalogue / Brand / Non-brand / Shopping / PMax.
+	column funnel_stage
+		dataType: string
+		lineageTag: cf064c65-c745-40de-85a1-039015fb9fa2
+		summarizeBy: none
+		sourceColumn: funnel_stage
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimCampaign = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\dim_campaign.parquet"))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

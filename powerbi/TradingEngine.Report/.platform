@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "TradingEngine"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "4759215b-c2d0-4efa-83f6-a3ddfb6b3ad1"
+  }
+}
