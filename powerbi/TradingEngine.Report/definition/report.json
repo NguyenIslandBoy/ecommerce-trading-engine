@@ -3,6 +3,11 @@
   "themeCollection": {
     "baseTheme": {
       "name": "CY23SU11",
+      "reportVersionAtImport": {
+        "visual": "1.8.86",
+        "report": "2.0.86",
+        "page": "1.3.86"
+      },
       "type": "SharedResources"
     }
   },
