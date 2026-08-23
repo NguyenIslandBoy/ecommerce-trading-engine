@@ -18,3 +18,6 @@ data_viz/
 # Client artefacts — must never be committed
 *.pbix
 Support_Service*
+
+# PBIP per-user state: DPAPI-encrypted credential bindings, machine-specific
+.pbi/localSettings.json

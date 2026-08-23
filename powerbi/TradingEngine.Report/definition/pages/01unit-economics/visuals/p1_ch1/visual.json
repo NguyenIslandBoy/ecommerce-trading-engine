@@ -57,12 +57,12 @@
                       "Entity": "#Measures"
                     }
                   },
-                  "Property": "Blended CAC"
+                  "Property": "Cohort CAC"
                 }
               },
-              "queryRef": "#Measures.Blended CAC",
-              "nativeQueryRef": "Blended CAC",
-              "displayName": "Blended CAC"
+              "queryRef": "#Measures.Cohort CAC",
+              "nativeQueryRef": "Cohort CAC",
+              "displayName": "Cohort CAC"
             }
           ]
         }

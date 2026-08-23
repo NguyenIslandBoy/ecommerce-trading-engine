@@ -33,7 +33,12 @@ is no built-in comparison to bind.
 |---|---|
 | X-axis | `CohortLTV[cohort_month]` |
 | Y-axis | `[LTV 60d (Margin)]` |
-| Y-axis | `[Blended CAC]` |
+| Y-axis | `[Cohort CAC]` |
+
+> **Use `[Cohort CAC]`, not `[Blended CAC]`.** `CohortLTV` has no relationship to `DimDate`, so a
+> `cohort_month` axis does not filter `FactDailyTrading`. `[Blended CAC]` therefore returns the
+> all-period £12.23 at every point — a flat line that hides the whole finding. `[Cohort CAC]` maps
+> `cohort_month` onto `DimDate[MonthStart]` via `TREATAS` and varies correctly.
 
 Both are £ on the same scale, so use a single Y-axis, not a dual axis — the point is that the
 lines converge, and a dual axis would let you fake or hide that.
@@ -210,7 +215,11 @@ Before building anything, load the model and check these against `docs/spec.md` 
 | `[Ad Spend]` | £247,493.29 |
 | `[Gap Days]` | 2 |
 | `[LTV / CAC]`, 2024-07 cohort | 4.42x |
-| `[LTV / CAC]`, 2025-06 cohort | 2.09x |
+| `[LTV / CAC]`, 2025-04 cohort | 2.43x |
+| `[LTV / CAC]`, 2025-06 cohort | **blank** (60-day window not closed) |
+| `[Cohort CAC]`, 2024-07 | £9.68 |
+| `[Cohort CAC]`, 2025-06 | £14.84 |
+| `[Blended CAC]`, no cohort in context | £12.23 |
 | `[Repeat Rate 90d]`, 2024-07 cohort | 31.8% |
 | `[Repeat Rate 90d]`, 2025-03 cohort | 0.0% |
 | `[Channel CAC]`, tiktok | **blank** |
