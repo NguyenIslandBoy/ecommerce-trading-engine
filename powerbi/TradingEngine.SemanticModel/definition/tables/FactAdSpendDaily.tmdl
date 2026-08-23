@@ -33,6 +33,8 @@ table FactAdSpendDaily
 		summarizeBy: none
 		sourceColumn: ad_date
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	column impressions
 		dataType: double
 		formatString: #,0
@@ -48,7 +50,7 @@ table FactAdSpendDaily
 		sourceColumn: clicks
 
 	column spend
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 76affb10-62c6-42dc-b64f-551508f4752d
 		summarizeBy: sum
@@ -78,34 +80,40 @@ table FactAdSpendDaily
 		sourceColumn: platform_conversions
 
 	column platform_conversion_value
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 1ee19385-032a-4010-802d-73171a050b71
 		summarizeBy: sum
 		sourceColumn: platform_conversion_value
 
 	column cpc
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.000
 		lineageTag: bfada40a-35b8-4ab7-9c1c-fb38c652b26d
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: cpc
+
+		annotation SummarizationSetBy = Automatic
 
 	/// The AUCTION component of a CPC move. Not controllable.
 	column cpm
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: bfab34e9-7b2d-4b91-93e4-4a8c083f51bd
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: cpm
+
+		annotation SummarizationSetBy = Automatic
 
 	/// The CREATIVE component of a CPC move. Controllable.
 	column ctr
-		dataType: decimal
+		dataType: double
 		formatString: 0.00%
 		lineageTag: 731b7b88-b19e-47b7-afe3-6e6f0c7108a8
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: ctr
+
+		annotation SummarizationSetBy = Automatic
 
 	partition FactAdSpendDaily = m
 		mode: import

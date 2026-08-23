@@ -2,3 +2,5 @@
 expression DataFolder = "C:\Users\nguye\Downloads\DS_projects\de_task\data\marts" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
 	lineageTag: f2e277b8-b5ad-4768-bf78-e73ffd8816f9
 
+	annotation PBI_ResultType = Text
+

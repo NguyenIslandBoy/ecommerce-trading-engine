@@ -9,6 +9,8 @@ table CohortLTV
 		summarizeBy: none
 		sourceColumn: cohort_month
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	column acquisition_channel
 		dataType: string
 		lineageTag: f5963e8b-bef9-44c9-843a-fc9271ec3e71
@@ -38,14 +40,14 @@ table CohortLTV
 		sourceColumn: has_full_exposure
 
 	column cum_net_revenue
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 0c3d5760-1d78-48c8-8cd1-3e0a5089c90e
 		summarizeBy: sum
 		sourceColumn: cum_net_revenue
 
 	column cum_contribution_margin
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 22527c99-cc48-4853-8a9d-5298c6dcbf2c
 		summarizeBy: sum

@@ -13,6 +13,7 @@
   },
   "settings": {
     "useStylableVisualContainerHeader": true,
-    "defaultDrillFilterOtherVisuals": true
+    "defaultDrillFilterOtherVisuals": true,
+    "useEnhancedTooltips": false
   }
 }

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "name": "p2_tik",
+  "position": {
+    "x": 960,
+    "y": 755,
+    "z": 15000,
+    "height": 265,
+    "width": 920,
+    "tabOrder": 15000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "horizontalTextAlignment": "left",
+                "textRuns": [
+                  {
+                    "value": "Why two rows in that table are blank\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "13pt",
+                      "color": "#0B1A2E",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "TikTok drives 2,396 orders (9.0% of the business) and no cost file was supplied. Unattributed carries 7,139 orders with no usable referrer.\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  },
+                  {
+                    "value": "CAC is spend ÷ customers. With no spend, it is not computable — so the measure returns BLANK rather than £0.00.\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  },
+                  {
+                    "value": "Rendering zero would claim free acquisition on a tenth of the business. ",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#C0392B",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "That is why blended CAC, which needs no attribution, is the only complete cost measure here.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "visualHeader": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
