@@ -78,7 +78,17 @@ def email_engagement_decay(ctx) -> list[Signal]:
             continue    # not falling enough to be worth a word
 
         ratio = (conv_change / open_change) if open_change < 0 else 0.0
-        conversion_followed = conv_change < 0 and ratio >= comovement_gate
+
+        # Co-movement must be a real trend, not a negative point estimate. On a
+        # short window a conversion series wanders; taking any downward drift as
+        # "the money followed" turned 35 artifacts into COMMERCIAL signals in
+        # the replay, on ratios like 0.705 off a -10.5% open decline that had
+        # barely cleared the gate itself.
+        _, conv_p = mann_kendall(conversions)
+        conversion_trend_real = np.isfinite(conv_p) and conv_p <= 0.05
+        conversion_followed = (
+            conv_change < 0 and ratio >= comovement_gate and conversion_trend_real
+        )
 
         classification = (
             Classification.COMMERCIAL if conversion_followed else Classification.ARTIFACT
@@ -103,6 +113,9 @@ def email_engagement_decay(ctx) -> list[Signal]:
                 "conversion_rate_change_pct": round(conv_change, 2),
                 "comovement_ratio": round(ratio, 3),
                 "comovement_threshold": comovement_gate,
+                "conversion_trend_p": (round(float(conv_p), 5)
+                                       if np.isfinite(conv_p) else None),
+                "conversion_trend_significant": bool(conversion_trend_real),
                 "conversion_followed": bool(conversion_followed),
                 "open_rate_latest": round(float(opens.iloc[-1]), 4),
                 "conversion_rate_latest": round(float(conversions.iloc[-1]), 4),
