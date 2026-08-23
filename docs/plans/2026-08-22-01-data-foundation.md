@@ -2242,9 +2242,11 @@ Append to `dbt/models/marts/_marts.yml`:
   - name: mart_cohort_retention
     description: >
       Cohort retention with an explicit censoring guard. retention_rate is
-      NULL wherever the observation window has not fully elapsed as of
-      var('as_of_date'). raw_retention_rate is always populated and exists
-      only to demonstrate the artifact the guard prevents.
+      NULL wherever the observation window has not fully elapsed as of the
+      LAST DATE WITH DATA (max(dim_date.date_day)) -- deliberately NOT as of
+      var('as_of_date'), which sits one day past period close to absorb
+      ad/email ingestion lag. raw_retention_rate is always populated and
+      exists only to show the difference the guard makes.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -2391,6 +2393,35 @@ select
 from exposure
 where months_since > 0
 ```
+
+- [ ] **Step 3a: Add the converse guard test**
+
+The censoring test only checks one direction: censored implies NULL. A guard accidentally
+inverted to return NULL *always* would satisfy it and pass silently, while destroying the
+model's entire purpose. Guard both directions.
+
+Create `dbt/tests/assert_exposed_cohorts_have_retention.sql`:
+
+```sql
+-- The converse of assert_censored_cohorts_have_null_retention.
+--
+-- A cohort-age whose observation window HAS fully elapsed must report a
+-- retention_rate -- including a legitimate 0.0, which is an observed fact and
+-- not a missing value. Without this test, a guard inverted to always-NULL
+-- would pass the censoring test while silently erasing every real signal
+-- this model exists to surface.
+
+select
+    cohort_month,
+    months_since,
+    has_full_exposure,
+    retention_rate
+from {{ ref('mart_cohort_retention') }}
+where has_full_exposure
+  and retention_rate is null
+```
+
+Expect PASS (zero rows): 66 of the 132 rows are fully exposed and all must carry a rate.
 
 - [ ] **Step 4: Build and test**
 
