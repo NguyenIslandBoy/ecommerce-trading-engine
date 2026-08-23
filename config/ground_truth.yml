@@ -1,0 +1,134 @@
+# Hand-labelled ground truth for the backtest.
+#
+# STATED LIMITATION, prominently: these labels are the author's own reading of
+# the dataset, established by profiling before any detector was written
+# (docs/specs/...design.md sections 2.2 and 2.3). Nobody independent confirmed
+# them, and the detectors were built by the same person who wrote them down.
+#
+# So the backtest measures INTERNAL CONSISTENCY -- does the engine find what
+# profiling said was there, and stay quiet about what profiling said was a trap
+# -- and NOT external validity. A high score here is evidence the engine does
+# what it was designed to do. It is not evidence the design was right.
+#
+# The traps are the more interesting half. Anyone can build a detector that
+# fires; the test is whether it stays silent on the four things in this file
+# that look exactly like signals and are not.
+
+events:
+
+  - id: meta_cost_inflation
+    detector: cpc_decomposition
+    entity_id: meta
+    onset: 2025-04-01
+    description: >
+      CPC 0.42 -> 1.02 (+143%) across all six campaigns at once. Decomposes into
+      CPM +55% (auction pressure) and CTR -36% (creative relevance). Frequency
+      flat at ~1.22 all year, so it is not audience saturation.
+    must_classify: COMMERCIAL
+
+  - id: blended_cac_rise
+    detector: cac_trend
+    entity_id: blended
+    onset: 2024-10-01
+    description: >
+      Blended CAC 9.68 -> 14.84 (+53%) across the year. Attribution-free, so a
+      Tier B signal. Gradual rather than a step, which is exactly why a 28-day
+      trend window could not see it.
+    must_classify: COMMERCIAL
+
+  - id: cohort_retention_collapse
+    detector: cohort_retention_shift
+    entity_id: all
+    # Not detectable at its true onset. The 2024-09 cohort's 90-day window does
+    # not close until 2024-12, and the detector needs four fully-exposed cohorts
+    # before it will compare them. Anything earlier would be reading censored
+    # cohorts, which is the error the whole model exists to prevent.
+    onset: 2025-01-31
+    description: >
+      90-day repeat rate 31.8% -> 0.0% across cohorts that ALL have full 90-day
+      exposure. Measured, not censored.
+    must_classify: COMMERCIAL
+
+  - id: meta_ingestion_gap
+    detector: data_completeness
+    entity_id: meta_ads_daily
+    onset: 2025-03-15
+    description: >
+      meta_ads_daily has no rows for 2025-03-15 or 2025-03-16 (363 dates against
+      Google's 365).
+    must_classify: DATA_QUALITY
+
+  - id: aov_erosion
+    detector: aov_decomposition
+    entity_id: blended
+    onset: 2025-02-01
+    description: >
+      AOV 61.36 -> 55.07 (-10%). Discount rate flat at ~3.2%, so this is mix
+      shift toward cheaper Vitamin D3 lines, not promotional dependency.
+    must_classify: COMMERCIAL
+
+  - id: d3_velocity_breakout
+    detector: product_velocity
+    entity_id: any            # several D3 variants; any of them counts
+    entity_contains: D3
+    onset: 2025-02-01
+    description: >
+      Vitamin D3 219 -> 701 units/month (3.2x), sustained, while the other
+      eleven products stayed flat. A demand signal, NOT the stockout signal -
+      D3 was stocked for it at 33.5 and 44.1 days of cover.
+    must_classify: COMMERCIAL
+
+# Things that look like signals and are not. A COMMERCIAL signal against any of
+# these is a false positive, and the count of them is the number that matters
+# most in the whole backtest.
+traps:
+
+  - id: email_engagement_decay
+    detector: email_engagement_decay
+    from: 2025-03-01
+    must_not_classify: COMMERCIAL
+    description: >
+      Open and click rates fall across all six flows from ~2025-03, but
+      conversion rates hold (Welcome 3.37% -> 3.23%). Engagement degradation
+      with intact monetisation is a deliverability or measurement change, not
+      lost demand.
+
+  - id: meta_spend_crash
+    detector: cac_trend
+    from: 2025-03-15
+    to: 2025-03-31
+    must_not_classify: COMMERCIAL
+    description: >
+      The two missing Meta days read as spend going to zero. A naive detector
+      reports a dramatic CAC improvement; blended CAC on those days computes to
+      6.75 and 6.33 against a true figure near 11.50.
+
+  - id: january_trough
+    detector: any
+    from: 2025-01-01
+    to: 2025-01-31
+    must_not_classify: COMMERCIAL
+    # Counts only signals that do NOT map to a labelled event. The first version
+    # of this test capped total commercial signals per cursor, and failed on two
+    # end-January cursors where five fired -- but four of the five were the
+    # retention collapse, the D3 breakout and AOV erosion, all labelled events
+    # that genuinely converge there. It was measuring event convergence, not
+    # seasonal false positives. What the trap actually means is "the trough must
+    # not MANUFACTURE signals", so unlabelled ones are the right thing to count.
+    exclude_labelled_events: true
+    max_commercial_signals_per_cursor: 4
+    description: >
+      November/December peak, January trough. Any non-seasonal baseline reports
+      January as a crisis. Day-of-week is removed and slopes are robust, so the
+      trough should not manufacture signals.
+
+  - id: censored_recent_cohorts
+    detector: cohort_retention_shift
+    from: 2024-07-01
+    to: 2024-12-31
+    must_not_classify: COMMERCIAL
+    description: >
+      Before enough cohorts have closed their 90-day window, the retention
+      detector must stay silent rather than read censored near-zero rates as a
+      collapse. Firing here would be the exact error the censoring guards exist
+      to prevent.

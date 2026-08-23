@@ -45,6 +45,7 @@ def _read(name: str) -> pd.DataFrame:
 class Context:
     as_of: dt.date
     window_end: dt.date          # last day actually visible (cursor, clamped)
+    is_latest: bool              # cursor is the newest the warehouse has
     daily: pd.DataFrame
     product: pd.DataFrame
     email: pd.DataFrame
@@ -120,6 +121,7 @@ class Warehouse:
         return Context(
             as_of=cursor,
             window_end=end,
+            is_latest=(end >= self.last_day),
             daily=daily_trading_as_of(self.daily, cursor),
             product=upto(self.product, "date_day"),
             email=upto_lagged(self.email, "week_start"),

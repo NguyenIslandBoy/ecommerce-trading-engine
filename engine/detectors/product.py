@@ -109,6 +109,13 @@ def inventory_cover(ctx) -> list[Signal]:
             "snapshot with no history, so historical cover figures are fiction."
         )
 
+    # The reason this exists: in a 245-cursor replay this detector fired 80
+    # times in January alone, using stock levels that were not measured until
+    # June. Every one of those was fiction, and they were inflating the
+    # backtest's signal count while claiming a seasonal crisis.
+    if not ctx.is_latest:
+        return []
+
     product = ctx.product.copy()
     product["date_day"] = pd.to_datetime(product["date_day"])
     latest = product["date_day"].max()
