@@ -1,0 +1,117 @@
+# Signal-to-action mapping, and the rules governing how much autonomy an action
+# may be given. As with detectors.yml, none of this came from the client, so it
+# lives in config where it can be argued with rather than buried in code.
+
+autonomy:
+  # Reversibility governs the CEILING on autonomy; confidence governs the
+  # MAGNITUDE. A highly confident signal still cannot auto-commit an inventory
+  # purchase, because being right on average is no comfort when the mistake
+  # cannot be undone.
+  high_confidence: 0.80
+  medium_confidence: 0.50
+
+  # Capped magnitude in the medium band: act, but small enough that being wrong
+  # is cheap. This is the core trading-engine behaviour -- size the test to the
+  # confidence in the evidence, not to the size of the opportunity.
+  medium_band_magnitude_cap: 0.10
+
+  # An action whose OWN simulation says it probably loses money is not
+  # recommended, however confident the signal that triggered it. Confidence
+  # measures how sure we are the signal is real; this measures whether acting on
+  # it is expected to pay. They are different questions and the engine was
+  # recommending a creative refresh with a median of -GBP 817 until this existed.
+  min_p_positive: 0.55
+
+  # A Tier C signal can never auto-execute regardless of confidence. 26.8% of
+  # orders are unattributed and TikTok has no cost data at all, so last-click
+  # channel figures are not a basis for an unattended decision.
+  tier_c_may_auto_execute: false
+
+simulation:
+  draws: 10000
+  horizon_days: 30
+  reorder_lead_time_days: 21
+  value_of_information_days: 7
+
+actions:
+
+  cac_trend:
+    type: REALLOCATE_SPEND
+    reversibility: reversible
+    # Deliberately bounded rather than aggressive. The COST signal is Tier A/B
+    # and certain; the INCREMENTAL REVENUE signal is Tier C and unreliable. A
+    # 20% test shift is sized to what the evidence actually supports.
+    default_shift_pct: 0.20
+    max_shift_pct: 0.30
+    rationale: >
+      Blended acquisition cost is rising on a significant trend. Shift a bounded
+      share of budget toward the cheaper channel and measure, rather than
+      committing to a reallocation the attribution data cannot justify.
+
+  cpc_decomposition:
+    # Two-pronged, because the decomposition says the damage has two causes and
+    # only one of them is controllable by changing creative.
+    type: REFRESH_CREATIVE
+    secondary_type: REALLOCATE_SPEND
+    reversibility: reversible
+    default_shift_pct: 0.20
+    rationale: >
+      CPC has risen. The CPM component is auction inflation and cannot be fixed
+      with creative; the CTR component can. Refresh creative to address the CTR
+      half, and shift budget sized only to the auction-attributable half.
+
+  cac_ltv_breach:
+    type: PAUSE_CAMPAIGN
+    reversibility: reversible
+    rationale: >
+      Acquisition cost has exceeded the 60-day contribution LTV of the most
+      recent fully-exposed cohort. Every additional customer from this channel
+      is bought at a loss on that horizon.
+
+  inventory_cover:
+    type: REORDER_INVENTORY
+    reversibility: irreversible     # capital committed, stock cannot be un-bought
+    rationale: >
+      Days of cover are below the reorder threshold. Stockout forfeits margin on
+      demand that will not wait; overstock ties up capital. Sized from the
+      simulated demand distribution over the lead time, not from a point forecast.
+
+  cohort_retention_shift:
+    type: INVESTIGATE_DATA
+    reversibility: reversible
+    rationale: >
+      Retention is collapsing across fully-exposed cohorts. No spend action is
+      appropriate: acquiring more customers into a book that does not retain
+      makes the problem larger, not smaller. This needs a product or lifecycle
+      diagnosis before any budget decision.
+
+  email_engagement_decay:
+    type: ADJUST_FLOW
+    reversibility: reversible
+    rationale: >
+      Engagement is falling. Only actionable where conversion fell with it --
+      an opens-only decline is a measurement artifact and acting on it would
+      churn a flow that is still earning.
+
+  data_completeness:
+    type: INVESTIGATE_DATA
+    reversibility: reversible
+    rationale: >
+      A source stopped delivering. Fix the pipeline before trusting any cost
+      metric over the affected window - missing spend makes efficiency look
+      better, not worse.
+
+  product_velocity:
+    type: INVESTIGATE_DATA
+    reversibility: reversible
+    rationale: >
+      A variant is selling materially away from its own recent norm. Worth
+      understanding before it becomes an inventory or merchandising decision.
+
+  aov_decomposition:
+    type: INVESTIGATE_DATA
+    reversibility: reversible
+    rationale: >
+      Average order value has moved. The decomposition says whether it was
+      basket size or realised price, which decides whether this is a
+      merchandising or a pricing conversation.
