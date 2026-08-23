@@ -146,7 +146,7 @@ The only surface detectors read.
 |---|---|---|
 | `mart_daily_trading` | date × channel | orders, contribution margin, new/returning customers, AOV, spend, CAC, ROAS, blended CAC |
 | `mart_product_daily` | date × variant | units, trailing 7d/28d velocity, days-of-cover |
-| `mart_cohort_retention` | cohort × age × as_of | carries `n_at_risk` and an exposure-sufficiency flag — the censoring fix |
+| `mart_cohort_retention` | cohort × age | carries `cohort_size` and an exposure-sufficiency flag (`has_full_exposure`) — the censoring fix |
 | `mart_ltv` | cohort × channel × horizon | contribution-margin LTV at 30/60/90 days, censoring-aware |
 | `mart_email_flow_weekly` | flow × week | open/click/conversion rate, revenue per recipient |
 | `mart_data_quality` | source × date | coverage gaps, null rates, derived-vs-precomputed drift |
@@ -190,7 +190,7 @@ Thresholds live in `config/detectors.yml`, not in code.
 5. `inventory_cover` — days of cover vs velocity, stockout risk.
 6. `aov_decomposition` — separates mix, price and discount effects.
 7. `email_engagement_decay` — engagement trend with a conversion co-movement check.
-8. `cohort_retention_shift` — compares cohorts only at equal exposure age with sufficient `n_at_risk`. Fires COMMERCIAL on the fully-exposed decline (31.8% → 0.0% at 90 days) and stays silent only on genuinely censored cohorts.
+8. `cohort_retention_shift` — compares cohorts only at equal exposure age with sufficient `cohort_size` and `has_full_exposure`. Fires COMMERCIAL on the fully-exposed decline (31.8% → 0.0% at 90 days) and stays silent only on genuinely censored cohorts.
 9. `channel_cvr_shift` — orders per click by channel (no session data available).
 10. `data_completeness` — missing dates per source.
 11. `attribution_divergence` — platform conversions vs Shopify-attributed; fires only when the *ratio* breaks trend.
