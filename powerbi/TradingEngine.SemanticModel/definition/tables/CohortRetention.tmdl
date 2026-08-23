@@ -9,6 +9,8 @@ table CohortRetention
 		summarizeBy: none
 		sourceColumn: cohort_month
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	column months_since
 		dataType: int64
 		formatString: 0
@@ -37,6 +39,8 @@ table CohortRetention
 		lineageTag: d2429064-def3-483d-ace3-6b14ac54a68f
 		summarizeBy: none
 		sourceColumn: window_end
+
+		annotation UnderlyingDateTimeDataType = Date
 
 	/// FALSE where the calendar-month window has not closed. A zero with FALSE here is UNOBSERVED, not observed.
 	column has_full_exposure

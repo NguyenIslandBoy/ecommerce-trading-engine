@@ -1,0 +1,137 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "name": "p4_note",
+  "position": {
+    "x": 1240,
+    "y": 175,
+    "z": 15000,
+    "height": 330,
+    "width": 640,
+    "tabOrder": 15000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "horizontalTextAlignment": "left",
+                "textRuns": [
+                  {
+                    "value": "Artifact, not lost demand\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "13pt",
+                      "color": "#0B1A2E",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "Looks like:  ",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#C0392B",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "\"Engagement is collapsing across all six flows — fix the flows.\"\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  },
+                  {
+                    "value": "Actually:  ",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#2E8B57",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "opens and clicks fell; orders per recipient did not. The flows monetise exactly as before — a deliverability or open-tracking change.\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  },
+                  {
+                    "value": "The rule:  ",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "engagement down + conversion flat → measurement. Engagement down + conversion down → commercial. The same test applied to Meta on page 2 returns the opposite verdict.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "visualHeader": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

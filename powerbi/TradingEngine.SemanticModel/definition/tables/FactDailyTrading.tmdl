@@ -9,6 +9,8 @@ table FactDailyTrading
 		summarizeBy: none
 		sourceColumn: date_day
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	column channel
 		dataType: string
 		lineageTag: f8a87fcb-b7a7-4fd2-821a-8a5ef16f484c
@@ -38,14 +40,14 @@ table FactDailyTrading
 
 	/// EX-VAT. Will not match a VAT-inclusive figure quoted elsewhere.
 	column net_revenue
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 1dfc6a43-6842-4f02-89a7-dbc4fec1f778
 		summarizeBy: sum
 		sourceColumn: net_revenue
 
 	column contribution_margin
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: cfaa2111-1a45-4fa4-9a27-3bb6d6b89bd4
 		summarizeBy: sum
@@ -53,14 +55,16 @@ table FactDailyTrading
 
 	/// Ex-VAT and excludes shipping.
 	column aov
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: dd9f9758-a9b8-41ec-964d-b7e011a6386a
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: aov
 
+		annotation SummarizationSetBy = Automatic
+
 	column ad_spend
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: b45de6c9-590e-45e8-b0ad-3539e8911049
 		summarizeBy: sum
@@ -82,26 +86,32 @@ table FactDailyTrading
 
 	/// TIER C - depends on last-click attribution. NULL for tiktok and unattributed by construction.
 	column channel_cac
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 03ce1184-376d-42b0-b218-9b0ab2e748c4
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: channel_cac
+
+		annotation SummarizationSetBy = Automatic
 
 	/// Ex-VAT, so ~17% lower than a platform-reported ROAS.
 	column channel_roas
-		dataType: decimal
+		dataType: double
 		formatString: #,0.00
 		lineageTag: c9d9ae3e-d66a-4ed7-95a2-2dc9d0d1c8fd
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: channel_roas
 
+		annotation SummarizationSetBy = Automatic
+
 	column channel_margin_roas
-		dataType: decimal
+		dataType: double
 		formatString: #,0.00
 		lineageTag: 888f9ad4-81c6-4919-8014-b6e3a73dda83
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: channel_margin_roas
+
+		annotation SummarizationSetBy = Automatic
 
 	/// FALSE when any ad source has an ingestion gap that day. Load-bearing: without it, blended CAC on the two missing Meta days reads a fabricated 42% improvement.
 	column ad_spend_is_complete
@@ -112,11 +122,13 @@ table FactDailyTrading
 
 	/// TIER B - attribution-free. NULL when ad_spend_is_complete is false.
 	column blended_cac
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 155611ac-3b67-4680-b3ee-ab78d335cb1c
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: blended_cac
+
+		annotation SummarizationSetBy = Automatic
 
 	column is_peak_season
 		dataType: boolean
@@ -137,6 +149,8 @@ table FactDailyTrading
 		lineageTag: 5d26136e-6b4c-4c6d-b322-f9f7a8a4972c
 		summarizeBy: none
 		sourceColumn: week_start
+
+		annotation UnderlyingDateTimeDataType = Date
 
 	partition FactDailyTrading = m
 		mode: import

@@ -16,6 +16,8 @@ table FactEmailFlowWeekly
 		summarizeBy: none
 		sourceColumn: week_start
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	column recipients
 		dataType: double
 		formatString: #,0
@@ -52,7 +54,7 @@ table FactEmailFlowWeekly
 		sourceColumn: unique_orders
 
 	column order_value
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: fc4ddb3a-19b4-489a-969e-446adbb271bb
 		summarizeBy: sum

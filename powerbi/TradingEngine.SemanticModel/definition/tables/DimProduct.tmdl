@@ -44,14 +44,14 @@ table DimProduct
 
 	/// VAT-INCLUSIVE list price.
 	column price
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 46eb710d-ea76-45b1-a56b-42c68f0693e0
 		summarizeBy: none
 		sourceColumn: price
 
 	column compare_at_price
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 5e0a0601-7f1f-42a0-a2cf-bec00cfac04c
 		summarizeBy: none
@@ -59,7 +59,7 @@ table DimProduct
 
 	/// EX-VAT cost price. Prices are VAT-inclusive and this is not, which is why margin divides price by 1.20 first.
 	column unit_cost
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: bcd69d23-15d9-4954-883d-2da9b279f20f
 		summarizeBy: none
@@ -67,7 +67,7 @@ table DimProduct
 
 	/// EX-VAT margin. Range 0.640-0.820 across the catalogue.
 	column margin_pct
-		dataType: decimal
+		dataType: double
 		formatString: 0.00%
 		lineageTag: 06be3108-cc57-42a2-afcf-4df48507e84c
 		summarizeBy: none

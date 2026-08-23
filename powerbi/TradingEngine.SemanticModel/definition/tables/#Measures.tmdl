@@ -232,6 +232,16 @@ table #Measures
 		displayFolder: 07 Data Quality
 		lineageTag: 8f33b4db-da59-4055-8f8d-d0ddfe8f1d0f
 
+	/// Repeat orders as a share of all orders, that month. THE TRAP: this is the
+	/// whole-book metric and it sits flat at ~24 percent all year, because it is
+	/// carried by the Jul-Nov 2024 cohorts still buying. Compare it against
+	/// [Repeat Rate 90d], which measures each intake separately and falls from
+	/// 31.8 percent to zero. Both are correct; the denominators differ.
+	measure 'Repeat Order Share' = DIVIDE(SUM(FactDailyTrading[returning_customers]), SUM(FactDailyTrading[orders]))
+		formatString: 0.0%
+		lineageTag: b9db4945-a32b-4d0e-963b-0846fb99d3d1
+		displayFolder: 04 Retention
+
 	partition #Measures = m
 		mode: import
 		source =

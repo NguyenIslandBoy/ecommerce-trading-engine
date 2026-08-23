@@ -9,6 +9,8 @@ table FactProductDaily
 		summarizeBy: none
 		sourceColumn: date_day
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	column variant_id
 		dataType: int64
 		formatString: 0
@@ -42,14 +44,14 @@ table FactProductDaily
 		sourceColumn: units
 
 	column net_revenue
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 4b093c2a-c665-469d-bac1-82f8f97f7b78
 		summarizeBy: sum
 		sourceColumn: net_revenue
 
 	column contribution_margin
-		dataType: decimal
+		dataType: double
 		formatString: \£#,0.00
 		lineageTag: 50aef3bb-ea69-4ec7-93a7-68a3ccc72fc2
 		summarizeBy: sum
