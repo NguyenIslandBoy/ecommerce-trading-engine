@@ -27,32 +27,34 @@
 
 ## File Structure
 
-| Path | Responsibility |
-|---|---|
-| `data/*.csv` | The seven provided raw files, moved from repo root |
-| `dbt/dbt_project.yml` | Project config, vars (`as_of_date`, `data_dir`), materialisations |
-| `dbt/profiles.yml` | DuckDB connection to `dbt/trading_engine.duckdb` |
-| `dbt/macros/as_of_filter.sql` | Availability filter shared by all staging models |
-| `dbt/macros/channel_from_referrer.sql` | Referrer → channel mapping, used in staging and tests |
-| `dbt/models/staging/_sources.yml` | External CSV source definitions |
-| `dbt/models/staging/stg_*.sql` | One view per source; casts, renames, and single-column deterministic derivations. No joins across sources, no aggregation. |
-| `dbt/models/staging/_staging.yml` | Column docs and schema tests for staging |
-| `dbt/models/core/dim_*.sql`, `fct_*.sql` | Star schema |
-| `dbt/models/core/_core.yml` | Keys, relationships, accepted values |
-| `dbt/models/marts/mart_*.sql` | The metric spine |
-| `dbt/models/marts/_marts.yml` | Mart tests |
-| `dbt/tests/*.sql` | Singular tests (completeness, reconciliation, margin sanity) |
+| Path                                         | Responsibility                                                                                                             |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `data/*.csv`                               | The seven provided raw files, moved from repo root                                                                         |
+| `dbt/dbt_project.yml`                      | Project config, vars (`as_of_date`, `data_dir`), materialisations                                                      |
+| `dbt/profiles.yml`                         | DuckDB connection to`dbt/trading_engine.duckdb`                                                                          |
+| `dbt/macros/as_of_filter.sql`              | Availability filter shared by all staging models                                                                           |
+| `dbt/macros/channel_from_referrer.sql`     | Referrer → channel mapping, used in staging and tests                                                                     |
+| `dbt/models/staging/_sources.yml`          | External CSV source definitions                                                                                            |
+| `dbt/models/staging/stg_*.sql`             | One view per source; casts, renames, and single-column deterministic derivations. No joins across sources, no aggregation. |
+| `dbt/models/staging/_staging.yml`          | Column docs and schema tests for staging                                                                                   |
+| `dbt/models/core/dim_*.sql`, `fct_*.sql` | Star schema                                                                                                                |
+| `dbt/models/core/_core.yml`                | Keys, relationships, accepted values                                                                                       |
+| `dbt/models/marts/mart_*.sql`              | The metric spine                                                                                                           |
+| `dbt/models/marts/_marts.yml`              | Mart tests                                                                                                                 |
+| `dbt/tests/*.sql`                          | Singular tests (completeness, reconciliation, margin sanity)                                                               |
 
 ---
 
 ## Task 1: Project scaffold and DuckDB connection
 
 **Files:**
+
 - Create: `data/` (move 7 CSVs into it)
 - Create: `dbt/dbt_project.yml`, `dbt/profiles.yml`, `dbt/models/staging/_sources.yml`
 - Modify: `.gitignore`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: dbt project rooted at `dbt/`, source `{{ source('raw', <table>) }}` for the seven tables, vars `as_of_date` and `data_dir`.
 
@@ -206,10 +208,12 @@ git commit -m "chore: scaffold dbt project and move CSVs into data/"
 ## Task 2: Shared macros and `stg_orders`
 
 **Files:**
+
 - Create: `dbt/macros/as_of_filter.sql`, `dbt/macros/channel_from_referrer.sql`
 - Create: `dbt/models/staging/stg_orders.sql`, `dbt/models/staging/_staging.yml`
 
 **Interfaces:**
+
 - Consumes: `source('raw','orders')`.
 - Produces:
   - Macro `as_of_filter(sync_col, event_col)` → SQL boolean expression.
@@ -374,10 +378,12 @@ git commit -m "feat: add as_of and channel macros with stg_orders"
 ## Task 3: `stg_order_lines`, `stg_customers`, `stg_products`
 
 **Files:**
+
 - Create: `dbt/models/staging/stg_order_lines.sql`, `stg_customers.sql`, `stg_products.sql`
 - Modify: `dbt/models/staging/_staging.yml`
 
 **Interfaces:**
+
 - Consumes: `as_of_filter`, `stg_orders` (for the order-line availability join).
 - Produces:
   - `stg_order_lines`: `order_line_id`, `order_id`, `line_index`, `sku`, `product_title`, `variant_title`, `vendor`, `product_id`, `variant_id`, `quantity BIGINT`, `unit_price DECIMAL(12,2)`, `total_discount DECIMAL(12,2)`, `grams`, `fulfillment_status`.
@@ -594,10 +600,12 @@ git commit -m "feat: add order line, customer and product staging models"
 ## Task 4: `stg_ads_daily` and `stg_email_flows`
 
 **Files:**
+
 - Create: `dbt/models/staging/stg_ads_daily.sql`, `dbt/models/staging/stg_email_flows.sql`
 - Modify: `dbt/models/staging/_staging.yml`
 
 **Interfaces:**
+
 - Produces:
   - `stg_ads_daily`: `platform VARCHAR`, `campaign_id`, `campaign_name`, `account_name`, `ad_date DATE`, `impressions BIGINT`, `clicks BIGINT`, `spend DECIMAL(12,2)`, `reach BIGINT`, `frequency DOUBLE`, `platform_conversions DOUBLE` (NULL for Meta), `platform_conversion_value DECIMAL(12,2)` (NULL for Meta), `synced_at`.
   - `stg_email_flows`: `flow_id`, `flow_name`, `message_id`, `message_name`, `message_channel`, `week_start DATE`, `flow_status`, `message_status`, `recipients BIGINT`, `unique_opens BIGINT`, `unique_clicks BIGINT`, `unique_unsubscribes BIGINT`, `unique_orders BIGINT`, `total_orders BIGINT`, `order_value DECIMAL(12,2)`, `tags`, `synced_at`.
@@ -809,6 +817,7 @@ group by platform"
 ```
 
 Expected exactly:
+
 - `meta`: 6 campaigns × 363 days = 2178 rows, **363** distinct days, `non_null_conv = 0`
 - `google`: 5 campaigns × 365 days = 1825 rows, **365** distinct days, `non_null_conv = 1825`
 
@@ -878,9 +887,11 @@ git commit -m "feat: add unioned ad spend and email flow staging models"
 ## Task 5: `dim_date` and `dim_campaign`
 
 **Files:**
+
 - Create: `dbt/models/core/dim_date.sql`, `dbt/models/core/dim_campaign.sql`, `dbt/models/core/_core.yml`
 
 **Interfaces:**
+
 - Produces:
   - `dim_date`: `date_day DATE` (PK), `year`, `month`, `year_month VARCHAR`, `iso_dow`, `iso_week`, `week_start DATE`, `month_start DATE`, `is_weekend BOOLEAN`, `is_peak_season BOOLEAN`.
   - `dim_campaign`: `campaign_key VARCHAR` (PK, `platform || ':' || campaign_id`), `platform`, `campaign_id`, `campaign_name`, `funnel_stage VARCHAR`.
@@ -1038,10 +1049,12 @@ git commit -m "feat: add date and campaign dimensions"
 ## Task 6: `dim_customer` and `dim_product`
 
 **Files:**
+
 - Create: `dbt/models/core/dim_customer.sql`, `dbt/models/core/dim_product.sql`
 - Modify: `dbt/models/core/_core.yml`
 
 **Interfaces:**
+
 - Produces:
   - `dim_customer`: `customer_id` (PK), `customer_email`, `has_valid_email`, `is_marketable BOOLEAN`, `email_consent_state`, `signup_date`, `first_order_date DATE`, `first_order_month DATE`, `acquisition_channel VARCHAR`, `accepts_marketing`, `source_order_count`, `source_total_spent`.
   - `dim_product`: `variant_id` (PK), `product_id`, `product_title`, `product_type`, `sku`, `variant_title`, `price`, `unit_cost`, `margin_pct`, `inventory_quantity`, `status`, `vendor`.
@@ -1191,11 +1204,13 @@ git commit -m "feat: add customer and product dimensions"
 ## Task 7: `fct_order` and `fct_order_line`
 
 **Files:**
+
 - Create: `dbt/models/core/fct_order.sql`, `dbt/models/core/fct_order_line.sql`
 - Create: `dbt/tests/assert_margin_not_above_revenue.sql`
 - Modify: `dbt/models/core/_core.yml`
 
 **Interfaces:**
+
 - Produces:
   - `fct_order`: `order_id` (PK), `customer_id`, `order_date`, `created_at`, `channel`, `is_cancelled`, `financial_status`, `total_price`, `subtotal_price`, `total_discounts`, `total_tax`, `total_shipping`, `is_first_order BOOLEAN`.
   - `fct_order_line`: `order_line_id` (PK), `order_id`, `customer_id`, `variant_id`, `order_date`, `channel`, `is_cancelled`, `quantity`, `gross_revenue_incl_vat DECIMAL(12,2)`, `line_discount DECIMAL(12,2)`, `net_revenue_incl_vat DECIMAL(12,2)`, `net_revenue DECIMAL(12,2)` (ex-VAT), `cogs DECIMAL(12,2)`, `contribution_margin DECIMAL(12,2)`. Downstream models read `net_revenue` and `contribution_margin`; the `_incl_vat` columns exist only for reconciliation against source order totals.
@@ -1413,10 +1428,12 @@ git commit -m "feat: add order and order line facts with contribution margin"
 ## Task 8: `fct_ad_spend_daily` and `fct_email_flow_weekly`
 
 **Files:**
+
 - Create: `dbt/models/core/fct_ad_spend_daily.sql`, `dbt/models/core/fct_email_flow_weekly.sql`
 - Modify: `dbt/models/core/_core.yml`
 
 **Interfaces:**
+
 - Produces:
   - `fct_ad_spend_daily`: `campaign_key`, `platform`, `campaign_id`, `funnel_stage`, `ad_date`, `impressions`, `clicks`, `spend`, `reach`, `frequency`, `platform_conversions`, `platform_conversion_value`, `cpc DECIMAL(12,4)`, `cpm DECIMAL(12,4)`, `ctr DECIMAL(8,6)`.
   - `fct_email_flow_weekly`: `flow_id`, `flow_name`, `message_id`, `week_start`, `recipients`, `unique_opens`, `unique_clicks`, `unique_unsubscribes`, `unique_orders`, `order_value`, `open_rate`, `click_rate`, `conversion_rate`, `revenue_per_recipient`.
@@ -1583,10 +1600,12 @@ git commit -m "feat: add ad spend and email flow facts with derived rates"
 ## Task 9: `mart_data_quality` and the completeness test
 
 **Files:**
+
 - Create: `dbt/models/marts/mart_data_quality.sql`, `dbt/models/marts/_marts.yml`
 - Create: `dbt/tests/assert_source_date_completeness.sql`
 
 **Interfaces:**
+
 - Produces: `mart_data_quality` with columns `source_name VARCHAR`, `date_day DATE`, `expected BOOLEAN`, `observed BOOLEAN`, `is_gap BOOLEAN`, `row_count BIGINT`, `issue_type VARCHAR`.
 
 This is the machinery that lets the detection layer mechanically separate a data-quality incident from a commercial event. It must exist before any detector is written.
@@ -1772,10 +1791,12 @@ stays visible in every build without blocking it."
 ## Task 10: `mart_daily_trading`
 
 **Files:**
+
 - Create: `dbt/models/marts/mart_daily_trading.sql`
 - Modify: `dbt/models/marts/_marts.yml`
 
 **Interfaces:**
+
 - Produces: `mart_daily_trading`, grain `date_day` × `channel`. Columns: `date_day`, `channel`, `orders BIGINT`, `new_customers BIGINT`, `returning_customers BIGINT`, `net_revenue DECIMAL(14,2)`, `contribution_margin DECIMAL(14,2)`, `aov DECIMAL(12,2)`, `ad_spend DECIMAL(14,2)`, `clicks BIGINT`, `channel_cac DECIMAL(12,2)`, `channel_roas DECIMAL(12,4)`, `blended_cac DECIMAL(12,2)`, `is_peak_season BOOLEAN`.
 
 - [ ] **Step 1: Write the failing test**
@@ -1971,6 +1992,7 @@ group by 1,2 order by 2,1"
 ```
 
 Expected, matching the profiling in the spec (section 2):
+
 - meta 2024-07 CAC ≈ 19.82, meta 2025-06 CAC ≈ 34.74
 - google 2024-07 CAC ≈ 11.73, google 2025-06 CAC ≈ 15.26
 
@@ -2003,10 +2025,12 @@ git commit -m "feat: add daily trading mart with channel and blended CAC"
 ## Task 11: `mart_product_daily`
 
 **Files:**
+
 - Create: `dbt/models/marts/mart_product_daily.sql`
 - Modify: `dbt/models/marts/_marts.yml`
 
 **Interfaces:**
+
 - Produces: `mart_product_daily`, grain `date_day` × `variant_id`. Columns: `date_day`, `variant_id`, `product_title`, `sku`, `units BIGINT`, `net_revenue`, `contribution_margin`, `velocity_7d DOUBLE`, `velocity_28d DOUBLE`, `velocity_ratio DOUBLE`, `inventory_quantity`, `days_of_cover DOUBLE`.
 
 - [ ] **Step 1: Write the failing test**
@@ -2178,11 +2202,13 @@ git commit -m "feat: add product velocity mart with inventory cover"
 ## Task 12: `mart_cohort_retention` — the censoring-aware model
 
 **Files:**
+
 - Create: `dbt/models/marts/mart_cohort_retention.sql`
 - Create: `dbt/tests/assert_censored_cohorts_have_null_retention.sql`
 - Modify: `dbt/models/marts/_marts.yml`
 
 **Interfaces:**
+
 - Produces: `mart_cohort_retention`, grain `cohort_month` × `months_since`. Columns: `cohort_month DATE`, `months_since INT`, `cohort_size BIGINT`, `repeat_customers BIGINT`, `has_full_exposure BOOLEAN`, `retention_rate DOUBLE` (NULL when exposure is incomplete), `raw_retention_rate DOUBLE` (always populated, for contrast).
 
 This is the most important model in the plan, and its purpose is subtler than "hide the collapse".
@@ -2399,6 +2425,7 @@ order by cohort_month, months_since"
 ```
 
 Expected, and this is the whole point of the task:
+
 - Early cohorts (2024-07, 2024-08) show `has_full_exposure = true` with both `raw` and `guarded` populated and non-trivial.
 - Late cohorts (2025-04 onward at `months_since = 3`) show `has_full_exposure = false`, `raw = 0.0`, and `guarded = NULL`.
 
@@ -2444,10 +2471,12 @@ from cohorts whose zero is merely unobserved. The decline itself is real:
 ## Task 13: `mart_ltv`
 
 **Files:**
+
 - Create: `dbt/models/marts/mart_ltv.sql`
 - Modify: `dbt/models/marts/_marts.yml`
 
 **Interfaces:**
+
 - Produces: `mart_ltv`, grain `cohort_month` × `acquisition_channel` × `horizon_days`. Columns: `cohort_month`, `acquisition_channel`, `horizon_days INT`, `cohort_size BIGINT`, `has_full_exposure BOOLEAN`, `cum_net_revenue`, `cum_contribution_margin`, `ltv_revenue DOUBLE`, `ltv_margin DOUBLE`.
 
 `ltv_margin` at `horizon_days = 60` is the figure the CAC/LTV breach detector compares against `channel_cac`.
@@ -2613,10 +2642,12 @@ git commit -m "feat: add censoring-aware contribution-margin LTV mart"
 ## Task 14: `mart_email_flow_weekly`
 
 **Files:**
+
 - Create: `dbt/models/marts/mart_email_flow_weekly.sql`
 - Modify: `dbt/models/marts/_marts.yml`
 
 **Interfaces:**
+
 - Produces: `mart_email_flow_weekly`, grain `flow_id` × `week_start`. Columns: `flow_id`, `flow_name`, `week_start`, `recipients`, `open_rate`, `click_rate`, `conversion_rate`, `unsubscribe_rate`, `revenue_per_recipient`, `order_value`, plus 8-week trailing means `open_rate_8w`, `click_rate_8w`, `conversion_rate_8w`.
 
 The trailing means are what the email decay detector compares: engagement falling while conversion holds is the signature of a measurement artifact rather than lost demand.
@@ -2748,6 +2779,7 @@ group by 1 order by 1"
 ```
 
 Expected, and this is the discrimination the detection layer depends on:
+
 - `open_rate` falling from roughly 0.52 to roughly 0.40
 - `click_rate` falling from roughly 0.12 to roughly 0.09
 - `conv_rate` essentially FLAT at roughly 0.032 throughout
@@ -2767,11 +2799,13 @@ git commit -m "feat: add weekly email flow mart with trailing engagement means"
 ## Task 15: Reconciliation suite and README
 
 **Files:**
+
 - Create: `dbt/tests/assert_revenue_reconciles_to_source.sql`
 - Create: `dbt/tests/assert_no_email_join_used.sql`
 - Create: `README.md`
 
 **Interfaces:**
+
 - Consumes: every model built so far.
 - Produces: a green `dbt build` across the whole project (with the one intentional completeness warning), and a README documenting the layer.
 
@@ -2966,13 +3000,13 @@ than "unknown".
 
 ## Known data quality issues
 
-| Issue | Detail | Handling |
-|---|---|---|
-| Missing ad days | `meta_ads_daily` has no rows for 2025-03-15 or 2025-03-16 | Detected by `assert_source_date_completeness`, which warns on every build. Surfaced in `mart_data_quality` so detectors can reclassify affected signals. |
-| Blank emails | 623 customers (3.0%) have an empty email | `has_valid_email` and `is_marketable` on `dim_customer` |
-| `order_count` drift | 825 customers disagree with derived counts | Source field counts cancelled orders; `total_spent` does not. Documented, not "fixed". |
-| Unattributed orders | 26.9% have no usable referrer | Channel metrics are confidence-discounted downstream |
-| No TikTok cost data | 9.0% of orders, no spend file | TikTok CAC is NULL by construction; blended CAC is the complete measure |
+| Issue                 | Detail                                                      | Handling                                                                                                                                                    |
+| --------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Missing ad days       | `meta_ads_daily` has no rows for 2025-03-15 or 2025-03-16 | Detected by`assert_source_date_completeness`, which warns on every build. Surfaced in `mart_data_quality` so detectors can reclassify affected signals. |
+| Blank emails          | 623 customers (3.0%) have an empty email                    | `has_valid_email` and `is_marketable` on `dim_customer`                                                                                               |
+| `order_count` drift | 825 customers disagree with derived counts                  | Source field counts cancelled orders;`total_spent` does not. Documented, not "fixed".                                                                     |
+| Unattributed orders   | 26.9% have no usable referrer                               | Channel metrics are confidence-discounted downstream                                                                                                        |
+| No TikTok cost data   | 9.0% of orders, no spend file                               | TikTok CAC is NULL by construction; blended CAC is the complete measure                                                                                     |
 
 ## The retention trap
 
@@ -2996,6 +3030,7 @@ the cohort quality underneath it collapsed.
 
 Layer 2 (detection) and Layer 3 (recommendation and simulation) — see the
 design spec.
+
 ```
 
 - [ ] **Step 6: Freeze the dependency set**
