@@ -26,11 +26,16 @@ with hop1_fact as (
 ),
 
 hop1_source as (
+    -- The as_of filter MUST be mirrored here. fct_order_line is filtered to
+    -- rows available as of the cursor; comparing it against an unfiltered
+    -- source makes this test fail at every historical cursor, which would
+    -- break the backtest that rebuilds the warehouse across many as_of dates.
     select sum(l.price * l.quantity - l.total_discount) as total
     from {{ source('raw', 'order_lines') }} l
     inner join {{ source('raw', 'orders') }} o
         on o.id = l.order_id
     where o.cancelled_at is null
+      and {{ as_of_filter('o._weld_synced', 'o.created_at') }}
 ),
 
 hop2_fact as (

@@ -14,11 +14,15 @@ brand's operational data.
 ## Quickstart
 
 ```bash
-python -m venv venv                     # Python 3.12 required; dbt does not support 3.14
-venv/Scripts/pip install -r requirements.txt
+# Python 3.12 required — dbt-core does not support 3.14
+uv venv --python 3.12 venv
+uv pip install --python venv/Scripts/python.exe -r requirements.txt
+
 cd dbt
 ../venv/Scripts/dbt.exe build --profiles-dir .
 ```
+
+If `uv` isn't available, `python -m venv venv && venv/Scripts/python -m pip install -r requirements.txt` also works.
 
 Rebuild the warehouse as of any historical date:
 
@@ -99,6 +103,14 @@ has not closed yet.
 `mart_cohort_retention` carries `has_full_exposure` and returns NULL for
 `retention_rate` wherever the observation window has not elapsed.
 `raw_retention_rate` is kept alongside it to show the difference.
+
+Note the 31.8% → 0.0% figure above is a *rolling* 90-day repeat rate
+(second order within 90 days of the first, computed directly from order
+dates), which is a different number from `mart_cohort_retention.retention_rate`,
+which buckets by discrete calendar month instead — the same 2024-07
+cohort reads 13.89% there at `months_since = 3`. Both are correct
+measurements; they just answer slightly different questions, and both
+show the same collapse.
 
 The trap runs the other way from the obvious reading: the monthly
 repeat-order rate IS stable at roughly 24% all year, but that stability
