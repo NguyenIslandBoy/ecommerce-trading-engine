@@ -1,7 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json",
   "pageOrder": [
-    "page1"
+    "00nav",
+    "01ueberblick",
+    "02flow",
+    "03aging",
+    "04team",
+    "05qualitaet",
+    "06glossar"
   ],
-  "activePageName": "page1"
+  "activePageName": "01ueberblick"
 }
