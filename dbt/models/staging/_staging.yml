@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_orders
-    description: "Orders, cast and renamed. Filtered to rows available as of var('as_of_date')."
+    description: "Orders, cast, renamed, and channel derived deterministically from referring_site. Filtered to rows available as of var('as_of_date')."
     columns:
       - name: order_id
         description: "Shopify order id. Primary key."

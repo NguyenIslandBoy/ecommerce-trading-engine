@@ -33,18 +33,22 @@ Rebuild the warehouse as of any historical date:
 
 ## Data model
 
-Three layers: `staging` (cast and rename only), `core` (star schema with
-COGS and contribution margin), `marts` (the metric spine that the
-detection layer reads).
+Three layers: `staging` (may cast, rename, normalise and derive
+deterministically from a single source column, but may not join across
+sources or aggregate), `core` (star schema with COGS and contribution
+margin), `marts` (the metric spine that the detection layer reads).
 
 See `docs/specs/2026-08-22-ecommerce-trading-engine-design.md` for the
 full design and the profiling that motivated it.
 
 ## Deliberate design decisions
 
-**Point-in-time correctness.** Every staging model filters on row
+**Point-in-time correctness.** Every staging model that can filters on row
 *availability* (`_weld_synced`, the ingestion timestamp) rather than event
-time. The whole warehouse can be rebuilt as of any date, which is what
+time — `stg_products` cannot (`products.csv` carries no `_weld_synced`
+column, only a current snapshot) and `stg_order_lines` has no such column
+either, so it inherits availability via its join to `stg_orders`. The
+whole warehouse can be rebuilt as of any date, which is what
 makes backtesting the detection layer honest. `as_of_date` defaults to
 `2025-07-01` — the day *after* the 12-month period closes on
 2025-06-30 — because ad and email sources carry a 1-day ingestion lag
@@ -89,6 +93,7 @@ if an email-based join would ever match more than 20% of orders.
 | Unattributed orders   | 26.9% have no usable referrer                               | Channel metrics are confidence-discounted downstream                                                                                                        |
 | No TikTok cost data   | 9.0% of orders, no spend file                               | TikTok CAC is NULL by construction; blended CAC (total spend / total new customers, attribution-free) is the only complete cost measure                     |
 | Inventory is a snapshot | `products.csv` carries only CURRENT `inventory_quantity`, with no history | `mart_product_daily.days_of_cover` applies that snapshot to every historical day, so it is meaningful only at the latest date. Any backtest must read inventory signals at the run date, never historically. |
+| Partial trailing windows at series start | Trailing-window columns average over fewer real days than their label implies until the window fills | `mart_product_daily.velocity_28d` and `days_of_cover` are unreliable for the first 27 days of the spine (2024-07-01 reads `velocity_28d` = 7.0 from a single day of data, `days_of_cover` = 67.4); `mart_email_flow_weekly`'s 8-week trailing means are likewise unreliable for the first 7 weeks. Not fixed here; a detector consuming these columns must discard the warm-up period. |
 
 ## The retention trap
 
@@ -112,6 +117,13 @@ which buckets by discrete calendar month instead — the same 2024-07
 cohort reads 13.89% there at `months_since = 3`. Both are correct
 measurements; they just answer slightly different questions, and both
 show the same collapse.
+
+**The rolling 90-day figure is not a column in any mart.** It is quoted
+here as the headline finding, but no model in this build computes a
+rolling (order-to-order) repeat-rate window — only the calendar-month
+bucketed `mart_cohort_retention.retention_rate`. Layer 2 (detection) will
+need to add a rolling-window measure if it wants to reproduce this exact
+number mechanically rather than by ad hoc query.
 
 The trap runs the other way from the obvious reading: the monthly
 repeat-order rate IS stable at roughly 24% all year, but that stability
