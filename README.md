@@ -31,6 +31,17 @@ Rebuild the warehouse as of any historical date:
 ../venv/Scripts/dbt.exe build --profiles-dir . --vars '{as_of_date: 2025-01-31}'
 ```
 
+Power BI reads Parquet, not the `.duckdb` file (which is gitignored).
+Regenerate the exports from the repo root after any `dbt build`:
+
+```bash
+venv/Scripts/python.exe scripts/export_marts.py
+```
+
+This writes the six marts plus `dim_date`, `dim_product` and
+`dim_campaign` to `data/marts/*.parquet` (also gitignored — regenerate,
+don't commit).
+
 ## Data model
 
 Three layers: `staging` (may cast, rename, normalise and derive
@@ -123,12 +134,11 @@ cohort reads 13.89% there at `months_since = 3`. Both are correct
 measurements; they just answer slightly different questions, and both
 show the same collapse.
 
-**The rolling 90-day figure is not a column in any mart.** It is quoted
-here as the headline finding, but no model in this build computes a
-rolling (order-to-order) repeat-rate window — only the calendar-month
-bucketed `mart_cohort_retention.retention_rate`. Layer 2 (detection) will
-need to add a rolling-window measure if it wants to reproduce this exact
-number mechanically rather than by ad hoc query.
+**The rolling 90-day figure is `mart_cohort_retention.repeat_rate_90d`.**
+It is guarded by `has_full_90d_exposure` the same way `retention_rate` is
+guarded by `has_full_exposure` — NULL wherever a cohort's 90-day window
+has not fully elapsed. Layer 2 (detection) should read this column
+directly rather than recompute the rolling window ad hoc.
 
 The trap runs the other way from the obvious reading: the monthly
 repeat-order rate IS stable at roughly 24% all year, but that stability
