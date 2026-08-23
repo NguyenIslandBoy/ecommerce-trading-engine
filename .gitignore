@@ -29,3 +29,7 @@ data/marts/
 # cache.abf is a binary model data cache. Neither is portable.
 **/.pbi/localSettings.json
 **/.pbi/cache.abf
+
+# The task brief itself - marked confidential by eComplete, so it stays out
+# of a repo that will be shared.
+brief/
