@@ -43,6 +43,11 @@ models:
                 values: ['meta', 'google', 'tiktok', 'unattributed']
       - name: contribution_margin
         data_tests: [not_null]
+      - name: aov
+        description: >
+          Average order value, ex-VAT and excluding shipping (net_revenue /
+          orders). Does not match a VAT-inclusive AOV quoted elsewhere, e.g.
+          in the design doc.
 
   - name: mart_product_daily
     description: >
@@ -79,6 +84,11 @@ models:
         data_tests: [not_null]
       - name: has_full_exposure
         data_tests: [not_null]
+      - name: window_end
+        description: >
+          Last calendar day of the cohort's month-K window (cohort_month +
+          months_since + 1 month, minus 1 day). Compared against the LAST
+          DATE WITH DATA to derive has_full_exposure.
 
   - name: mart_ltv
     description: >
