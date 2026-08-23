@@ -75,3 +75,21 @@ models:
         data_tests: [not_null]
       - name: has_full_exposure
         data_tests: [not_null]
+
+  - name: mart_ltv
+    description: >
+      Contribution-margin LTV by acquisition cohort and channel at 30, 60
+      and 90 day horizons. Censoring-aware: has_full_exposure is false
+      where the horizon extends past var('as_of_date').
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [cohort_month, acquisition_channel, horizon_days]
+    columns:
+      - name: horizon_days
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [30, 60, 90]
+      - name: cohort_size
+        data_tests: [not_null]
