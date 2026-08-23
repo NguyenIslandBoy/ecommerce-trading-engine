@@ -64,6 +64,7 @@ exposure as (
 
         -- The last-acquired customer in the cohort must have had the full
         -- horizon to spend, or the cohort's LTV is understated.
+        (s.last_acquisition_date + h.horizon_days)          as exposure_end,
         (s.last_acquisition_date + h.horizon_days)
             <= (select max(date_day) from {{ ref('dim_date') }})  as has_full_exposure,
 
@@ -84,6 +85,9 @@ select
     acquisition_channel,
     horizon_days,
     cohort_size,
+    -- Date this cohort-horizon becomes fully exposed. The flag is this date
+    -- against the last date with data; a backtest compares it against its cursor.
+    exposure_end,
     has_full_exposure,
 
     -- Raw sums stay populated even when censored, mirroring

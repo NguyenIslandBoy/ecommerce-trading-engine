@@ -89,6 +89,7 @@ exposure_90d as (
     -- first_order_date in the cohort, not the cohort boundary itself.
     select
         cohort_month,
+        max(first_order_date) + 90                       as exposure_90d_end,
         max(first_order_date) + 90 <= (select max(date_day) from {{ ref('dim_date') }})
                                                          as has_full_90d_exposure
     from customers
@@ -182,6 +183,11 @@ select
     -- Rolling 90-day repeat rate. Cohort-level: identical across all
     -- months_since rows for a given cohort_month. See header comment.
     coalesce(r90.repeat_within_90d, 0)                  as repeat_within_90d,
+    -- Date this cohort's 90-day window closes. has_full_90d_exposure is that
+    -- date compared against the last date with data; a backtest at cursor D
+    -- compares it against D instead. window_end is the same idea for
+    -- retention_rate and was already exposed.
+    exp90.exposure_90d_end,
     exp90.has_full_90d_exposure,
     case
         when exp90.has_full_90d_exposure

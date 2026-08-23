@@ -47,7 +47,8 @@ spend_facts as (
         platform                                        as channel,
         sum(spend)                                      as ad_spend,
         sum(clicks)                                     as clicks,
-        sum(impressions)                                as impressions
+        sum(impressions)                                as impressions,
+        max(available_on)                               as spend_available_on
     from {{ ref('fct_ad_spend_daily') }}
     group by ad_date, platform
 
@@ -110,6 +111,12 @@ select
     s.ad_spend,
     s.clicks,
     s.impressions,
+
+    -- Date the spend figures on this row became visible. Ads sync one day
+    -- after event date, so at cursor D this row's spend is knowable only
+    -- when spend_available_on <= D. The backtest reads this instead of
+    -- re-deriving the lag, and instead of rebuilding the warehouse 365 times.
+    s.spend_available_on,
 
     -- Tier C: depends on last-click attribution.
     cast(s.ad_spend / nullif(o.new_customers, 0)
