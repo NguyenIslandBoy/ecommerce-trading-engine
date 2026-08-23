@@ -93,3 +93,25 @@ models:
                 values: [30, 60, 90]
       - name: cohort_size
         data_tests: [not_null]
+
+  - name: mart_email_flow_weekly
+    description: >
+      Flow-level weekly engagement, rolled up from message grain, with
+      8-week trailing means. The decay detector compares the engagement
+      trend against the conversion trend.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [flow_name, week_start]
+    columns:
+      - name: flow_name
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Welcome Series', 'Cart Abandonment', 'Browse Abandonment', 'Post-Purchase', 'Replenishment', 'Win-Back']
+      - name: conversion_rate
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
