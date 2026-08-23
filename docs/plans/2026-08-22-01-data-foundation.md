@@ -3007,6 +3007,7 @@ than "unknown".
 | `order_count` drift | 825 customers disagree with derived counts                  | Source field counts cancelled orders;`total_spent` does not. Documented, not "fixed".                                                                     |
 | Unattributed orders   | 26.9% have no usable referrer                               | Channel metrics are confidence-discounted downstream                                                                                                        |
 | No TikTok cost data   | 9.0% of orders, no spend file                               | TikTok CAC is NULL by construction; blended CAC is the complete measure                                                                                     |
+| Inventory is a snapshot | `products.csv` carries only CURRENT `inventory_quantity`, with no history | `mart_product_daily.days_of_cover` applies that snapshot to every historical day, so it is meaningful only at the latest date. Any backtest must read inventory signals at the run date, never historically. |
 
 ## The retention trap
 
