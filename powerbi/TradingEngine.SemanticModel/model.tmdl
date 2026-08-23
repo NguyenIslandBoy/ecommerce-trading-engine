@@ -1,0 +1,30 @@
+/// eCommerce Trading Engine - Layer 1 semantic model. Star schema over Parquet exports of a dbt/DuckDB warehouse (20 models, 92 tests). Every measure reconciles to warehouse figures guarded by those tests.
+model Model
+	culture: de-DE
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: de-DE
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["DataFolder","DimDate","DimChannel","DimProduct","DimCampaign","FactDailyTrading","FactAdSpendDaily","FactProductDaily","FactEmailFlowWeekly","FactDataQuality","CohortRetention","CohortLTV","#Measures"]
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
+
+ref table DimDate
+ref table #Measures
+ref table Zeitvergleich
+ref table DimChannel
+ref table DimProduct
+ref table DimCampaign
+ref table FactDailyTrading
+ref table FactAdSpendDaily
+ref table FactProductDaily
+ref table FactEmailFlowWeekly
+ref table FactDataQuality
+ref table CohortRetention
+ref table CohortLTV
+

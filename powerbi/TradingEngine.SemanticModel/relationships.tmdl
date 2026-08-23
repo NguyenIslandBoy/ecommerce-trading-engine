@@ -1,0 +1,36 @@
+relationship FactDailyTrading_date_day_DimDate_Date
+	fromColumn: FactDailyTrading.date_day
+	toColumn: DimDate.Date
+
+relationship FactProductDaily_date_day_DimDate_Date
+	fromColumn: FactProductDaily.date_day
+	toColumn: DimDate.Date
+
+relationship FactDataQuality_date_day_DimDate_Date
+	fromColumn: FactDataQuality.date_day
+	toColumn: DimDate.Date
+
+relationship FactAdSpendDaily_ad_date_DimDate_Date
+	fromColumn: FactAdSpendDaily.ad_date
+	toColumn: DimDate.Date
+
+relationship FactEmailFlowWeekly_week_start_DimDate_Date
+	fromColumn: FactEmailFlowWeekly.week_start
+	toColumn: DimDate.Date
+
+relationship FactDailyTrading_channel_DimChannel_channel
+	fromColumn: FactDailyTrading.channel
+	toColumn: DimChannel.channel
+
+relationship CohortLTV_acquisition_channel_DimChannel_channel
+	fromColumn: CohortLTV.acquisition_channel
+	toColumn: DimChannel.channel
+
+relationship FactProductDaily_variant_id_DimProduct_variant_id
+	fromColumn: FactProductDaily.variant_id
+	toColumn: DimProduct.variant_id
+
+relationship FactAdSpendDaily_campaign_key_DimCampaign_campaign_key
+	fromColumn: FactAdSpendDaily.campaign_key
+	toColumn: DimCampaign.campaign_key
+

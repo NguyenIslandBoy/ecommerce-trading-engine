@@ -1,0 +1,110 @@
+/// Product catalogue at variant grain (24 rows). Carries unit cost, so margin is computable.
+table DimProduct
+	lineageTag: 4ddd279f-a979-47b8-b0d0-2fad8806d2af
+
+	/// Shopify variant id. Primary key.
+	column variant_id
+		dataType: int64
+		isKey
+		formatString: 0
+		lineageTag: 21440263-bd20-424a-89e7-b08bfd06dd89
+		summarizeBy: none
+		sourceColumn: variant_id
+
+	column product_id
+		dataType: int64
+		formatString: 0
+		lineageTag: d788b2a7-38fb-4ca2-93e0-56091913a560
+		summarizeBy: none
+		sourceColumn: product_id
+
+	column product_title
+		dataType: string
+		lineageTag: cae0c560-f308-4f90-8bd4-1afbd8c125e7
+		summarizeBy: none
+		sourceColumn: product_title
+
+	column product_type
+		dataType: string
+		lineageTag: 90afe570-9968-4086-9068-b17c79e063ce
+		summarizeBy: none
+		sourceColumn: product_type
+
+	column sku
+		dataType: string
+		lineageTag: bb45a80b-3272-4383-ae0a-f299c786e728
+		summarizeBy: none
+		sourceColumn: sku
+
+	column variant_title
+		dataType: string
+		lineageTag: eb7ca0bb-d50f-4135-a355-d2adb5240a77
+		summarizeBy: none
+		sourceColumn: variant_title
+
+	/// VAT-INCLUSIVE list price.
+	column price
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 46eb710d-ea76-45b1-a56b-42c68f0693e0
+		summarizeBy: none
+		sourceColumn: price
+
+	column compare_at_price
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 5e0a0601-7f1f-42a0-a2cf-bec00cfac04c
+		summarizeBy: none
+		sourceColumn: compare_at_price
+
+	/// EX-VAT cost price. Prices are VAT-inclusive and this is not, which is why margin divides price by 1.20 first.
+	column unit_cost
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: bcd69d23-15d9-4954-883d-2da9b279f20f
+		summarizeBy: none
+		sourceColumn: unit_cost
+
+	/// EX-VAT margin. Range 0.640-0.820 across the catalogue.
+	column margin_pct
+		dataType: decimal
+		formatString: 0.00%
+		lineageTag: 06be3108-cc57-42a2-afcf-4df48507e84c
+		summarizeBy: none
+		sourceColumn: margin_pct
+
+	column weight_grams
+		dataType: int64
+		formatString: #,0
+		lineageTag: 2c67d365-8bc1-426c-b1ce-73f9266f299b
+		summarizeBy: none
+		sourceColumn: weight_grams
+
+	/// CURRENT stock snapshot. No inventory history exists, so days-of-cover is meaningful only at the latest date.
+	column inventory_quantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: 7fcb4374-033f-4b9d-b790-4e3f5749a47e
+		summarizeBy: sum
+		sourceColumn: inventory_quantity
+
+	column status
+		dataType: string
+		lineageTag: 5f7918bd-e712-4250-a3f8-58090ce37f74
+		summarizeBy: none
+		sourceColumn: status
+
+	column vendor
+		dataType: string
+		lineageTag: c3baae12-68f6-4532-8c06-cd39c3e74c79
+		summarizeBy: none
+		sourceColumn: vendor
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\dim_product.parquet"))
+				in
+				    Source
+

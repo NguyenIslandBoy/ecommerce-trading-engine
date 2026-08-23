@@ -1,0 +1,125 @@
+/// Klaviyo flow engagement at flow x week grain (318 rows). WEEKLY - relates to DimDate via week_start.
+table FactEmailFlowWeekly
+	lineageTag: 2032ad1c-9d13-4f1a-a806-783fdfb7d6a5
+
+	column flow_name
+		dataType: string
+		lineageTag: 9c8b574f-8d82-4d93-b7d9-03d5a3666501
+		summarizeBy: none
+		sourceColumn: flow_name
+
+	/// Monday of the ISO week. This fact is WEEKLY: filtering DimDate to a single day returns blank six days out of seven.
+	column week_start
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 26a7fc17-6188-4151-b7a4-3d074ec4e300
+		summarizeBy: none
+		sourceColumn: week_start
+
+	column recipients
+		dataType: double
+		formatString: #,0
+		lineageTag: f23f1dac-a980-431d-9eb3-3b773349e89a
+		summarizeBy: sum
+		sourceColumn: recipients
+
+	column unique_opens
+		dataType: double
+		formatString: #,0
+		lineageTag: 17afa82a-edc0-430e-9654-1f5c67c9ce7e
+		summarizeBy: sum
+		sourceColumn: unique_opens
+
+	column unique_clicks
+		dataType: double
+		formatString: #,0
+		lineageTag: 7c6c1dd3-aa4b-4371-83b6-f9800b86b574
+		summarizeBy: sum
+		sourceColumn: unique_clicks
+
+	column unique_unsubscribes
+		dataType: double
+		formatString: #,0
+		lineageTag: ea05161f-9668-41c3-abba-1cea4b0bc8a0
+		summarizeBy: sum
+		sourceColumn: unique_unsubscribes
+
+	column unique_orders
+		dataType: double
+		formatString: #,0
+		lineageTag: 69ebdc05-7842-4e53-b390-0ab88eda4d3b
+		summarizeBy: sum
+		sourceColumn: unique_orders
+
+	column order_value
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: fc4ddb3a-19b4-489a-969e-446adbb271bb
+		summarizeBy: sum
+		sourceColumn: order_value
+
+	column open_rate
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 267339e1-fb3d-4c2d-9e8a-952a8fbaa7bb
+		summarizeBy: none
+		sourceColumn: open_rate
+
+	column click_rate
+		dataType: double
+		formatString: 0.0%
+		lineageTag: fca3c70c-aadd-4699-870a-2793e87f0002
+		summarizeBy: none
+		sourceColumn: click_rate
+
+	/// Orders per recipient. The discriminator: engagement falling while THIS stays flat means a measurement artifact, not lost demand.
+	column conversion_rate
+		dataType: double
+		formatString: 0.00%
+		lineageTag: 3935d832-8950-482e-a1e4-828274f38415
+		summarizeBy: none
+		sourceColumn: conversion_rate
+
+	column unsubscribe_rate
+		dataType: double
+		formatString: 0.00%
+		lineageTag: 2e2f1ec2-8fbb-4dba-8c6b-cc1e701111d3
+		summarizeBy: none
+		sourceColumn: unsubscribe_rate
+
+	column revenue_per_recipient
+		dataType: double
+		formatString: \£#,0.00
+		lineageTag: c1e471b8-6737-4f0c-acb9-c3ed0d85fedc
+		summarizeBy: none
+		sourceColumn: revenue_per_recipient
+
+	column open_rate_8w
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 1f3edee3-f4e9-46f0-8357-0ade3e64fd44
+		summarizeBy: none
+		sourceColumn: open_rate_8w
+
+	column click_rate_8w
+		dataType: double
+		formatString: 0.0%
+		lineageTag: bc88bbd1-d079-4cb5-ac0e-f8259dd070f1
+		summarizeBy: none
+		sourceColumn: click_rate_8w
+
+	column conversion_rate_8w
+		dataType: double
+		formatString: 0.00%
+		lineageTag: 34214848-f065-4dcb-a6ca-2bccf70450c5
+		summarizeBy: none
+		sourceColumn: conversion_rate_8w
+
+	partition FactEmailFlowWeekly = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\mart_email_flow_weekly.parquet"))
+				in
+				    Source
+

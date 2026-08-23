@@ -1,0 +1,180 @@
+/// Date dimension, 2024-2026, generated in M. The model date table. Relates to every daily fact, and to the weekly email fact via week_start.
+table DimDate
+	lineageTag: 7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d
+	dataCategory: Time
+
+	/// Datum (Tageskorn).
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: dd/MM/yyyy
+		lineageTag: 8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Jahr (4-stellig).
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Quartal (Q1, Q2, Q3, Q4).
+	column Quarter
+		dataType: string
+		lineageTag: 0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f50
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Monat als Zahl (1-12). Sortier-Spalte für MonthName.
+	column Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5061
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Monatsname auf Deutsch (Januar bis Dezember). Sortiert nach Month.
+	column MonthName
+		dataType: string
+		lineageTag: 2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f506172
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Jahr-Monat im Format YYYY-MM (z.B. 2026-05). Sortiert nach Date.
+	column YearMonth
+		dataType: string
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617283
+		summarizeBy: none
+		sourceColumn: YearMonth
+		sortByColumn: YearMonthNr
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Jahr-Quartal im Format YYYY-Qn (z.B. 2026-Q1). Sortiert nach YearQuarterNr. Achse für 5-Quartals-Trends.
+	column YearQuarter
+		dataType: string
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617284
+		summarizeBy: none
+		sourceColumn: YearQuarter
+		sortByColumn: YearQuarterNr
+
+	/// Sortierschlüssel für YearQuarter (Year*10 + Quartal).
+	column YearQuarterNr
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617285
+		summarizeBy: none
+		sourceColumn: YearQuarterNr
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Sortierschlüssel für YearMonth (Year*100 + Month). Muss dieselbe Kardinalität wie YearMonth haben (1 Wert pro Monat), damit PBI nicht implizit nach Date sub-groupt.
+	column YearMonthNr
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617286
+		summarizeBy: none
+		sourceColumn: YearMonthNr
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Kalenderwoche (ISO 8601). Bereich 1..53.
+	column Week
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617287
+		summarizeBy: none
+		sourceColumn: Week
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Jahr-Kalenderwoche im Format "KW01"..."KW53" (für X-Achse historischer Trend-Charts). Sortiert nach YearWeekNr.
+	column YearWeek
+		dataType: string
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617288
+		summarizeBy: none
+		sourceColumn: YearWeek
+		sortByColumn: YearWeekNr
+
+	/// Sortierschlüssel für YearWeek (Year*100 + Week).
+	column YearWeekNr
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617289
+		summarizeBy: none
+		sourceColumn: YearWeekNr
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Monats-Offset relativ zum aktuellen Monat (TODAY): 0 = aktueller Monat, -1 = Vormonat, +1 = Folgemonat. Für rollierende Fenster (letzte 12 Monate = -11..0). Wird beim Refresh neu berechnet.
+	column 'Month Offset' = ( YEAR ( DimDate[Date] ) - YEAR ( TODAY () ) ) * 12 + ( MONTH ( DimDate[Date] ) - MONTH ( TODAY () ) )
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f5061728a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Drill-down Hierarchie für Charts: Jahr → Quartal → Monat. Wichtig: nutzt UNIQUE-Spalten (YearQuarter "2026-Q1", YearMonth "2026-01") statt MonthName/Quarter, damit "Go to next level" funktioniert (sonst aggregiert PBI alle Jahre).
+	hierarchy 'Date Hierarchy'
+		lineageTag: 4b5c6d7e-8f9a-4b5c-6d7e-8f9a0b1c2d3e
+
+		level Year
+			lineageTag: 5c6d7e8f-9a0b-4c5d-7e8f-9a0b1c2d3e4f
+			column: Year
+
+		level Quartal
+			lineageTag: 6d7e8f9a-0b1c-4d6e-8f9a-0b1c2d3e4f50
+			column: YearQuarter
+
+		level Monat
+			lineageTag: 7e8f9a0b-1c2d-4e7f-9a0b-1c2d3e4f5061
+			column: YearMonth
+
+	/// Date dimension built in M from List.Dates over an explicit 2024-2026 window. Covers the 2024-07-01 to 2025-06-30 data period with headroom. Adjust the bounds in the partition source if the window needs to grow. No DAX calculated columns: every output column comes from Table.AddColumn in M.
+	partition DimDate = m
+		mode: import
+		source =
+				let
+				    StartDate = #date(2024, 1, 1),
+				    EndDate = #date(2026, 12, 31),
+				    Days = Duration.Days(EndDate - StartDate) + 1,
+				    DateList = List.Dates(StartDate, Days, #duration(1, 0, 0, 0)),
+				    Source = Table.FromList(DateList, Splitter.SplitByNothing(), {"Date"}, null, ExtraValues.Error),
+				    TypedDate = Table.TransformColumnTypes(Source, {{"Date", type date}}),
+				    AddYear = Table.AddColumn(TypedDate, "Year", each Date.Year([Date]), Int64.Type),
+				    AddQuarter = Table.AddColumn(AddYear, "Quarter", each "Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    AddMonth = Table.AddColumn(AddQuarter, "Month", each Date.Month([Date]), Int64.Type),
+				    AddMonthName = Table.AddColumn(AddMonth, "MonthName", each Date.MonthName([Date], "en-GB"), type text),
+				    AddYearMonth = Table.AddColumn(AddMonthName, "YearMonth", each Text.From(Date.Year([Date])) & "-" & Text.PadStart(Text.From(Date.Month([Date])), 2, "0"), type text),
+				    AddYearQuarter = Table.AddColumn(AddYearMonth, "YearQuarter", each Text.From(Date.Year([Date])) & "-Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    AddYearQuarterNr = Table.AddColumn(AddYearQuarter, "YearQuarterNr", each Date.Year([Date]) * 10 + Date.QuarterOfYear([Date]), Int64.Type),
+				    AddYearMonthNr = Table.AddColumn(AddYearQuarterNr, "YearMonthNr", each Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type),
+				    AddWeek = Table.AddColumn(AddYearMonthNr, "Week", each Date.WeekOfYear([Date], Day.Monday), Int64.Type),
+				    AddYearWeek = Table.AddColumn(AddWeek, "YearWeek", each "W" & Text.PadStart(Text.From(Date.WeekOfYear([Date], Day.Monday)), 2, "0"), type text),
+				    AddYearWeekNr = Table.AddColumn(AddYearWeek, "YearWeekNr", each Date.Year([Date]) * 100 + Date.WeekOfYear([Date], Day.Monday), Int64.Type)
+				in
+				    AddYearWeekNr
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

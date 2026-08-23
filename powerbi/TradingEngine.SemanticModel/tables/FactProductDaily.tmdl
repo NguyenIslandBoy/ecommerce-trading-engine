@@ -1,0 +1,102 @@
+/// Product velocity and inventory cover at day x variant grain (8,760 rows). Dense: a zero-sale day is a zero row, not a missing one.
+table FactProductDaily
+	lineageTag: 7eae27b0-2cd0-4b45-b452-51db0a24df22
+
+	column date_day
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 55128229-fb16-4b2a-a9d3-46e1031a0f05
+		summarizeBy: none
+		sourceColumn: date_day
+
+	column variant_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 3ebfd56d-1434-4eff-bf7a-adee6c89210a
+		summarizeBy: none
+		sourceColumn: variant_id
+
+	column product_title
+		dataType: string
+		lineageTag: c6b50c27-b285-4124-b8eb-9be36fbee6df
+		summarizeBy: none
+		sourceColumn: product_title
+
+	column sku
+		dataType: string
+		lineageTag: dd16fb40-d3ee-4a30-86fa-74bc9748bced
+		summarizeBy: none
+		sourceColumn: sku
+
+	column product_type
+		dataType: string
+		lineageTag: 09a4f759-5d1a-4773-a2a2-6bb90428d26b
+		summarizeBy: none
+		sourceColumn: product_type
+
+	column units
+		dataType: double
+		formatString: #,0
+		lineageTag: 635764b6-817a-4dc8-a721-6ad1dcbd4571
+		summarizeBy: sum
+		sourceColumn: units
+
+	column net_revenue
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 4b093c2a-c665-469d-bac1-82f8f97f7b78
+		summarizeBy: sum
+		sourceColumn: net_revenue
+
+	column contribution_margin
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 50aef3bb-ea69-4ec7-93a7-68a3ccc72fc2
+		summarizeBy: sum
+		sourceColumn: contribution_margin
+
+	column velocity_7d
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 547401fc-6d17-48dc-b782-dd750ed3d380
+		summarizeBy: none
+		sourceColumn: velocity_7d
+
+	/// PARTIAL for the first 27 days of the series - do not read the start of the trend as a real move.
+	column velocity_28d
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a7d9638c-2c4c-44b1-833a-560325012ceb
+		summarizeBy: none
+		sourceColumn: velocity_28d
+
+	column velocity_ratio
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 98c21620-36c1-4cc9-9c9c-d337c70813cf
+		summarizeBy: none
+		sourceColumn: velocity_ratio
+
+	column inventory_quantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: b8b4ee04-723a-4ff4-a270-9f31ec0bf6fa
+		summarizeBy: none
+		sourceColumn: inventory_quantity
+
+	/// Current stock snapshot applied historically - meaningful only at the latest date.
+	column days_of_cover
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 38d216e3-3fff-4266-ad30-e6bed8b58f4f
+		summarizeBy: none
+		sourceColumn: days_of_cover
+
+	partition FactProductDaily = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\mart_product_daily.parquet"))
+				in
+				    Source
+

@@ -1,0 +1,117 @@
+/// Ad spend at campaign-day grain (4,003 rows). Meta covers 363 of 365 days - the 2 missing days are a real ingestion gap, not zero spend.
+table FactAdSpendDaily
+	lineageTag: 966db3e9-85bb-4c23-b223-26ef7dba7e2d
+
+	column campaign_key
+		dataType: string
+		lineageTag: 7ab21961-0764-426d-88b2-b3424fd619b4
+		summarizeBy: none
+		sourceColumn: campaign_key
+
+	column platform
+		dataType: string
+		lineageTag: fb433e4a-c39b-4aa6-8464-29589bab989c
+		summarizeBy: none
+		sourceColumn: platform
+
+	column campaign_id
+		dataType: string
+		lineageTag: d4cadd31-2c05-4eee-ba09-c47f1bb010ac
+		summarizeBy: none
+		sourceColumn: campaign_id
+
+	column funnel_stage
+		dataType: string
+		lineageTag: 2400abbd-c2e8-4ad6-8d8d-79298b0dff23
+		summarizeBy: none
+		sourceColumn: funnel_stage
+
+	column ad_date
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 20237913-9335-4c93-885e-a4b52f491030
+		summarizeBy: none
+		sourceColumn: ad_date
+
+	column impressions
+		dataType: double
+		formatString: #,0
+		lineageTag: bdb0cefd-ba3b-473d-930b-c6b625cf7eea
+		summarizeBy: sum
+		sourceColumn: impressions
+
+	column clicks
+		dataType: double
+		formatString: #,0
+		lineageTag: f6fd9603-1fd0-4b6b-b943-eea969d3296f
+		summarizeBy: sum
+		sourceColumn: clicks
+
+	column spend
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 76affb10-62c6-42dc-b64f-551508f4752d
+		summarizeBy: sum
+		sourceColumn: spend
+
+	column reach
+		dataType: double
+		formatString: #,0
+		lineageTag: ff5e2c33-ea05-42ed-a458-b3abf5a7e87d
+		summarizeBy: sum
+		sourceColumn: reach
+
+	/// Impressions per person reached. Flat at ~1.22 all year, which rules out audience saturation.
+	column frequency
+		dataType: double
+		formatString: #,0.00
+		lineageTag: f96fe0ec-b9b2-42e2-8664-3bb22d1b4dbf
+		summarizeBy: none
+		sourceColumn: frequency
+
+	/// NULL for Meta, which reports no conversions at all. Zero would be a different and wrong claim.
+	column platform_conversions
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 41bb4f35-0d96-4d98-a587-ebc81434a0f9
+		summarizeBy: sum
+		sourceColumn: platform_conversions
+
+	column platform_conversion_value
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 1ee19385-032a-4010-802d-73171a050b71
+		summarizeBy: sum
+		sourceColumn: platform_conversion_value
+
+	column cpc
+		dataType: decimal
+		formatString: \£#,0.000
+		lineageTag: bfada40a-35b8-4ab7-9c1c-fb38c652b26d
+		summarizeBy: none
+		sourceColumn: cpc
+
+	/// The AUCTION component of a CPC move. Not controllable.
+	column cpm
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: bfab34e9-7b2d-4b91-93e4-4a8c083f51bd
+		summarizeBy: none
+		sourceColumn: cpm
+
+	/// The CREATIVE component of a CPC move. Controllable.
+	column ctr
+		dataType: decimal
+		formatString: 0.00%
+		lineageTag: 731b7b88-b19e-47b7-afe3-6e6f0c7108a8
+		summarizeBy: none
+		sourceColumn: ctr
+
+	partition FactAdSpendDaily = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\fct_ad_spend_daily.parquet"))
+				in
+				    Source
+
