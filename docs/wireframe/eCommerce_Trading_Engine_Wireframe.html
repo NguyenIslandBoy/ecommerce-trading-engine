@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<!--
+  eCommerce Trading Engine - Report Wireframe v1
+  ===============================================================
+  Project : eComplete Data Engineer technical task - Layer 1
+  Basis   : docs/spec.md (2026-08-23)
+  Source  : dbt / DuckDB warehouse - 20 models, 95 test nodes
+  Canvas  : 1920x1080, 4 tabs, keyboard 0-3 / arrow keys, URL #tab-N
+
+  Every figure is REAL - queried from the built warehouse, not invented.
+  Layout is illustrative.
+
+  Blocked visuals are deliberately hatched rather than filled with
+  invented numbers: TikTok CAC cannot be computed because no cost file
+  exists for that channel, and showing GBP 0 would claim free acquisition
+  on 9% of orders.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eCommerce Trading Engine &middot; Layer 1 &middot; Wireframe v1</title>
+<style>
+/* Wireframe house-style design system.
+   Extracted from the reference wireframe (Support_Service_Wireframe.html <style> block).
+   Data-free — safe to share. /spec-from-requirements reuses these tokens + component classes.
+*/
+  :root {
+    --navy: #0B1A2E;
+    --navy-2: #14253D;
+    --navy-3: #1E3556;
+    --ink: #1A2332;
+    --muted: #6B7785;
+    --muted-2: #98A2B3;
+    --line: #E5E8EC;
+    --line-2: #EEF1F4;
+    --bg: #F4F6F9;
+    --card: #FFFFFF;
+    --accent: #2F6FB5;
+    --accent-2: #5A9FD4;
+    --accent-3: #B4D4F0;
+    --accent-4: #E1ECF7;
+    --pos: #2E8B57;
+    --pos-2: #C4E4D2;
+    --neg: #C0392B;
+    --neg-2: #F1C9C5;
+    --warn: #B8860B;
+    --warn-2: #F4E2B2;
+    --tile-bg: #F8FAFC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #1A1D23;
+    font-family: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  body { display: flex; flex-direction: column; }
+
+  /* ============== STAGE ============== */
+  .stage {
+    flex: 1;
+    overflow: hidden;
+    background: #1A1D23;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stage-inner {
+    width: 1920px;
+    height: 1080px;
+    transform-origin: center center;
+    position: relative;
+    flex: 0 0 auto;
+  }
+  .hint {
+    position: absolute;
+    bottom: 14px;
+    right: 24px;
+    color: #6B7785;
+    font-size: 12px;
+    font-family: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    letter-spacing: 0.04em;
+    z-index: 50;
+    user-select: none;
+  }
+  .hint kbd {
+    display: inline-block;
+    background: #2A2F38;
+    border: 1px solid #3A414C;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-family: inherit;
+    color: #B7C3D6;
+    margin: 0 2px;
+  }
+
+  /* ============== PAGE BASE ============== */
+  .page {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    background: var(--bg);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  .page.active { display: flex; }
+
+  /* ============== HEAD WITH INTEGRATED NAV ============== */
+  .head {
+    background: var(--navy);
+    color: #fff;
+    flex: 0 0 auto;
+  }
+  .nav-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 36px;
+    padding: 0 44px;
+    border-bottom: 1px solid #2A3E5A;
+    height: 42px;
+  }
+  .nav-strip .ns-item {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #8FA5C4;
+    cursor: pointer;
+    padding: 0 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    transition: color 0.12s, border-color 0.12s;
+    white-space: nowrap;
+  }
+  .nav-strip .ns-item:hover {
+    color: #fff;
+  }
+  .nav-strip .ns-item.active {
+    color: #fff;
+    border-bottom-color: var(--accent-2);
+  }
+  .head-main {
+    padding: 22px 44px 22px 44px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .head-main .left { min-width: 0; }
+  .head-main .left .req-id {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #8FA5C4;
+    margin-bottom: 8px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .head-main h1 {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .head-main .sub {
+    font-size: 14px;
+    color: #B7C3D6;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  .head-main .right {
+    text-align: right;
+    color: #B7C3D6;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .head-main .right .ts {
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .head-main .right .tag {
+    display: inline-block;
+    padding: 3px 9px;
+    background: var(--navy-3);
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #B7C3D6;
+    margin-left: 4px;
+  }
+
+  /* ============== BODY ============== */
+  .body {
+    padding: 20px 44px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ============== SLICERS ============== */
+  .slicers { display: flex; gap: 10px; flex: 0 0 auto; }
+  .slicer {
+    flex: 1 1 0;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+  }
+  .slicer .lbl {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .slicer .val {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .slicer .val .lbl-inner {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .slicer .val .chev {
+    color: var(--muted-2);
+    font-size: 12px;
+    margin-left: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ============== KPIS ============== */
+  .kpis { display: flex; gap: 10px; flex: 0 0 auto; }
+  .kpi {
+    flex: 1 1 0;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 18px;
+    height: 116px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .kpi .name {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kpi .value {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kpi .value.md { font-size: 24px; }
+  .kpi .value.sm { font-size: 18px; }
+  .kpi .delta {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+  .kpi .delta.pos { color: var(--pos); font-weight: 600; }
+  .kpi .delta.neg { color: var(--neg); font-weight: 600; }
+  .kpi .delta.warn { color: var(--warn); font-weight: 600; }
+
+  /* ============== ROWS / COLS ============== */
+  .row { display: flex; gap: 12px; min-height: 0; }
+  .row.grow { flex: 1; }
+  .col-1 { flex: 1 1 0; min-width: 0; display: flex; }
+  .col-2 { flex: 2 1 0; min-width: 0; display: flex; }
+  .col-3 { flex: 3 1 0; min-width: 0; display: flex; }
+
+  /* ============== CARD ============== */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .card .ct {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card .cs {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card .cbody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .card svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ============== TABLE ============== */
+  table.t {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    table-layout: auto;
+  }
+  table.t th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 10.5px;
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--line);
+    background: var(--tile-bg);
+    white-space: nowrap;
+  }
+  table.t td {
+    padding: 8px 8px;
+    border-bottom: 1px solid var(--line-2);
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.t td.bold { font-weight: 600; }
+  table.t tbody tr:last-child td { border-bottom: none; }
+  table.t tbody tr.tot td { font-weight: 700; background: var(--tile-bg); border-top: 1px solid var(--line); }
+
+  /* ============== PILL ============== */
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 9px;
+    background: var(--tile-bg);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .pill.pos { background: var(--pos-2); border-color: var(--pos-2); color: #1e5a36; }
+  .pill.neg { background: var(--neg-2); border-color: var(--neg-2); color: #7a1f15; }
+  .pill.warn { background: var(--warn-2); border-color: var(--warn-2); color: #6b4e07; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .warn { color: var(--warn); }
+
+  /* ============== FOOTER ============== */
+  .foot {
+    padding: 9px 44px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .foot .center {
+    color: var(--muted-2);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ============== NAV (LANDING) PAGE ============== */
+  .nav-head {
+    background: var(--navy);
+    color: #fff;
+    flex: 0 0 auto;
+  }
+  .nav-hero {
+    padding: 52px 72px 40px 72px;
+  }
+  .nav-hero .req-id {
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #8FA5C4;
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+  .nav-hero h1 {
+    font-size: 50px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    line-height: 1.05;
+  }
+  .nav-hero .nav-sub {
+    font-size: 17px;
+    color: #B7C3D6;
+  }
+  .nav-body {
+    padding: 32px 72px 24px 72px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    min-height: 0;
+  }
+  .intro {
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.6;
+    margin-bottom: 22px;
+    max-width: 1400px;
+  }
+  .meta-row { display: flex; gap: 14px; margin-bottom: 28px; }
+  .meta {
+    flex: 1 1 0;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 18px;
+    overflow: hidden;
+  }
+  .meta .mk {
+    font-size: 10.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .meta .mv {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tiles { display: flex; gap: 16px; margin-bottom: 20px; }
+  .tile {
+    flex: 1 1 0;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 22px;
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    overflow: hidden;
+  }
+  .tile:hover {
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(47,111,181,0.2);
+    transform: translateY(-2px);
+  }
+  .tile .tn {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .tile .tt {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tile .td {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    flex: 1;
+    overflow: hidden;
+  }
+  .tile .tq {
+    font-size: 10.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-top: 1px solid var(--line-2);
+    padding-top: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-note {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent-2);
+    border-radius: 4px;
+    padding: 13px 20px;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: auto;
+  }
+  .nav-note em { font-style: normal; color: var(--ink); font-weight: 700; }
+
+  /* ============== SVG HELPERS ============== */
+  .grid line { stroke: var(--line-2); stroke-width: 1; }
+  .grid text { fill: var(--muted); font-size: 11px; }
+  .ax { fill: var(--muted); font-size: 11px; }
+  .bar-plan { fill: var(--accent-3); }
+  .bar-ist  { fill: var(--accent); }
+  .bar-pos  { fill: var(--pos); }
+  .bar-neg  { fill: var(--neg); }
+  .bar-warn { fill: var(--warn); }
+  .bar-mut  { fill: var(--muted-2); }
+  .vlab { fill: var(--ink); font-size: 11px; font-weight: 600; text-anchor: middle; }
+  .vlab-l { fill: var(--ink); font-size: 12px; font-weight: 600; text-anchor: start; }
+  .vlab-r { fill: var(--ink); font-size: 12px; font-weight: 700; text-anchor: end; }
+  .line-path { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .line-dot { fill: var(--accent); }
+  .line-dot-2 { fill: var(--neg); }
+  .line-area { fill: var(--accent-3); opacity: 0.35; }
+  .legend { font-size: 11px; fill: var(--muted); }
+  .legend-strong { font-size: 12px; fill: var(--ink); font-weight: 600; }
+
+  /* Comment card */
+  .comment-list { font-size: 12.5px; line-height: 1.55; }
+  .comment-list .ci { margin-bottom: 10px; }
+  .comment-list .ci .ch { margin-bottom: 4px; }
+  .comment-list .ci .ct2 { color: var(--ink); }
+  .comment-list .footer-note {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-2);
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .comment-list em { color: var(--pos); font-style: normal; font-weight: 700; }
+  .comment-list strong { color: var(--neg); font-weight: 700; }
+
+
+/* ---- additions on top of the house design system ---- */
+.nsn { display:inline-block; opacity:.55; font-variant-numeric:tabular-nums; margin-right:7px; font-size:10px; }
+/* Blocked visuals: hatched, never filled with invented numbers */
+.card.blk { background: repeating-linear-gradient(135deg,#FBFCFD 0 9px,#F1F4F7 9px 18px); }
+.card.blk .ct { color:#4B5563; }
+.kpi.blk .value { color:#9CA3AF; } .kpi.blk .name { color:#6B7280; }
+.blkbox { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; text-align:center; min-height:0; padding:10px 16px; }
+.blkbox .bt { font-size:12.5px; font-weight:700; color:#78350F; }
+.blkbox .bd { font-size:11.5px; color:var(--muted); line-height:1.5; max-width:320px; }
+.line-path-2 { stroke: var(--neg); }
+.line-path-3 { stroke: var(--warn); stroke-dasharray: 4 3; }
+.line-dot-2 { fill: var(--neg); }
+.cohort { width:100%; border-collapse:collapse; font-size:11.5px; }
+.cohort th { text-align:center; color:var(--muted); font-weight:600; padding:5px 3px; font-size:10.5px; }
+.cohort td.chd { color:var(--muted); padding:4px 8px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.cohort td.cc { text-align:center; padding:4px 3px; font-variant-numeric:tabular-nums; border:1px solid #fff; }
+.cc.hi { background:#2E8B57; color:#fff; font-weight:600; } .cc.mid { background:#9CCFAF; }
+.cc.lo { background:#E4EFE7; } .cc.zero { background:#F7E9E7; color:var(--neg); font-weight:700; }
+.cc.cens { background:repeating-linear-gradient(45deg,#F0F2F5,#F0F2F5 4px,#E5E8EC 4px,#E5E8EC 8px); color:var(--muted); }
+.vs-naive { color:var(--neg); } .vs-true { color:var(--pos); }
+
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="stage-inner">
+
+<!-- ============ TAB 00 ============ -->
+<section class="page active" data-page="0"><div class="head"><div class="nav-strip"><div class="ns-item active" data-tab="0"><span class="nsn">00</span>Unit economics</div><div class="ns-item" data-tab="1"><span class="nsn">01</span>Acquisition cost</div><div class="ns-item" data-tab="2"><span class="nsn">02</span>Customer value</div><div class="ns-item" data-tab="3"><span class="nsn">03</span>Signal vs artifact</div></div><div class="head-main"><div class="left"><div class="req-id">eCOMPLETE TECHNICAL TASK &middot; LAYER 1 &middot; TAB 00</div><h1>Unit economics have more than halved</h1><div class="sub">Cost per acquired customer and value per acquired customer moved against each other at the same time</div></div><div class="right"><span class="tag">Vitalis UK</span><div class="ts">12 months to 2025-06-30</div></div></div></div>
+  <div class="body"><div class="meta-row"><div class="slicer" style="flex:0 0 230px"><div class="lbl">Period</div><div class="val"><span class="lbl-inner">Jul 2024 &ndash; Jun 2025</span><span class="chev">&#9662;</span></div></div><div class="slicer" style="flex:0 0 190px"><div class="lbl">Channel</div><div class="val"><span class="lbl-inner">All channels</span><span class="chev">&#9662;</span></div></div><div class="meta"><div class="mk">Source</div><div class="mv">dbt / DuckDB &middot; 20 models</div></div><div class="meta"><div class="mk">Tests</div><div class="mv">95 nodes &middot; 1 intentional warn</div></div><div class="meta"><div class="mk">Currency</div><div class="mv">GBP &middot; ex-VAT</div></div><div class="meta"><div class="mk">As of</div><div class="mv">2025-07-01 (day after close)</div></div></div>
+    <div class="kpis">
+      <div class="kpi"><div class="name">LTV / CAC ratio</div><div class="value">2.09<span class="u">&times;</span></div><div class="delta neg">&#9660; from 4.42&times; &middot; &minus;53%</div></div>
+      <div class="kpi"><div class="name">Blended CAC <span class="m">&middot; attribution-free</span></div><div class="value">&pound;14.84</div><div class="delta neg">&#9650; from &pound;9.68 &middot; +53%</div></div>
+      <div class="kpi"><div class="name">60-day margin LTV</div><div class="value">&pound;30.24</div><div class="delta neg">&#9660; from &pound;42.81 &middot; &minus;29%</div></div>
+      <div class="kpi"><div class="name">Contribution margin</div><div class="value">855.9<span class="u">k&pound;</span></div><div class="delta">70.6% of ex-VAT revenue &middot; reconciled</div></div>
+    </div>
+    <div class="row grow">
+      <div class="card col-2"><div class="ct">Value per customer vs cost to acquire</div>
+        <div class="cs">60-day contribution-margin LTV by acquisition cohort &middot; blended CAC by month &middot; both &pound;, same axis</div>
+        <div class="cbody"><svg viewBox="0 0 600 190" preserveAspectRatio="none" style="width:100%;height:100%"><g class="grid"><line x1="8" y1="8" x2="592" y2="8"/><line x1="8" y1="45" x2="592" y2="45"/><line x1="8" y1="82" x2="592" y2="82"/><line x1="8" y1="119" x2="592" y2="119"/><line x1="8" y1="142" x2="592" y2="142"/></g><polyline class="line-path" points="8.0,14.5 61.1,21.4 114.2,35.1 167.3,30.9 220.4,35.7 273.5,37.6 326.5,46.6 379.6,46.1 432.7,47.3 485.8,52.0 538.9,47.8 592.0,49.5" fill="none"/><circle class="line-dot" cx="8.0" cy="14.5" r="3"/><circle class="line-dot" cx="61.1" cy="21.4" r="3"/><circle class="line-dot" cx="114.2" cy="35.1" r="3"/><circle class="line-dot" cx="167.3" cy="30.9" r="3"/><circle class="line-dot" cx="220.4" cy="35.7" r="3"/><circle class="line-dot" cx="273.5" cy="37.6" r="3"/><circle class="line-dot" cx="326.5" cy="46.6" r="3"/><circle class="line-dot" cx="379.6" cy="46.1" r="3"/><circle class="line-dot" cx="432.7" cy="47.3" r="3"/><circle class="line-dot" cx="485.8" cy="52.0" r="3"/><circle class="line-dot" cx="538.9" cy="47.8" r="3"/><circle class="line-dot" cx="592.0" cy="49.5" r="3"/><polyline class="line-path line-path-2" points="8.0,113.2 61.1,108.2 114.2,107.1 167.3,106.1 220.4,105.6 273.5,106.7 326.5,104.0 379.6,104.7 432.7,105.8 485.8,104.9 538.9,100.4 592.0,97.8" fill="none"/><circle class="line-dot-2" cx="8.0" cy="113.2" r="3"/><circle class="line-dot-2" cx="61.1" cy="108.2" r="3"/><circle class="line-dot-2" cx="114.2" cy="107.1" r="3"/><circle class="line-dot-2" cx="167.3" cy="106.1" r="3"/><circle class="line-dot-2" cx="220.4" cy="105.6" r="3"/><circle class="line-dot-2" cx="273.5" cy="106.7" r="3"/><circle class="line-dot-2" cx="326.5" cy="104.0" r="3"/><circle class="line-dot-2" cx="379.6" cy="104.7" r="3"/><circle class="line-dot-2" cx="432.7" cy="105.8" r="3"/><circle class="line-dot-2" cx="485.8" cy="104.9" r="3"/><circle class="line-dot-2" cx="538.9" cy="100.4" r="3"/><circle class="line-dot-2" cx="592.0" cy="97.8" r="3"/><text class="vlab" x="8.0" y="166" text-anchor="middle">24-07</text><text class="vlab" x="61.1" y="166" text-anchor="middle">24-08</text><text class="vlab" x="114.2" y="166" text-anchor="middle">24-09</text><text class="vlab" x="167.3" y="166" text-anchor="middle">24-10</text><text class="vlab" x="220.4" y="166" text-anchor="middle">24-11</text><text class="vlab" x="273.5" y="166" text-anchor="middle">24-12</text><text class="vlab" x="326.5" y="166" text-anchor="middle">25-01</text><text class="vlab" x="379.6" y="166" text-anchor="middle">25-02</text><text class="vlab" x="432.7" y="166" text-anchor="middle">25-03</text><text class="vlab" x="485.8" y="166" text-anchor="middle">25-04</text><text class="vlab" x="538.9" y="166" text-anchor="middle">25-05</text><text class="vlab" x="592.0" y="166" text-anchor="middle">25-06</text></svg></div>
+        <div class="legend"><span class="legend-strong" style="color:var(--accent)">&#9679; 60-day margin LTV</span>
+          <span class="legend-strong" style="color:var(--neg)">&#9679; Blended CAC</span>
+          <span>Last 2 cohorts not fully exposed &mdash; see tab 02</span></div></div>
+      <div class="card col-1"><div class="ct">What this means</div><div class="cs">For a non-technical reader</div>
+        <div class="cbody"><div class="comment-list">
+          <div class="ci"><div class="ch">Both sides moved at once</div>
+            <div class="ct2">Acquisition got <strong>53% more expensive</strong> while each customer became <strong>29% less valuable</strong>. Neither alone would be alarming; together the ratio more than halved.</div></div>
+          <div class="ci"><div class="ch">Payback is now marginal</div>
+            <div class="ct2">At 2.09&times; on a 60-day horizon, Meta-acquired customers (CAC &pound;34.74) sit close to break-even before overheads.</div></div>
+          <div class="ci"><div class="ch">The cause is on tab 02</div>
+            <div class="ct2">LTV fell because <em>customers stopped coming back</em> &mdash; not because they spent less on the first order.</div></div>
+        </div></div></div>
+    </div>
+    <div class="tiles">
+      <div class="tile" data-goto="1"><div class="tt">Acquisition cost</div><div class="tn">Meta CPC +143%</div>
+        <div class="td">Half auction, half creative</div><div class="tq">Open tab 01 &rarr;</div></div>
+      <div class="tile" data-goto="2"><div class="tt">Customer value</div><div class="tn">90-day repeat 31.8% &rarr; 0.0%</div>
+        <div class="td">Real collapse, not censoring</div><div class="tq">Open tab 02 &rarr;</div></div>
+      <div class="tile"><div class="tt">Product velocity</div><div class="tn">Vitamin D3 Drops</div>
+        <div class="td">219 &rarr; 701 units/mo &middot; <span class="pos">3.2&times;</span></div><div class="tq">Highest velocity in catalogue &mdash; adequately stocked at 33.5d</div></div>
+      <div class="tile"><div class="tt">Inventory cover &middot; urgent</div><div class="tn">CBD Oil 20% 30ml</div>
+        <div class="td"><span class="neg">17.0 days</span> cover</div><div class="tq">109 units against 6.4/day &mdash; the reorder, not D3</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>dbt / DuckDB &middot; point-in-time correct &middot; 95 test nodes</span>
+    <span class="center">WIREFRAME &mdash; every figure is real; layout is illustrative</span><span>Tab 00 of 03</span></div></section>
+
+<!-- ============ TAB 01 ============ -->
+<section class="page" data-page="1"><div class="head"><div class="nav-strip"><div class="ns-item" data-tab="0"><span class="nsn">00</span>Unit economics</div><div class="ns-item active" data-tab="1"><span class="nsn">01</span>Acquisition cost</div><div class="ns-item" data-tab="2"><span class="nsn">02</span>Customer value</div><div class="ns-item" data-tab="3"><span class="nsn">03</span>Signal vs artifact</div></div><div class="head-main"><div class="left"><div class="req-id">eCOMPLETE TECHNICAL TASK &middot; LAYER 1 &middot; TAB 01</div><h1>Half of Meta&rsquo;s cost rise is not yours to fix</h1><div class="sub">CPC = CPM &divide; (1000 &times; CTR). Decomposing the rise separates auction pressure from creative decay</div></div><div class="right"><span class="tag">Acquisition</span><div class="ts">Indexed to Jul-2024 = 100</div></div></div></div>
+  <div class="body"><div class="meta-row"><div class="slicer" style="flex:0 0 230px"><div class="lbl">Period</div><div class="val"><span class="lbl-inner">Jul 2024 &ndash; Jun 2025</span><span class="chev">&#9662;</span></div></div><div class="slicer" style="flex:0 0 190px"><div class="lbl">Channel</div><div class="val"><span class="lbl-inner">All channels</span><span class="chev">&#9662;</span></div></div><div class="meta"><div class="mk">Source</div><div class="mv">dbt / DuckDB &middot; 20 models</div></div><div class="meta"><div class="mk">Tests</div><div class="mv">95 nodes &middot; 1 intentional warn</div></div><div class="meta"><div class="mk">Currency</div><div class="mv">GBP &middot; ex-VAT</div></div><div class="meta"><div class="mk">As of</div><div class="mv">2025-07-01 (day after close)</div></div></div>
+    <div class="kpis">
+      <div class="kpi"><div class="name">Meta CAC <span class="m">&middot; Tier C</span></div><div class="value">&pound;34.74</div><div class="delta neg">&#9650; from &pound;19.82 &middot; +75%</div></div>
+      <div class="kpi"><div class="name">Google CAC <span class="m">&middot; Tier C</span></div><div class="value">&pound;15.26</div><div class="delta warn">&#9650; from &pound;11.73 &middot; +30%</div></div>
+      <div class="kpi"><div class="name">Meta CPC <span class="m">&middot; Tier A</span></div><div class="value">&pound;1.02</div><div class="delta neg">&#9650; from &pound;0.42 &middot; +143%</div></div>
+      <div class="kpi blk"><div class="name">TikTok CAC</div><div class="value sm">Not computable</div><div class="delta">2,396 orders &middot; no cost file supplied</div></div>
+    </div>
+    <div class="row grow">
+      <div class="card col-2"><div class="ct">What actually drove Meta&rsquo;s cost per click</div>
+        <div class="cs">Indexed, Jul-2024 = 100. Both components turn at Apr-2025, together</div>
+        <div class="cbody"><svg viewBox="0 0 600 190" preserveAspectRatio="none" style="width:100%;height:100%"><g class="grid"><line x1="8" y1="8" x2="592" y2="8"/><line x1="8" y1="45" x2="592" y2="45"/><line x1="8" y1="82" x2="592" y2="82"/><line x1="8" y1="119" x2="592" y2="119"/><line x1="8" y1="142" x2="592" y2="142"/></g><polyline class="line-path" points="8.0,108.5 61.1,106.7 114.2,106.7 167.3,107.1 220.4,109.1 273.5,107.9 326.5,107.2 379.6,107.5 432.7,106.9 485.8,94.2 538.9,50.2 592.0,12.1" fill="none"/><polyline class="line-path line-path-2" points="8.0,108.5 61.1,107.4 114.2,106.7 167.3,107.8 220.4,108.8 273.5,108.1 326.5,108.0 379.6,108.0 432.7,107.7 485.8,102.0 538.9,83.6 592.0,70.9" fill="none"/><polyline class="line-path line-path-3" points="8.0,108.5 61.1,109.1 114.2,108.4 167.3,109.3 220.4,108.2 273.5,108.8 326.5,109.2 379.6,109.0 432.7,109.3 485.8,114.9 538.9,126.4 592.0,132.6" fill="none"/><text class="vlab" x="8.0" y="166" text-anchor="middle">24-07</text><text class="vlab" x="61.1" y="166" text-anchor="middle">24-08</text><text class="vlab" x="114.2" y="166" text-anchor="middle">24-09</text><text class="vlab" x="167.3" y="166" text-anchor="middle">24-10</text><text class="vlab" x="220.4" y="166" text-anchor="middle">24-11</text><text class="vlab" x="273.5" y="166" text-anchor="middle">24-12</text><text class="vlab" x="326.5" y="166" text-anchor="middle">25-01</text><text class="vlab" x="379.6" y="166" text-anchor="middle">25-02</text><text class="vlab" x="432.7" y="166" text-anchor="middle">25-03</text><text class="vlab" x="485.8" y="166" text-anchor="middle">25-04</text><text class="vlab" x="538.9" y="166" text-anchor="middle">25-05</text><text class="vlab" x="592.0" y="166" text-anchor="middle">25-06</text></svg></div>
+        <div class="legend"><span class="legend-strong" style="color:var(--accent)">&#9679; CPC &rarr; 244</span>
+          <span class="legend-strong" style="color:var(--neg)">&#9679; CPM &rarr; 156 (auction)</span>
+          <span class="legend-strong" style="color:var(--warn)">&#9679; CTR &rarr; 64 (creative)</span></div></div>
+      <div class="card col-1"><div class="ct">Contrast</div><div class="cs">Two causes, two different responses</div>
+        <div class="cbody"><div class="comment-list">
+          <div class="ci"><div class="ch vs-naive">Naive reading</div>
+            <div class="ct2">&ldquo;Meta CAC is up 75% &mdash; cut the Meta budget.&rdquo;</div></div>
+          <div class="ci"><div class="ch vs-true">What the decomposition shows</div>
+            <div class="ct2"><strong>CPM +56%</strong> is auction price. You cannot control it &mdash; only decide whether to keep paying it.<br><br><strong>CTR &minus;36%</strong> is creative relevance. You <em>can</em> control that, cheaply and reversibly.</div></div>
+          <div class="ci"><div class="ch">Frequency is flat at ~1.22</div>
+            <div class="ct2">So this is <em>not</em> audience saturation. Refresh creative first; reallocate only the auction-attributable share.</div></div>
+        </div></div></div>
+    </div>
+    <div class="row" style="flex:0 0 190px">
+      <div class="card col-2"><div class="ct">Order share by last-click channel</div>
+        <div class="cs">Why channel CAC is confidence-discounted &mdash; over a quarter of orders carry no usable referrer</div>
+        <div class="cbody"><div class="tiles" style="margin:0">
+          <div class="tile"><div class="tt">Google</div><div class="tn">36.5%</div><div class="td">9,705 orders</div><div class="tq">CAC &pound;15.26 &middot; CPC flat all year at ~&pound;0.19</div></div>
+          <div class="tile"><div class="tt">Meta</div><div class="tn">27.5%</div><div class="td">7,313 orders</div><div class="tq">CAC &pound;34.74 &mdash; the cost problem</div></div>
+          <div class="tile"><div class="tt">Unattributed</div><div class="tn">26.9%</div><div class="td">7,139 orders</div><div class="tq">No usable referrer &mdash; no UTMs exist anywhere in the data</div></div>
+          <div class="tile"><div class="tt">TikTok</div><div class="tn">9.0%</div><div class="td">2,396 orders</div><div class="tq">Orders but no spend rows</div></div>
+        </div></div></div>
+      <div class="card col-1 blk"><div class="ct">TikTok CAC &mdash; deliberately not shown</div>
+        <div class="cs">Blocked visual, not an oversight</div>
+        <div class="cbody"><div class="blkbox">
+          <div class="bt">No cost data exists for this channel</div>
+          <div class="bd">TikTok drives <strong>2,396 orders (9.0%)</strong> but no spend file was supplied. Rendering &pound;0 would claim free acquisition on a tenth of the business; rendering blank would look like a bug.<br><br>Blended CAC is the only complete cost measure.</div>
+        </div></div></div>
+    </div>
+  </div>
+  <div class="foot"><span>Tier A evidence &mdash; platform-reported, attribution-free</span>
+    <span class="center">WIREFRAME &mdash; every figure is real; layout is illustrative</span><span>Tab 01 of 03</span></div></section>
+
+<!-- ============ TAB 02 ============ -->
+<section class="page" data-page="2"><div class="head"><div class="nav-strip"><div class="ns-item" data-tab="0"><span class="nsn">00</span>Unit economics</div><div class="ns-item" data-tab="1"><span class="nsn">01</span>Acquisition cost</div><div class="ns-item active" data-tab="2"><span class="nsn">02</span>Customer value</div><div class="ns-item" data-tab="3"><span class="nsn">03</span>Signal vs artifact</div></div><div class="head-main"><div class="left"><div class="req-id">eCOMPLETE TECHNICAL TASK &middot; LAYER 1 &middot; TAB 02</div><h1>The headline retention number is the trap</h1><div class="sub">A stable blended repeat rate sitting on top of a cohort base that stopped returning</div></div><div class="right"><span class="tag">Customer value</span><div class="ts">Censoring-aware</div></div></div></div>
+  <div class="body"><div class="meta-row"><div class="slicer" style="flex:0 0 230px"><div class="lbl">Period</div><div class="val"><span class="lbl-inner">Jul 2024 &ndash; Jun 2025</span><span class="chev">&#9662;</span></div></div><div class="slicer" style="flex:0 0 190px"><div class="lbl">Channel</div><div class="val"><span class="lbl-inner">All channels</span><span class="chev">&#9662;</span></div></div><div class="meta"><div class="mk">Source</div><div class="mv">dbt / DuckDB &middot; 20 models</div></div><div class="meta"><div class="mk">Tests</div><div class="mv">95 nodes &middot; 1 intentional warn</div></div><div class="meta"><div class="mk">Currency</div><div class="mv">GBP &middot; ex-VAT</div></div><div class="meta"><div class="mk">As of</div><div class="mv">2025-07-01 (day after close)</div></div></div>
+    <div class="row" style="flex:0 0 250px">
+      <div class="card col-1"><div class="ct vs-naive">What the blended metric says</div>
+        <div class="cs">Repeat orders as a share of all orders, by month &middot; 0&ndash;35% scale</div>
+        <div class="cbody"><svg viewBox="0 0 600 160" preserveAspectRatio="none" style="width:100%;height:100%"><g class="grid"><line x1="8" y1="8" x2="592" y2="8"/><line x1="8" y1="45" x2="592" y2="45"/><line x1="8" y1="82" x2="592" y2="82"/><line x1="8" y1="119" x2="592" y2="119"/><line x1="8" y1="142" x2="592" y2="142"/></g><polyline class="line-path" points="8.0,129.7 61.1,87.3 114.2,67.0 167.3,52.4 220.4,55.1 273.5,52.0 326.5,49.3 379.6,50.1 432.7,49.7 485.8,48.6 538.9,50.9 592.0,50.1" fill="none"/><circle class="line-dot" cx="8.0" cy="129.7" r="3"/><circle class="line-dot" cx="61.1" cy="87.3" r="3"/><circle class="line-dot" cx="114.2" cy="67.0" r="3"/><circle class="line-dot" cx="167.3" cy="52.4" r="3"/><circle class="line-dot" cx="220.4" cy="55.1" r="3"/><circle class="line-dot" cx="273.5" cy="52.0" r="3"/><circle class="line-dot" cx="326.5" cy="49.3" r="3"/><circle class="line-dot" cx="379.6" cy="50.1" r="3"/><circle class="line-dot" cx="432.7" cy="49.7" r="3"/><circle class="line-dot" cx="485.8" cy="48.6" r="3"/><circle class="line-dot" cx="538.9" cy="50.9" r="3"/><circle class="line-dot" cx="592.0" cy="50.1" r="3"/><text class="vlab" x="8.0" y="166" text-anchor="middle">24-07</text><text class="vlab" x="61.1" y="166" text-anchor="middle">24-08</text><text class="vlab" x="114.2" y="166" text-anchor="middle">24-09</text><text class="vlab" x="167.3" y="166" text-anchor="middle">24-10</text><text class="vlab" x="220.4" y="166" text-anchor="middle">24-11</text><text class="vlab" x="273.5" y="166" text-anchor="middle">24-12</text><text class="vlab" x="326.5" y="166" text-anchor="middle">25-01</text><text class="vlab" x="379.6" y="166" text-anchor="middle">25-02</text><text class="vlab" x="432.7" y="166" text-anchor="middle">25-03</text><text class="vlab" x="485.8" y="166" text-anchor="middle">25-04</text><text class="vlab" x="538.9" y="166" text-anchor="middle">25-05</text><text class="vlab" x="592.0" y="166" text-anchor="middle">25-06</text></svg></div>
+        <div class="legend"><span class="legend-strong" style="color:var(--accent)">&#9679; Monthly repeat rate</span>
+          <span>Settles at ~24% from Oct-2024 and stays there</span></div></div>
+      <div class="card col-1"><div class="ct vs-true">What the cohorts say</div>
+        <div class="cs">Share of each cohort ordering again within 90 days &middot; same 0&ndash;35% scale</div>
+        <div class="cbody"><svg viewBox="0 0 600 160" preserveAspectRatio="none" style="width:100%;height:100%"><g class="grid"><line x1="8" y1="8" x2="592" y2="8"/><line x1="8" y1="45" x2="592" y2="45"/><line x1="8" y1="82" x2="592" y2="82"/><line x1="8" y1="119" x2="592" y2="119"/><line x1="8" y1="142" x2="592" y2="142"/></g><polyline class="line-path line-path-2" points="8.0,20.4 61.1,45.6 114.2,81.5 167.3,105.1 220.4,132.8 273.5,141.2 326.5,141.3 379.6,141.1 432.7,142.0 485.8,142.0 538.9,142.0 592.0,142.0" fill="none"/><circle class="line-dot-2" cx="8.0" cy="20.4" r="3"/><circle class="line-dot-2" cx="61.1" cy="45.6" r="3"/><circle class="line-dot-2" cx="114.2" cy="81.5" r="3"/><circle class="line-dot-2" cx="167.3" cy="105.1" r="3"/><circle class="line-dot-2" cx="220.4" cy="132.8" r="3"/><circle class="line-dot-2" cx="273.5" cy="141.2" r="3"/><circle class="line-dot-2" cx="326.5" cy="141.3" r="3"/><circle class="line-dot-2" cx="379.6" cy="141.1" r="3"/><circle class="line-dot-2" cx="432.7" cy="142.0" r="3"/><circle class="line-dot-2" cx="485.8" cy="142.0" r="3"/><circle class="line-dot-2" cx="538.9" cy="142.0" r="3"/><circle class="line-dot-2" cx="592.0" cy="142.0" r="3"/><text class="vlab" x="8.0" y="166" text-anchor="middle">24-07</text><text class="vlab" x="61.1" y="166" text-anchor="middle">24-08</text><text class="vlab" x="114.2" y="166" text-anchor="middle">24-09</text><text class="vlab" x="167.3" y="166" text-anchor="middle">24-10</text><text class="vlab" x="220.4" y="166" text-anchor="middle">24-11</text><text class="vlab" x="273.5" y="166" text-anchor="middle">24-12</text><text class="vlab" x="326.5" y="166" text-anchor="middle">25-01</text><text class="vlab" x="379.6" y="166" text-anchor="middle">25-02</text><text class="vlab" x="432.7" y="166" text-anchor="middle">25-03</text><text class="vlab" x="485.8" y="166" text-anchor="middle">25-04</text><text class="vlab" x="538.9" y="166" text-anchor="middle">25-05</text><text class="vlab" x="592.0" y="166" text-anchor="middle">25-06</text></svg></div>
+        <div class="legend"><span class="legend-strong" style="color:var(--neg)">&#9679; 90-day repeat rate by cohort</span>
+          <span>31.8% &rarr; 0.0%, all fully observed</span></div></div>
+      <div class="card col-1"><div class="ct">Why both are correct</div><div class="cs">The denominators differ</div>
+        <div class="cbody"><div class="comment-list">
+          <div class="ci"><div class="ch vs-naive">Looks like</div><div class="ct2">Repeat rate steady at <strong>24%</strong>. Retention is fine.</div></div>
+          <div class="ci"><div class="ch vs-true">Actually</div><div class="ct2">That 24% is carried almost entirely by the <strong>Jul&ndash;Nov 2024 cohorts still buying</strong>. Essentially <strong>no customer acquired in 2025 returns</strong>.</div></div>
+          <div class="ci"><div class="ch">Why it matters</div><div class="ct2">The blended metric looks healthy until the 2024 cohorts stop buying &mdash; then revenue falls with no warning. A lagging indicator dressed as a current one.</div></div>
+        </div></div></div>
+    </div>
+    <div class="row grow">
+      <div class="card col-2"><div class="ct">Cohort retention &mdash; observed zeros vs unobserved</div>
+        <div class="cs">Share of each acquisition cohort ordering again N months later &middot; hatched = observation window has not elapsed</div>
+        <div class="cbody" style="overflow:auto">
+          <table class="cohort"><thead><tr><th style="text-align:left">Cohort</th><th>M+1</th><th>M+2</th><th>M+3</th><th>M+4</th><th>M+5</th></tr></thead><tbody><tr><td class="chd">2024-07</td><td class="cc hi">12.2%</td><td class="cc hi">13.9%</td><td class="cc hi">13.9%</td><td class="cc hi">13.5%</td><td class="cc hi">13.3%</td></tr><tr><td class="chd">2024-08</td><td class="cc mid">8.8%</td><td class="cc hi">11.5%</td><td class="cc hi">12.7%</td><td class="cc hi">10.5%</td><td class="cc mid">6.7%</td></tr><tr><td class="chd">2024-09</td><td class="cc mid">4.2%</td><td class="cc mid">7.4%</td><td class="cc mid">8.4%</td><td class="cc lo">1.0%</td><td class="cc mid">2.2%</td></tr><tr><td class="chd">2024-10</td><td class="cc mid">3.5%</td><td class="cc mid">6.2%</td><td class="cc zero">0.0%</td><td class="cc lo">0.1%</td><td class="cc lo">0.2%</td></tr><tr><td class="chd">2024-11</td><td class="cc lo">1.8%</td><td class="cc lo">0.1%</td><td class="cc lo">0.1%</td><td class="cc zero">0.0%</td><td class="cc lo">0.1%</td></tr><tr><td class="chd">2024-12</td><td class="cc zero">0.0%</td><td class="cc lo">0.1%</td><td class="cc lo">0.1%</td><td class="cc lo">0.1%</td><td class="cc lo">0.0%</td></tr><tr><td class="chd">2025-01</td><td class="cc zero">0.0%</td><td class="cc lo">0.2%</td><td class="cc zero">0.0%</td><td class="cc lo">0.1%</td><td class="cc lo">0.1%</td></tr><tr><td class="chd">2025-02</td><td class="cc lo">0.1%</td><td class="cc lo">0.1%</td><td class="cc zero">0.0%</td><td class="cc lo">0.2%</td><td class="cc cens">n/a</td></tr><tr><td class="chd">2025-03</td><td class="cc zero">0.0%</td><td class="cc zero">0.0%</td><td class="cc zero">0.0%</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td></tr><tr><td class="chd">2025-04</td><td class="cc zero">0.0%</td><td class="cc zero">0.0%</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td></tr><tr><td class="chd">2025-05</td><td class="cc zero">0.0%</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td></tr><tr><td class="chd">2025-06</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td><td class="cc cens">n/a</td></tr></tbody></table></div></div>
+      <div class="card col-1"><div class="ct">The distinction that matters</div><div class="cs">Two cells, same number, opposite meaning</div>
+        <div class="cbody"><div class="comment-list">
+          <div class="ci"><div class="ch">2024-10 at M+3 &rarr; <span class="neg">0.0%</span></div>
+            <div class="ct2">Window fully elapsed. This zero is an <strong>observed fact</strong> &mdash; a real collapse.</div></div>
+          <div class="ci"><div class="ch">2025-04 at M+3 &rarr; <span style="color:var(--muted)">n/a</span></div>
+            <div class="ct2">Window has not closed. Median gap to a second order is <strong>100 days</strong>, so this cohort has not had the chance. Reporting 0% would be wrong.</div></div>
+          <div class="ci"><div class="ch">Censoring is real but small</div>
+            <div class="ct2">It explains only the last two to three cohorts. Everything through 2025-03 is fully observed &mdash; <em>the decline is genuine</em>.</div></div>
+        </div></div></div>
+    </div>
+  </div>
+  <div class="foot"><span>mart_cohort_retention &middot; guard tested in both directions</span>
+    <span class="center">WIREFRAME &mdash; every figure is real; layout is illustrative</span><span>Tab 02 of 03</span></div></section>
+
+<!-- ============ TAB 03 ============ -->
+<section class="page" data-page="3"><div class="head"><div class="nav-strip"><div class="ns-item" data-tab="0"><span class="nsn">00</span>Unit economics</div><div class="ns-item" data-tab="1"><span class="nsn">01</span>Acquisition cost</div><div class="ns-item" data-tab="2"><span class="nsn">02</span>Customer value</div><div class="ns-item active" data-tab="3"><span class="nsn">03</span>Signal vs artifact</div></div><div class="head-main"><div class="left"><div class="req-id">eCOMPLETE TECHNICAL TASK &middot; LAYER 1 &middot; TAB 03</div><h1>Two things that look like problems and are not</h1><div class="sub">Separating a measurement artifact and an ingestion gap from genuine commercial events</div></div><div class="right"><span class="tag">Signal vs artifact</span><div class="ts">Indexed to Jul-2024 = 100</div></div></div></div>
+  <div class="body"><div class="meta-row"><div class="slicer" style="flex:0 0 230px"><div class="lbl">Period</div><div class="val"><span class="lbl-inner">Jul 2024 &ndash; Jun 2025</span><span class="chev">&#9662;</span></div></div><div class="slicer" style="flex:0 0 190px"><div class="lbl">Channel</div><div class="val"><span class="lbl-inner">All channels</span><span class="chev">&#9662;</span></div></div><div class="meta"><div class="mk">Source</div><div class="mv">dbt / DuckDB &middot; 20 models</div></div><div class="meta"><div class="mk">Tests</div><div class="mv">95 nodes &middot; 1 intentional warn</div></div><div class="meta"><div class="mk">Currency</div><div class="mv">GBP &middot; ex-VAT</div></div><div class="meta"><div class="mk">As of</div><div class="mv">2025-07-01 (day after close)</div></div></div>
+    <div class="row grow">
+      <div class="card col-2"><div class="ct">Email engagement vs monetisation &mdash; Welcome Series</div>
+        <div class="cs">Open rate falls 22%. Conversion rate does not move.</div>
+        <div class="cbody"><svg viewBox="0 0 600 190" preserveAspectRatio="none" style="width:100%;height:100%"><g class="grid"><line x1="8" y1="8" x2="592" y2="8"/><line x1="8" y1="45" x2="592" y2="45"/><line x1="8" y1="82" x2="592" y2="82"/><line x1="8" y1="119" x2="592" y2="119"/><line x1="8" y1="142" x2="592" y2="142"/></g><polyline class="line-path" points="8.0,52.7 61.1,41.0 114.2,56.6 167.3,46.6 220.4,48.8 273.5,52.2 326.5,47.5 379.6,50.5 432.7,60.0 485.8,70.0 538.9,85.1 592.0,102.0" fill="none"/><circle class="line-dot" cx="8.0" cy="52.7" r="3"/><circle class="line-dot" cx="61.1" cy="41.0" r="3"/><circle class="line-dot" cx="114.2" cy="56.6" r="3"/><circle class="line-dot" cx="167.3" cy="46.6" r="3"/><circle class="line-dot" cx="220.4" cy="48.8" r="3"/><circle class="line-dot" cx="273.5" cy="52.2" r="3"/><circle class="line-dot" cx="326.5" cy="47.5" r="3"/><circle class="line-dot" cx="379.6" cy="50.5" r="3"/><circle class="line-dot" cx="432.7" cy="60.0" r="3"/><circle class="line-dot" cx="485.8" cy="70.0" r="3"/><circle class="line-dot" cx="538.9" cy="85.1" r="3"/><circle class="line-dot" cx="592.0" cy="102.0" r="3"/><polyline class="line-path line-path-2" points="8.0,52.7 61.1,50.0 114.2,52.7 167.3,69.9 220.4,60.6 273.5,52.7 326.5,65.9 379.6,66.6 432.7,65.3 485.8,63.3 538.9,51.3 592.0,61.9" fill="none"/><circle class="line-dot-2" cx="8.0" cy="52.7" r="3"/><circle class="line-dot-2" cx="61.1" cy="50.0" r="3"/><circle class="line-dot-2" cx="114.2" cy="52.7" r="3"/><circle class="line-dot-2" cx="167.3" cy="69.9" r="3"/><circle class="line-dot-2" cx="220.4" cy="60.6" r="3"/><circle class="line-dot-2" cx="273.5" cy="52.7" r="3"/><circle class="line-dot-2" cx="326.5" cy="65.9" r="3"/><circle class="line-dot-2" cx="379.6" cy="66.6" r="3"/><circle class="line-dot-2" cx="432.7" cy="65.3" r="3"/><circle class="line-dot-2" cx="485.8" cy="63.3" r="3"/><circle class="line-dot-2" cx="538.9" cy="51.3" r="3"/><circle class="line-dot-2" cx="592.0" cy="61.9" r="3"/><text class="vlab" x="8.0" y="166" text-anchor="middle">24-07</text><text class="vlab" x="61.1" y="166" text-anchor="middle">24-08</text><text class="vlab" x="114.2" y="166" text-anchor="middle">24-09</text><text class="vlab" x="167.3" y="166" text-anchor="middle">24-10</text><text class="vlab" x="220.4" y="166" text-anchor="middle">24-11</text><text class="vlab" x="273.5" y="166" text-anchor="middle">24-12</text><text class="vlab" x="326.5" y="166" text-anchor="middle">25-01</text><text class="vlab" x="379.6" y="166" text-anchor="middle">25-02</text><text class="vlab" x="432.7" y="166" text-anchor="middle">25-03</text><text class="vlab" x="485.8" y="166" text-anchor="middle">25-04</text><text class="vlab" x="538.9" y="166" text-anchor="middle">25-05</text><text class="vlab" x="592.0" y="166" text-anchor="middle">25-06</text></svg></div>
+        <div class="legend"><span class="legend-strong" style="color:var(--accent)">&#9679; Open rate &rarr; 78 (&minus;22%)</span>
+          <span class="legend-strong" style="color:var(--neg)">&#9679; Conversion rate &rarr; 96 (flat)</span></div></div>
+      <div class="card col-1"><div class="ct">Verdict</div><div class="cs">Artifact, not lost demand</div>
+        <div class="cbody"><div class="comment-list">
+          <div class="ci"><div class="ch vs-naive">Looks like</div><div class="ct2">&ldquo;Engagement is collapsing across all six flows &mdash; fix the flows.&rdquo;</div></div>
+          <div class="ci"><div class="ch vs-true">Actually</div><div class="ct2">Opens and clicks fell; <strong>orders per recipient did not</strong>. The flows monetise exactly as before &mdash; a deliverability or open-tracking change.</div></div>
+          <div class="ci"><div class="ch">The rule</div><div class="ct2">Engagement down + conversion flat &rarr; measurement. Engagement down + conversion down &rarr; commercial. The same test on tab 01 returns the opposite verdict for Meta.</div></div>
+        </div></div></div>
+    </div>
+    <div class="row grow">
+      <div class="card col-1"><div class="ct">Completeness &mdash; detected mechanically</div>
+        <div class="cs">mart_data_quality &middot; joined by downstream metrics, not just noted</div>
+        <div class="cbody"><div class="comment-list">
+          <div class="ci"><div class="ch"><span class="pill warn">meta_ads_daily</span> 2025-03-15</div><div class="ct2">missing_day &mdash; no rows ingested</div></div>
+          <div class="ci"><div class="ch"><span class="pill warn">meta_ads_daily</span> 2025-03-16</div><div class="ct2">missing_day &mdash; no rows ingested</div></div>
+          <div class="ci"><div class="footer-note">All other 1,093 source-days complete. Orders and Google Ads: zero gaps.</div></div>
+        </div></div></div>
+      <div class="card col-2"><div class="ct">Why this is wired into the metric, not just reported</div>
+        <div class="cs">The difference between reporting a gap and being wrong because of one</div>
+        <div class="cbody"><div class="comment-list">
+          <div class="ci"><div class="ch vs-naive">A naive daily detector would say</div>
+            <div class="ct2">&ldquo;Meta spend dropped to &pound;0 on 15&ndash;16 March &mdash; campaigns paused, investigate immediately.&rdquo;</div></div>
+          <div class="ci"><div class="ch vs-true">What actually happened</div>
+            <div class="ct2">The rows were never ingested. Spend did not change.</div></div>
+          <div class="ci"><div class="ch">The consequence if left unhandled</div>
+            <div class="ct2">Blended CAC on those days computes from Google spend alone and reads <strong>&pound;6.75 and &pound;6.33</strong> against a true level of ~&pound;11.50 &mdash; a fabricated <strong>42% improvement</strong> in acquisition cost. The metric is NULLed on incomplete days instead.</div></div>
+        </div></div></div>
+    </div>
+  </div>
+  <div class="foot"><span>Same mechanism classifies signals COMMERCIAL / DATA_QUALITY / ARTIFACT in Layer 2</span>
+    <span class="center">WIREFRAME &mdash; every figure is real; layout is illustrative</span><span>Tab 03 of 03</span></div></section>
+</div>
+<div class="hint">Tabs <kbd>0</kbd><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> &middot; <kbd>&larr;</kbd><kbd>&rarr;</kbd> &middot; or click the strip</div>
+</div>
+<script>
+(function() {
+  const pages = document.querySelectorAll('.page');
+  const stageInner = document.querySelector('.stage-inner');
+  const stage = document.querySelector('.stage');
+  function setActive(id) {
+    id = String(id);
+    if (!document.querySelector('.page[data-page="' + id + '"]')) return;
+    document.querySelectorAll('.nav-strip .ns-item').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === id);
+    });
+    pages.forEach(p => p.classList.toggle('active', p.dataset.page === id));
+    if (history.replaceState) history.replaceState(null, '', '#tab-' + id);
+  }
+  document.querySelectorAll('.nav-strip .ns-item').forEach(t => {
+    t.addEventListener('click', () => setActive(t.dataset.tab));
+  });
+  document.querySelectorAll('.tile[data-goto]').forEach(tile => {
+    tile.style.cursor = 'pointer';
+    tile.addEventListener('click', () => setActive(tile.dataset.goto));
+  });
+  document.addEventListener('keydown', e => {
+    const tabs = document.querySelectorAll('.page.active .nav-strip .ns-item');
+    const cur = [...tabs].findIndex(t => t.classList.contains('active'));
+    if (e.key === 'ArrowRight' && cur < tabs.length - 1) { setActive(tabs[cur+1].dataset.tab); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' && cur > 0) { setActive(tabs[cur-1].dataset.tab); e.preventDefault(); }
+    else if (/^[0-3]$/.test(e.key)) { setActive(e.key); e.preventDefault(); }
+  });
+  const h = window.location.hash.match(/tab-(\d+)/);
+  if (h) setActive(h[1]);
+  function scale() {
+    const s = Math.min(stage.clientWidth / 1920, stage.clientHeight / 1080);
+    stageInner.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', scale);
+  requestAnimationFrame(scale);
+  setTimeout(scale, 100);
+})();
+</script>
+</body>
+</html>
