@@ -2520,8 +2520,10 @@ Append to `dbt/models/marts/_marts.yml`:
   - name: mart_ltv
     description: >
       Contribution-margin LTV by acquisition cohort and channel at 30, 60
-      and 90 day horizons. Censoring-aware: has_full_exposure is false
-      where the horizon extends past var('as_of_date').
+      and 90 day horizons. Censoring-aware: has_full_exposure is false where
+      the horizon extends past the LAST DATE WITH DATA (max(dim_date.date_day))
+      -- deliberately NOT var('as_of_date'), which sits one day past period
+      close to absorb ad/email ingestion lag.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
