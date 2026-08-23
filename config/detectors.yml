@@ -98,6 +98,16 @@ detectors:
     min_decline_pct: 25.0
     min_cohorts: 4
 
+  channel_cvr_shift:
+    enabled: true
+    # Orders per click. Google and Meta only - TikTok has no cost file and
+    # unattributed has no channel, so 36% of orders have no clicks to divide by.
+    # 90 days for the same reason as cac_trend: this drifts rather than steps.
+    window_days: 90
+    min_clicks: 5000         # below this the daily ratio is mostly noise
+    min_change_pct: 15.0     # change across the whole window, not per day
+    max_p_value: 0.05
+
   data_completeness:
     enabled: true
     # Any source-day the warehouse flagged. Always DATA_QUALITY, never

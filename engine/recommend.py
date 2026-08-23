@@ -76,6 +76,8 @@ class Recommendation:
         }
         if self.outcome is not None:
             row.update({
+                "median_revenue_delta": (None if self.outcome.revenue_median is None
+                                         else round(self.outcome.revenue_median, 2)),
                 "median_margin_delta": round(self.outcome.median, 2),
                 "p_positive": (None if self.outcome.p_positive is None
                                else round(self.outcome.p_positive, 3)),
@@ -167,6 +169,21 @@ def _cheapest_alternative(ctx: Context, exclude: str) -> str | None:
     return best
 
 
+def _reference_ltv_revenue(ctx: Context, horizon: int = 60) -> float | None:
+    """Revenue counterpart of the margin LTV, on the same cohort."""
+    exposed = ctx.ltv[
+        (ctx.ltv["horizon_days"] == horizon) & ctx.ltv["has_full_exposure"].astype(bool)
+    ]
+    if exposed.empty:
+        return None
+    newest = exposed[exposed["cohort_month"] == exposed["cohort_month"].max()]
+    size = float(newest["cohort_size"].sum())
+    if size <= 0:
+        return None
+    return float(
+        (newest["ltv_revenue"].astype(float) * newest["cohort_size"]).sum() / size)
+
+
 def _reference_ltv(ctx: Context, horizon: int = 60) -> float | None:
     exposed = ctx.ltv[
         (ctx.ltv["horizon_days"] == horizon) & ctx.ltv["has_full_exposure"].astype(bool)
@@ -191,6 +208,7 @@ def recommend(ctx: Context, signals: pd.DataFrame) -> list[Recommendation]:
     sim_cfg = cfg["simulation"]
     actions = cfg["actions"]
     ltv = _reference_ltv(ctx)
+    ltv_revenue = _reference_ltv_revenue(ctx)
     out: list[Recommendation] = []
 
     if signals.empty:
@@ -233,7 +251,8 @@ def recommend(ctx: Context, signals: pd.DataFrame) -> list[Recommendation]:
 
         if detector in ("cac_trend", "cpc_decomposition") and ltv:
             out.extend(_spend_recommendations(
-                ctx, signal, mapping, cfg, sim_cfg, ltv, confidence, tier, entity
+                ctx, signal, mapping, cfg, sim_cfg, ltv, confidence, tier, entity,
+                ltv_revenue,
             ))
         elif detector == "inventory_cover":
             found = _reorder_recommendation(
@@ -261,7 +280,8 @@ def recommend(ctx: Context, signals: pd.DataFrame) -> list[Recommendation]:
 
 
 def _spend_recommendations(ctx, signal, mapping, cfg, sim_cfg, ltv,
-                           confidence, tier, entity) -> list[Recommendation]:
+                           confidence, tier, entity,
+                           ltv_revenue=None) -> list[Recommendation]:
     """Reallocation, plus a creative refresh where the CPC split justifies one."""
     results: list[Recommendation] = []
     evidence = signal["evidence"]
@@ -284,6 +304,7 @@ def _spend_recommendations(ctx, signal, mapping, cfg, sim_cfg, ltv,
                 outcome = simulate_creative_refresh(
                     ctx.daily, donor, ctr_decline, ltv,
                     draws=sim_cfg["draws"], horizon_days=sim_cfg["horizon_days"],
+                    ltv_revenue=ltv_revenue,
                 )
             except ValueError:
                 outcome = None
@@ -316,6 +337,7 @@ def _spend_recommendations(ctx, signal, mapping, cfg, sim_cfg, ltv,
         outcome = simulate_reallocation(
             ctx.daily, donor, receiver, shift, margin_rate=0.7063, ltv_margin=ltv,
             draws=sim_cfg["draws"], horizon_days=sim_cfg["horizon_days"],
+            ltv_revenue=ltv_revenue,
         )
     except ValueError:
         return results
