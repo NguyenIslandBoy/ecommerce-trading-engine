@@ -136,6 +136,33 @@ is carried by the Jul-Nov 2024 cohorts continuing to buy. Essentially no
 customer acquired in 2025 returns. The blended metric looks healthy while
 the cohort quality underneath it collapsed.
 
+## A finding that shapes Layer 2: the LTV horizon is not comparable over time
+
+`mart_ltv` measures value inside a fixed window (30/60/90 days). How much that window
+misses turns out to depend entirely on when the customer was acquired:
+
+| Cohort  | Net revenue arriving AFTER day 90 | Share of that cohort's revenue |
+|---------|----------------------------------:|-------------------------------:|
+| 2024-07 |                          £101,232 |                          44.5% |
+| 2024-08 |                           £57,894 |                          36.4% |
+| 2024-09 |                           £13,946 |                          12.6% |
+| 2024-10 |                              £760 |                           0.8% |
+| 2025-03 onward |                          £0 |                           0.0% |
+
+Across the whole dataset, £174,701 of £1,211,690 net revenue (14.4%) lands beyond day 90 --
+and almost all of it belongs to three cohorts.
+
+The consequence is easy to miss. A 60-day LTV **understates** the July 2024 cohort's true
+value badly, and is **essentially complete** for any 2025 cohort. So a detector that compares
+a fixed-horizon LTV against CAC over time is comparing unlike quantities: the horizon's
+truncation bias silently shrinks toward zero as retention collapses, which flatters recent
+cohorts relative to older ones and understates how far unit economics have actually moved.
+
+Layer 2 should either compare cohorts only at equal observed age, or state the horizon bias
+explicitly alongside any CAC/LTV verdict. This is the same class of error as the censoring
+trap `mart_cohort_retention` already guards -- measuring different cohorts over different
+effective windows -- arriving through a different door.
+
 ## What I would build next
 
 Layer 2 (detection) and Layer 3 (recommendation and simulation) — see the
