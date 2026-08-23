@@ -44,9 +44,19 @@ class Outcome:
     ci_high: float         # 90th percentile
     median: float
     assumptions: dict
+    # The brief asks for revenue impact alongside margin impact. Margin is the
+    # decision variable -- it is what the business keeps -- but revenue is the
+    # number a stakeholder recognises, so both are carried.
+    revenue_draws: np.ndarray | None = None
+
+    @property
+    def revenue_median(self) -> float | None:
+        if self.revenue_draws is None:
+            return None
+        return float(np.median(self.revenue_draws))
 
     def summary(self) -> dict:
-        return {
+        summary = {
             "metric": self.metric,
             "median": round(float(self.median), 2),
             "p_positive": (None if self.p_positive is None
@@ -56,10 +66,18 @@ class Outcome:
             "draws": int(self.draws.size),
             "assumptions": self.assumptions,
         }
+        if self.revenue_draws is not None:
+            summary.update(
+                revenue_median=round(float(np.median(self.revenue_draws)), 2),
+                revenue_ci80_low=round(float(np.percentile(self.revenue_draws, 10)), 2),
+                revenue_ci80_high=round(float(np.percentile(self.revenue_draws, 90)), 2),
+            )
+        return summary
 
 
 def _outcome(metric: str, draws: np.ndarray, assumptions: dict,
-             directional: bool = True) -> Outcome:
+             directional: bool = True,
+             revenue_draws: np.ndarray | None = None) -> Outcome:
     return Outcome(
         metric=metric,
         draws=draws,
@@ -68,6 +86,7 @@ def _outcome(metric: str, draws: np.ndarray, assumptions: dict,
         ci_high=float(np.percentile(draws, 90)),
         median=float(np.median(draws)),
         assumptions=assumptions,
+        revenue_draws=revenue_draws,
     )
 
 
@@ -134,7 +153,8 @@ def simulate_reallocation(daily: pd.DataFrame, from_channel: str, to_channel: st
                           shift_pct: float, margin_rate: float,
                           ltv_margin: float, draws: int = DRAWS,
                           horizon_days: int = HORIZON_DAYS,
-                          seed: int = 7) -> Outcome:
+                          seed: int = 7,
+                          ltv_revenue: float | None = None) -> Outcome:
     """Move ``shift_pct`` of one channel's budget to another, for 30 days.
 
     Returns the distribution of the contribution-margin difference against doing
@@ -199,7 +219,17 @@ def simulate_reallocation(daily: pd.DataFrame, from_channel: str, to_channel: st
     customers_lost = total_moved / marginal_donor_cac
 
     ltv_draws = np.clip(rng.normal(ltv_margin, ltv_margin * 0.20, draws), 0.0, None)
-    margin_delta = (customers_gained - customers_lost) * ltv_draws
+    net_customers = customers_gained - customers_lost
+    margin_delta = net_customers * ltv_draws
+
+    # Same customer movement valued at revenue rather than margin. Derived from
+    # the same draws, so the two distributions stay consistent with each other
+    # rather than being simulated twice.
+    revenue_delta = None
+    if ltv_revenue:
+        revenue_draws = np.clip(
+            rng.normal(ltv_revenue, ltv_revenue * 0.20, draws), 0.0, None)
+        revenue_delta = net_customers * revenue_draws
 
     return _outcome(
         "contribution_margin_delta_30d",
@@ -219,13 +249,15 @@ def simulate_reallocation(daily: pd.DataFrame, from_channel: str, to_channel: st
             "note": ("marginal CAC rises with spend as CAC_0*(scale**beta); "
                      "beta=0 would make reallocation free and is never assumed"),
         },
+        revenue_draws=revenue_delta,
     )
 
 
 def simulate_creative_refresh(daily: pd.DataFrame, channel: str, ctr_uplift: float,
                               ltv_margin: float, draws: int = DRAWS,
                               horizon_days: int = HORIZON_DAYS,
-                              seed: int = 11) -> Outcome:
+                              seed: int = 11,
+                              ltv_revenue: float | None = None) -> Outcome:
     """Recover part of a CTR decline without changing spend.
 
     Cheap, fast and reversible, so the uplift is modelled as uncertain but the
@@ -259,7 +291,14 @@ def simulate_creative_refresh(daily: pd.DataFrame, channel: str, ctr_uplift: flo
     ltv_draws = np.clip(rng.normal(ltv_margin, ltv_margin * 0.20, draws), 0.0, None)
     production_cost = rng.normal(1500, 400, draws)   # one creative round
 
-    margin_delta = (improved_customers - baseline_customers) * ltv_draws - production_cost
+    net_customers = improved_customers - baseline_customers
+    margin_delta = net_customers * ltv_draws - production_cost
+
+    revenue_delta = None
+    if ltv_revenue:
+        revenue_draws = np.clip(
+            rng.normal(ltv_revenue, ltv_revenue * 0.20, draws), 0.0, None)
+        revenue_delta = net_customers * revenue_draws
 
     return _outcome(
         "contribution_margin_delta_30d",
@@ -274,6 +313,7 @@ def simulate_creative_refresh(daily: pd.DataFrame, channel: str, ctr_uplift: flo
             "horizon_days": horizon_days,
             "note": "downside bounded by production cost - spend is unchanged",
         },
+        revenue_draws=revenue_delta,
     )
 
 

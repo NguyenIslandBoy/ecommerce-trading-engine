@@ -383,7 +383,7 @@ The series has a November/December peak and a January trough, and covers exactly
   assume daily CAC residuals are normal — they are not.
 - **MAD z-scores**, not standard deviations, so a catalogue containing both a 3×
   bestseller and a long tail does not have the tail permanently flagged.
-- **Benjamini–Hochberg** FDR at 0.10. Nine detectors across ~20 entities at 365
+- **Benjamini–Hochberg** FDR at 0.10. Ten detectors across ~20 entities at 365
   cursors manufactures false positives by construction; Bonferroni at that scale
   would reject everything real along with them.
 - **Day-of-week** is removed multiplicatively. **Month-of-year is not** — with 12

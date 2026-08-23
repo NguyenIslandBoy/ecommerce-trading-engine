@@ -328,3 +328,80 @@ def cpc_decomposition(ctx) -> list[Signal]:
             },
         ))
     return signals
+
+
+@register("channel_cvr_shift")
+def channel_cvr_shift(ctx) -> list[Signal]:
+    """Orders per click, by channel -- the conversion step between the ad and
+    the sale.
+
+    Covers Google and Meta only, and says so. TikTok has no cost file and
+    unattributed has no channel, so neither has clicks to divide by; between
+    them that is 36% of orders this detector cannot see. Partial coverage of a
+    real metric, stated, rather than a number invented for the missing two.
+
+    Tier C: clicks are platform-reported and exact, but attributing the ORDERS
+    to a channel is last-click, so the ratio inherits the weaker half.
+
+    Distinct from cpc_decomposition's CTR, which is impressions to clicks. This
+    is clicks to orders -- a landing-page and offer question, not an ad one.
+    """
+    cfg = ctx.detector_config("channel_cvr_shift")
+    if not cfg.get("enabled", True) or ctx.daily.empty:
+        return []
+
+    window = _trailing(ctx.daily, cfg.get("window_days", 90))
+    signals: list[Signal] = []
+
+    for channel in COST_CHANNELS:
+        rows = window[(window["channel"] == channel)
+                      & window["clicks"].notna()].copy()
+        rows = rows[rows["clicks"].astype(float) > 0]
+        if len(rows) < ctx.config["trend"]["min_points"]:
+            continue
+        if rows["clicks"].astype(float).sum() < cfg.get("min_clicks", 5000):
+            continue
+
+        rows["cvr"] = (rows["orders"].astype(float)
+                       / rows["clicks"].astype(float))
+
+        adjusted, _ = deseasonalise_dow(rows, "cvr")
+        adjusted = pd.Series(adjusted).dropna()
+        if len(adjusted) < ctx.config["trend"]["min_points"]:
+            continue
+
+        median = float(np.median(adjusted))
+        if median <= 0:
+            continue
+
+        slope = theil_sen_slope(adjusted)
+        z, p = mann_kendall(adjusted)
+        if not np.isfinite(slope) or not np.isfinite(p):
+            continue
+
+        pct_over_window = 100.0 * slope * (len(adjusted) - 1) / median
+        if abs(pct_over_window) < cfg.get("min_change_pct", 15.0):
+            continue
+        if p > cfg.get("max_p_value", 0.05):
+            continue
+
+        signals.append(Signal(
+            detector="channel_cvr_shift", entity_type="channel",
+            entity_id=channel,
+            as_of_date=ctx.as_of, fired_date=ctx.window_end,
+            severity=severity_from_z(z),
+            direction=Direction.IMPROVING if slope > 0 else Direction.DEGRADING,
+            attribution_tier=Tier.C,
+            p_value=float(p),
+            evidence={
+                "cvr_pct_now": round(100 * float(adjusted.iloc[-1]), 4),
+                "cvr_pct_median": round(100 * median, 4),
+                "pct_change_over_window": round(pct_over_window, 2),
+                "mann_kendall_z": round(float(z), 3),
+                "days": int(len(adjusted)),
+                "coverage": ("google and meta only - tiktok has no cost file "
+                             "and unattributed has no channel, so 36% of "
+                             "orders are outside this measure"),
+            },
+        ))
+    return signals

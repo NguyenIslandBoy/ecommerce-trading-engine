@@ -101,6 +101,15 @@ actions:
       metric over the affected window - missing spend makes efficiency look
       better, not worse.
 
+  channel_cvr_shift:
+    type: INVESTIGATE_DATA
+    reversibility: reversible
+    rationale: >
+      Orders per click has moved on a channel. That is a landing-page, offer or
+      audience-quality question rather than an ad one - the click was already
+      paid for. Worth diagnosing before any spend decision, and it rests on
+      last-click attribution so it cannot drive one alone.
+
   product_velocity:
     type: INVESTIGATE_DATA
     reversibility: reversible

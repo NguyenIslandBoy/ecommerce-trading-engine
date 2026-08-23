@@ -8,7 +8,7 @@ evidence can actually bear.
 | Layer | State |
 |---|---|
 | **1. Data foundation** | Built — 20 dbt models, 94 data tests, point-in-time correct |
-| **2. Signal detection** | Built — 9 detectors, replayed across 246 cursors |
+| **2. Signal detection** | Built — 10 detectors, replayed across 246 cursors |
 | **3. Recommendation & simulation** | Built — Monte Carlo, autonomy gate |
 | **Surfaces** | Streamlit app (`app.py`), Power BI report (`powerbi/`), Jupyter walkthrough (`notebooks/`) |
 
@@ -137,7 +137,7 @@ the point-in-time filter simple enough to trust. `core` is a star schema
 carrying COGS and contribution margin. `marts` is the metric spine everything
 downstream reads.
 
-**Detection** — nine detectors, each returning a `Signal` with its evidence,
+**Detection** — ten detectors, each returning a `Signal` with its evidence,
 classification, attribution tier and confidence. Adjudication happens centrally
 so all nine are judged on the same terms: outage suppression, then
 Benjamini–Hochberg FDR at 0.10, then confidence as severity × tier reliability ×
@@ -215,7 +215,7 @@ cursors in ~25 seconds and scores it against hand labels in
 | | |
 |---|---|
 | Recall | **100%** (6/6 labelled events) |
-| Precision | 76% of distinct commercial signals map to a labelled event |
+| Precision | 67% of distinct commercial signals map to a labelled event |
 | Trap violations | **0 of 4** |
 
 The traps matter more than the events. Anyone can build a detector that fires;
@@ -238,6 +238,12 @@ A 365-cursor replay is affordable only because `engine/pit.py` reconstructs any
 cursor in ~100ms against the ~35s a real dbt rebuild takes.
 `scripts/verify_pit.py` proves that shortcut: it rebuilds the warehouse at three
 cursors and asserts the reconstruction is identical **on every column**.
+
+Precision is deliberately harsh, and worth reading carefully: **any** commercial
+signal that does not map to one of six labelled events counts against it,
+including genuine findings nobody thought to label. Adding labels to match what
+the detectors found would raise the number and mean nothing, so the labels have
+been left where profiling put them.
 
 > **Stated limitation.** The ground-truth labels are my own reading of the
 > dataset, written before the detectors — but written by the same person who
