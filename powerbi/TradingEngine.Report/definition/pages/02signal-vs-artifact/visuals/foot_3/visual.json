@@ -1,11 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "foot_1",
+  "name": "foot_3",
   "position": {
     "x": 40.19870598783532,
     "y": 1035.1166791867595,
     "z": 4000,
-    "height": 31.823975573702963,
+    "height": 33.49892165652943,
     "width": 1839.0907989434659,
     "tabOrder": 4000
   },
@@ -19,23 +19,14 @@
               {
                 "textRuns": [
                   {
-                    "value": "Source: dbt / DuckDB warehouse · 20 models · 94 tests · every figure reconciled",
+                    "value": "Source: dbt / DuckDB warehouse · 20 models · 94 tests · every figure reconciled          Page 2 of 2  ·  Signal vs artifact",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "9pt",
-                      "color": "#6B7785"
-                    }
-                  },
-                  {
-                    "value": "          Page 1 of 2  ·  Unit economics & acquisition",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "9pt",
-                      "color": "#6B7785"
+                      "color": "#6b7785"
                     }
                   }
-                ],
-                "horizontalTextAlignment": "left"
+                ]
               }
             ]
           }

@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "p1_note",
+  "name": "p4_note",
   "position": {
-    "x": 660,
-    "y": 335,
-    "z": 12000,
-    "height": 340,
-    "width": 340,
-    "tabOrder": 12000
+    "x": 1280,
+    "y": 495,
+    "z": 10000,
+    "height": 300,
+    "width": 600,
+    "tabOrder": 10000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,76 +19,99 @@
               {
                 "textRuns": [
                   {
-                    "value": "What this means\n\n",
+                    "value": "Artifact, not lost demand",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "13pt",
-                      "color": "#0B1A2E",
-                      "fontWeight": "bold"
-                    }
-                  },
-                  {
-                    "value": "Both sides moved at once.  ",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332",
-                      "fontWeight": "bold"
-                    }
-                  },
-                  {
-                    "value": "Acquisition got 53% more expensive while each customer became 29% less valuable. Neither alone would be alarming; together the ratio fell 45% — 4.42x to 2.43x.\n\n",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332"
-                    }
-                  },
-                  {
-                    "value": "Meta is now below break-even.  ",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332",
-                      "fontWeight": "bold"
-                    }
-                  },
-                  {
-                    "value": "Meta-acquired customers cost £34.83 on trailing CAC and return £31.01 of 60-day margin — 0.89x, a loss before overheads. Channel figures are last-click, so this sizes a test rather than settling a verdict.\n\n",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332"
-                    }
-                  },
-                  {
-                    "value": "The cause is on page 2.  ",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332",
-                      "fontWeight": "bold"
-                    }
-                  },
-                  {
-                    "value": "LTV fell because customers stopped coming back — not because they spent less on the first order.\n\n",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332"
-                    }
-                  },
-                  {
-                    "value": "Note: the last two cohorts are censored and return blank by design.",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "10pt",
-                      "color": "#6B7785",
-                      "fontStyle": "italic"
+                      "color": "#0b1a2e"
                     }
                   }
-                ],
-                "horizontalTextAlignment": "left"
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Looks like:  ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#c0392b"
+                    }
+                  },
+                  {
+                    "value": "\"Engagement is collapsing across all six flows — fix the flows.\"",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1a2332"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Actually:  ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#2e8b57"
+                    }
+                  },
+                  {
+                    "value": "opens and clicks fell; orders per recipient did not. The flows monetise exactly as before — a deliverability or open-tracking change.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1a2332"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "The rule:  ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1a2332"
+                    }
+                  },
+                  {
+                    "value": "engagement down + conversion flat → measurement. Engagement down + conversion down → commercial. The same test applied to Meta on page 1 returns the opposite verdict.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1a2332"
+                    }
+                  }
+                ]
               }
             ]
           }

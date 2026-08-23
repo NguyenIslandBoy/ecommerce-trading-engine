@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "p1_k1",
+  "name": "p4_k1",
   "position": {
     "x": 40,
-    "y": 165,
-    "z": 5000,
-    "height": 150,
-    "width": 300,
-    "tabOrder": 5000
+    "y": 815,
+    "z": 11000,
+    "height": 205,
+    "width": 290,
+    "tabOrder": 11000
   },
   "visual": {
     "visualType": "cardVisual",
@@ -23,12 +23,12 @@
                       "Entity": "#Measures"
                     }
                   },
-                  "Property": "LTV / CAC"
+                  "Property": "Gap Days"
                 }
               },
-              "queryRef": "#Measures.LTV / CAC",
-              "nativeQueryRef": "LTV / CAC ratio",
-              "displayName": "LTV / CAC ratio"
+              "queryRef": "#Measures.Gap Days",
+              "nativeQueryRef": "Ingestion gap days detected",
+              "displayName": "Ingestion gap days detected"
             }
           ]
         }

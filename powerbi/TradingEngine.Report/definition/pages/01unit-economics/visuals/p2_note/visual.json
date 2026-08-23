@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "p1_note",
+  "name": "p2_note",
   "position": {
-    "x": 660,
+    "x": 1560,
     "y": 335,
-    "z": 12000,
+    "z": 14000,
     "height": 340,
-    "width": 340,
-    "tabOrder": 12000
+    "width": 320,
+    "tabOrder": 14000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "What this means\n\n",
+                    "value": "Two causes, two different responses\n\n",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "13pt",
@@ -28,7 +28,41 @@
                     }
                   },
                   {
-                    "value": "Both sides moved at once.  ",
+                    "value": "Naive reading:  ",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#C0392B",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "\"Meta CAC is up 75% — cut the Meta budget.\"\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  },
+                  {
+                    "value": "What the decomposition shows:  ",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#2E8B57",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "CPM +56% is auction price. You cannot control it — only decide whether to keep paying it. CTR −36% is creative relevance. You can control that, cheaply and reversibly.\n\n",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "11pt",
+                      "color": "#1A2332"
+                    }
+                  },
+                  {
+                    "value": "Frequency is flat at ~1.22 all year, ",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
@@ -37,7 +71,7 @@
                     }
                   },
                   {
-                    "value": "Acquisition got 53% more expensive while each customer became 29% less valuable. Neither alone would be alarming; together the ratio fell 45% — 4.42x to 2.43x.\n\n",
+                    "value": "which is what rules out audience saturation. Refresh creative first; reallocate only the auction-attributable share.\n\n",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
@@ -45,41 +79,7 @@
                     }
                   },
                   {
-                    "value": "Meta is now below break-even.  ",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332",
-                      "fontWeight": "bold"
-                    }
-                  },
-                  {
-                    "value": "Meta-acquired customers cost £34.83 on trailing CAC and return £31.01 of 60-day margin — 0.89x, a loss before overheads. Channel figures are last-click, so this sizes a test rather than settling a verdict.\n\n",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332"
-                    }
-                  },
-                  {
-                    "value": "The cause is on page 2.  ",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332",
-                      "fontWeight": "bold"
-                    }
-                  },
-                  {
-                    "value": "LTV fell because customers stopped coming back — not because they spent less on the first order.\n\n",
-                    "textStyle": {
-                      "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#1A2332"
-                    }
-                  },
-                  {
-                    "value": "Note: the last two cohorts are censored and return blank by design.",
+                    "value": "CPC, CPM and CTR are platform-reported and need no attribution.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "10pt",

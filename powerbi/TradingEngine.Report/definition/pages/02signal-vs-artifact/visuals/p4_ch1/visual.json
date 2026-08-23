@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "p1_ch1",
+  "name": "p4_ch1",
   "position": {
-    "x": 40,
-    "y": 335,
-    "z": 11000,
-    "height": 340,
+    "x": 660,
+    "y": 495,
+    "z": 9000,
+    "height": 300,
     "width": 600,
-    "tabOrder": 11000
+    "tabOrder": 9000
   },
   "visual": {
     "visualType": "lineChart",
@@ -20,16 +20,16 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "CohortLTV"
+                      "Entity": "DimDate"
                     }
                   },
-                  "Property": "cohort_month"
+                  "Property": "YearMonth"
                 }
               },
-              "queryRef": "CohortLTV.cohort_month",
-              "nativeQueryRef": "Cohort",
+              "queryRef": "DimDate.YearMonth",
+              "nativeQueryRef": "Month",
               "active": true,
-              "displayName": "Cohort"
+              "displayName": "Month"
             }
           ]
         },
@@ -43,13 +43,17 @@
                       "Entity": "#Measures"
                     }
                   },
-                  "Property": "LTV 60d (Margin)"
+                  "Property": "Open Rate"
                 }
               },
-              "queryRef": "#Measures.LTV 60d (Margin)",
-              "nativeQueryRef": "LTV 60d (Margin)",
-              "displayName": "LTV 60d (Margin)"
-            },
+              "queryRef": "#Measures.Open Rate",
+              "nativeQueryRef": "Open Rate",
+              "displayName": "Open Rate"
+            }
+          ]
+        },
+        "Y2": {
+          "projections": [
             {
               "field": {
                 "Measure": {
@@ -58,12 +62,12 @@
                       "Entity": "#Measures"
                     }
                   },
-                  "Property": "Cohort CAC"
+                  "Property": "Email Conversion Rate"
                 }
               },
-              "queryRef": "#Measures.Cohort CAC",
-              "nativeQueryRef": "Cohort CAC",
-              "displayName": "Cohort CAC"
+              "queryRef": "#Measures.Email Conversion Rate",
+              "nativeQueryRef": "Email Conversion Rate",
+              "displayName": "Email Conversion Rate"
             }
           ]
         }
