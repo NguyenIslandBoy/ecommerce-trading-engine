@@ -57,3 +57,19 @@ models:
                 field: variant_id
       - name: units
         data_tests: [not_null]
+
+  - name: mart_cohort_retention
+    description: >
+      Cohort retention with an explicit censoring guard. retention_rate is
+      NULL wherever the observation window has not fully elapsed as of
+      var('as_of_date'). raw_retention_rate is always populated and exists
+      only to demonstrate the artifact the guard prevents.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [cohort_month, months_since]
+    columns:
+      - name: cohort_size
+        data_tests: [not_null]
+      - name: has_full_exposure
+        data_tests: [not_null]
