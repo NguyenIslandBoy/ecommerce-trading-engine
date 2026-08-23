@@ -1,0 +1,93 @@
+/// Cohort retention, censoring-aware (12 cohorts x 11 ages = 132 rows). Deliberately NOT related to DimDate: cohort_month is month-grain and answers a different question from the daily facts.
+table CohortRetention
+	lineageTag: 0a7c591d-7568-4704-97b3-0e2a482dc3c5
+
+	column cohort_month
+		dataType: dateTime
+		formatString: MMM yyyy
+		lineageTag: 3ff19aa9-e693-43e7-b6c1-caba4719237a
+		summarizeBy: none
+		sourceColumn: cohort_month
+
+	column months_since
+		dataType: int64
+		formatString: 0
+		lineageTag: 92e98be5-bb5b-4f25-9b82-69bac7355788
+		summarizeBy: none
+		sourceColumn: months_since
+
+	/// Repeats across all 11 age rows. Any measure using it must filter to one age or it counts the cohort 11 times.
+	column cohort_size
+		dataType: int64
+		formatString: #,0
+		lineageTag: fb0d1bde-dc62-4e98-a3aa-363698546ed2
+		summarizeBy: sum
+		sourceColumn: cohort_size
+
+	column repeat_customers
+		dataType: int64
+		formatString: #,0
+		lineageTag: 6def669a-caca-47a7-963b-8e986002e8d1
+		summarizeBy: sum
+		sourceColumn: repeat_customers
+
+	column window_end
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: d2429064-def3-483d-ace3-6b14ac54a68f
+		summarizeBy: none
+		sourceColumn: window_end
+
+	/// FALSE where the calendar-month window has not closed. A zero with FALSE here is UNOBSERVED, not observed.
+	column has_full_exposure
+		dataType: boolean
+		lineageTag: b2ff0af1-421a-4e2b-ba2e-bb9d8630462e
+		summarizeBy: none
+		sourceColumn: has_full_exposure
+
+	/// CALENDAR-MONTH bucketed. NULL where the window has not elapsed.
+	column retention_rate
+		dataType: double
+		formatString: 0.00%
+		lineageTag: 719e92f8-bfc3-4339-8b9c-ee24355f5d7d
+		summarizeBy: none
+		sourceColumn: retention_rate
+
+	/// Unguarded. Retained ONLY to demonstrate the artifact the guard prevents. Never use in a visual.
+	column raw_retention_rate
+		dataType: double
+		formatString: 0.00%
+		lineageTag: f92b4445-c29c-4f2f-bed1-f70bfc86dbb2
+		summarizeBy: none
+		sourceColumn: raw_retention_rate
+
+	column repeat_within_90d
+		dataType: int64
+		formatString: #,0
+		lineageTag: 74b2dd0b-e1ff-4e82-8540-113dbdca60ca
+		summarizeBy: sum
+		sourceColumn: repeat_within_90d
+
+	/// FALSE where the 90-day window has not closed (2025-04 onward).
+	column has_full_90d_exposure
+		dataType: boolean
+		lineageTag: e7278664-47e2-4541-915c-01cfd9335168
+		summarizeBy: none
+		sourceColumn: has_full_90d_exposure
+
+	/// ROLLING 90-day window from each customer's own first order. Falls 31.8% to 0.0% across fully-observed cohorts.
+	column repeat_rate_90d
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 75159263-6eec-4556-94f2-d05bc44b48f3
+		summarizeBy: none
+		sourceColumn: repeat_rate_90d
+
+	partition CohortRetention = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\mart_cohort_retention.parquet"))
+				in
+				    Source
+

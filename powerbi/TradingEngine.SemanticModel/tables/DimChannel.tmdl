@@ -1,0 +1,49 @@
+/// Channel lookup (4 rows). Presentational only - display names, sort order, and whether cost data exists. The channel domain itself is defined and tested in dbt; this table does not redefine it.
+table DimChannel
+	lineageTag: 6540947a-c8e4-4d54-835e-7cd84512f665
+
+	/// Join key. Matches FactDailyTrading[channel] and CohortLTV[acquisition_channel].
+	column channel
+		dataType: string
+		isKey
+		lineageTag: 9132965b-20d9-47e0-899a-c65cf1ffaf59
+		summarizeBy: none
+		sourceColumn: channel
+
+	/// Display name.
+	column channel_name
+		dataType: string
+		lineageTag: d5003476-2593-4559-95ee-7085cab865d0
+		summarizeBy: none
+		sourceColumn: channel_name
+
+	/// Sort order for visuals. Set channel_name to Sort by this column.
+	column sort_order
+		dataType: int64
+		formatString: 0
+		lineageTag: 8eaab753-99b4-4a7a-9e20-10bb3641b138
+		summarizeBy: none
+		sourceColumn: sort_order
+
+	/// FALSE for TikTok (9% of orders, no cost file) and Unattributed. Where FALSE, CAC is not computable and must render blank - never zero, which would claim free acquisition.
+	column has_cost_data
+		dataType: boolean
+		lineageTag: aec25993-41b4-4e04-b7cb-47845c1f134f
+		summarizeBy: none
+		sourceColumn: has_cost_data
+
+	partition DimChannel = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [channel = text, channel_name = text, sort_order = Int64.Type, has_cost_data = logical],
+				        {
+				            {"google",       "Google",       1, true},
+				            {"meta",         "Meta",         2, true},
+				            {"unattributed", "Unattributed", 3, false},
+				            {"tiktok",       "TikTok",       4, false}
+				        })
+				in
+				    Source
+

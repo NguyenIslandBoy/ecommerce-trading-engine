@@ -1,0 +1,35 @@
+/// Calculation group: switches any measure between Current / MTD / QTD / YTD from a single slicer. Retained from the project template - generic pattern, no dependency on the previous data.
+table Zeitvergleich
+	lineageTag: c1a1c1a1-0000-4000-8000-000000000010
+
+	calculationGroup
+		precedence: 10
+
+		calculationItem Aktuell = SELECTEDMEASURE ( )
+
+		calculationItem MTD = CALCULATE ( SELECTEDMEASURE ( ), DATESMTD ( DimDate[Date] ) )
+
+		calculationItem QTD = CALCULATE ( SELECTEDMEASURE ( ), DATESQTD ( DimDate[Date] ) )
+
+		calculationItem YTD = CALCULATE ( SELECTEDMEASURE ( ), DATESYTD ( DimDate[Date] ) )
+
+	/// Slicer-Spalte: Aktuell / MTD / QTD / YTD. Sortiert nach Ordinal.
+	column Ansicht
+		dataType: string
+		lineageTag: c1a1c1a1-0000-4000-8000-000000000011
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c1a1c1a1-0000-4000-8000-000000000012
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

@@ -1,0 +1,4 @@
+/// Folder holding the Parquet exports produced by scripts/export_marts.py. Parameterised so the model can be repointed without editing eleven queries. Regenerate with: dbt build, then python scripts/export_marts.py
+expression DataFolder = "C:\Users\nguye\Downloads\DS_projects\de_task\data\marts" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: f2e277b8-b5ad-4768-bf78-e73ffd8816f9
+

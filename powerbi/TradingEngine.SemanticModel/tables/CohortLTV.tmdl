@@ -1,0 +1,76 @@
+/// Contribution-margin LTV by cohort x channel x horizon (144 rows). Censoring-aware. Deliberately NOT related to DimDate.
+table CohortLTV
+	lineageTag: 90a45fae-4620-4002-b8b5-fd67de573286
+
+	column cohort_month
+		dataType: dateTime
+		formatString: MMM yyyy
+		lineageTag: 53514965-e581-475d-b230-5a59a6edb80c
+		summarizeBy: none
+		sourceColumn: cohort_month
+
+	column acquisition_channel
+		dataType: string
+		lineageTag: f5963e8b-bef9-44c9-843a-fc9271ec3e71
+		summarizeBy: none
+		sourceColumn: acquisition_channel
+
+	/// 30, 60 or 90. Measures must filter to one, or three horizons are summed together.
+	column horizon_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 839b1db0-b37e-4430-bf72-96dd98f16ef9
+		summarizeBy: none
+		sourceColumn: horizon_days
+
+	column cohort_size
+		dataType: int64
+		formatString: #,0
+		lineageTag: a0e1c288-7790-447b-b0a4-4fda1c41530b
+		summarizeBy: sum
+		sourceColumn: cohort_size
+
+	/// FALSE where last acquisition + horizon extends past the last date with data.
+	column has_full_exposure
+		dataType: boolean
+		lineageTag: 7ff32638-2571-445a-84d1-ae510098a02f
+		summarizeBy: none
+		sourceColumn: has_full_exposure
+
+	column cum_net_revenue
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 0c3d5760-1d78-48c8-8cd1-3e0a5089c90e
+		summarizeBy: sum
+		sourceColumn: cum_net_revenue
+
+	column cum_contribution_margin
+		dataType: decimal
+		formatString: \£#,0.00
+		lineageTag: 22527c99-cc48-4853-8a9d-5298c6dcbf2c
+		summarizeBy: sum
+		sourceColumn: cum_contribution_margin
+
+	column ltv_revenue
+		dataType: double
+		formatString: \£#,0.00
+		lineageTag: 186af3dc-1fe7-4e25-bf32-afaae6bda437
+		summarizeBy: none
+		sourceColumn: ltv_revenue
+
+	/// NULL under censoring. THE figure the CAC/LTV comparison uses.
+	column ltv_margin
+		dataType: double
+		formatString: \£#,0.00
+		lineageTag: a3dc90e6-f259-4e47-ad1a-430f35adfcc2
+		summarizeBy: none
+		sourceColumn: ltv_margin
+
+	partition CohortLTV = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "\mart_ltv.parquet"))
+				in
+				    Source
+

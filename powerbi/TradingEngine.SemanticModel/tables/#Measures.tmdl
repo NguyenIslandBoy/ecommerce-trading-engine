@@ -1,0 +1,247 @@
+/// Measure-only container. Holds no data of its own, so the field list separates 'what you can measure' from 'what you can slice by'. 28 measures across seven display folders; every one carries a description explaining what it means and where it can mislead.
+table #Measures
+	lineageTag: 4cff60b3-0c34-47e3-9d95-69adfc8a9e42
+
+	/// Ex-VAT net revenue. Source prices are VAT-inclusive, so this will NOT match a VAT-inclusive figure quoted elsewhere. Reconciles to 1,211,689.88 for the full period.
+	measure 'Net Revenue' = SUM(FactDailyTrading[net_revenue])
+		formatString: \£#,0
+		displayFolder: 01 Revenue & Margin
+		lineageTag: be3e90a8-2377-4b2b-9636-f4d80ec5188d
+
+	/// Ex-VAT revenue less COGS. Every value metric here is margin-based, not revenue-based: catalogue margins run 64-82%, so the two diverge materially. Reconciles to 855,863.08.
+	measure 'Contribution Margin' = SUM(FactDailyTrading[contribution_margin])
+		formatString: \£#,0
+		displayFolder: 01 Revenue & Margin
+		lineageTag: 0b826739-0d2e-4916-bc85-36936ab1a93e
+
+	/// Blended contribution margin rate. 70.6% for the full period.
+	measure 'Margin %' = DIVIDE([Contribution Margin], [Net Revenue])
+		formatString: 0.0%
+		displayFolder: 01 Revenue & Margin
+		lineageTag: f5719f7f-79fe-43f5-a8fa-c2488a9a1ee8
+
+	/// Non-cancelled orders. 25,720 for the full period.
+	measure Orders = SUM(FactDailyTrading[orders])
+		formatString: #,0
+		displayFolder: 01 Revenue & Margin
+		lineageTag: 44b5cfc2-8b91-4106-b082-c0b2fbbb3a15
+
+	/// Average order value, EX-VAT and excluding shipping. Will not match a VAT-inclusive AOV.
+	measure AOV = DIVIDE([Net Revenue], [Orders])
+		formatString: \£#,0.00
+		displayFolder: 01 Revenue & Margin
+		lineageTag: 6e4c596c-8619-47a3-844c-aaf165a229d4
+
+	/// Customers whose first non-cancelled order fell in the period. 20,284 for the full period.
+	measure 'New Customers' = SUM(FactDailyTrading[new_customers])
+		formatString: #,0
+		displayFolder: 02 Acquisition
+		lineageTag: 7b41cc3d-1837-431d-a680-1fa8968c604a
+
+	/// Total ad spend across Meta and Google. TikTok has no cost file, so its spend is absent, not zero. 247,493.29 for the full period.
+	measure 'Ad Spend' = SUM(FactDailyTrading[ad_spend])
+		formatString: \£#,0
+		displayFolder: 02 Acquisition
+		lineageTag: 4b4f2baa-2ad4-47ad-bbfc-9311b3d1e5ec
+
+	/// TIER B, attribution-free. Deliberately excludes days with an ad-source ingestion gap from BOTH numerator and denominator. Without that filter the two missing Meta days compute from Google spend alone and read a fabricated 42% improvement in acquisition cost.
+	measure 'Blended CAC' =
+			VAR CompleteSpend =
+			    CALCULATE(SUM(FactDailyTrading[ad_spend]), KEEPFILTERS(FactDailyTrading[ad_spend_is_complete] = TRUE()))
+			VAR CompleteCustomers =
+			    CALCULATE(SUM(FactDailyTrading[new_customers]), KEEPFILTERS(FactDailyTrading[ad_spend_is_complete] = TRUE()))
+			RETURN
+			    DIVIDE(CompleteSpend, CompleteCustomers)
+		formatString: \£#,0.00
+		displayFolder: 02 Acquisition
+		lineageTag: af49dcf4-0172-43e4-a005-ae64da50a08a
+
+	/// TIER C - depends on last-click attribution, unreliable here (26.9% of orders carry no usable referrer). Returns BLANK for TikTok and Unattributed rather than zero: zero would claim free acquisition on 9% of the business.
+	measure 'Channel CAC' =
+			IF(
+			    SELECTEDVALUE(DimChannel[has_cost_data]) = FALSE(),
+			    BLANK(),
+			    DIVIDE(
+			        CALCULATE(SUM(FactDailyTrading[ad_spend]), KEEPFILTERS(FactDailyTrading[ad_spend_is_complete] = TRUE())),
+			        CALCULATE(SUM(FactDailyTrading[new_customers]), KEEPFILTERS(FactDailyTrading[ad_spend_is_complete] = TRUE()))
+			    )
+			)
+		formatString: \£#,0.00
+		displayFolder: 02 Acquisition
+		lineageTag: 01266562-0a23-4cea-a28c-63e58b9a710e
+
+	/// TIER A, platform-reported, needs no attribution. Meta rose 0.42 to 1.02 (+143%) from April 2025.
+	measure CPC = DIVIDE(SUM(FactAdSpendDaily[spend]), SUM(FactAdSpendDaily[clicks]))
+		formatString: \£#,0.000
+		displayFolder: 02 Acquisition
+		lineageTag: cea3d702-4e59-489f-9e18-4943e38073c3
+
+	/// The AUCTION component of a CPC move. Meta rose 9.93 to 15.50 (+56%). NOT controllable: you can only decide whether to keep paying it.
+	measure CPM = DIVIDE(SUM(FactAdSpendDaily[spend]) * 1000, SUM(FactAdSpendDaily[impressions]))
+		formatString: \£#,0.00
+		displayFolder: 02 Acquisition
+		lineageTag: e7d7fe2f-f308-443e-a42d-0330e3466c25
+
+	/// The CREATIVE component of a CPC move. Meta fell 2.38% to 1.52% (-36%). Controllable, cheaply and reversibly. CPC = CPM / (1000 x CTR) is an identity.
+	measure CTR = DIVIDE(SUM(FactAdSpendDaily[clicks]), SUM(FactAdSpendDaily[impressions]))
+		formatString: 0.00%
+		displayFolder: 02 Acquisition
+		lineageTag: faa953a2-993d-44d3-97dd-947b91c0884c
+
+	/// Average impressions per person reached. Flat at ~1.22 all year, which is what rules out audience saturation as the cause of the CTR decline.
+	measure Frequency = AVERAGE(FactAdSpendDaily[frequency])
+		formatString: #,0.00
+		displayFolder: 02 Acquisition
+		lineageTag: 6fd3363a-d823-4b48-a6b3-1cb684f4422f
+
+	/// 60-day contribution margin per acquired customer. Restricted to fully-exposed cohorts: a censored cohort has not had 60 days to spend, and including it makes LTV appear to RECOVER. Fell 42.81 to 30.24 (-29%).
+	measure 'LTV 60d (Margin)' =
+			VAR Margin =
+			    CALCULATE(
+			        SUM(CohortLTV[cum_contribution_margin]),
+			        CohortLTV[horizon_days] = 60,
+			        KEEPFILTERS(CohortLTV[has_full_exposure] = TRUE())
+			    )
+			VAR Cohort =
+			    CALCULATE(
+			        SUM(CohortLTV[cohort_size]),
+			        CohortLTV[horizon_days] = 60,
+			        KEEPFILTERS(CohortLTV[has_full_exposure] = TRUE())
+			    )
+			RETURN
+			    DIVIDE(Margin, Cohort)
+		formatString: \£#,0.00
+		displayFolder: 03 Customer Value
+		lineageTag: eafd73c5-306e-4e1f-97c1-03ea3315689c
+
+	/// Revenue-based LTV, kept only for contrast. Overstates headroom above CAC by ~1.4x versus the margin figure, which is why the margin measure is the decision metric.
+	measure 'LTV 60d (Revenue)' =
+			VAR Rev =
+			    CALCULATE(
+			        SUM(CohortLTV[cum_net_revenue]),
+			        CohortLTV[horizon_days] = 60,
+			        KEEPFILTERS(CohortLTV[has_full_exposure] = TRUE())
+			    )
+			VAR Cohort =
+			    CALCULATE(
+			        SUM(CohortLTV[cohort_size]),
+			        CohortLTV[horizon_days] = 60,
+			        KEEPFILTERS(CohortLTV[has_full_exposure] = TRUE())
+			    )
+			RETURN
+			    DIVIDE(Rev, Cohort)
+		formatString: \£#,0.00
+		displayFolder: 03 Customer Value
+		lineageTag: 5be21bfd-0a20-4487-ba7e-b625d0658902
+
+	/// Unit economics headline. Fell 4.42x to 2.09x over twelve months - cost per customer +53% while value per customer -29%.
+	measure 'LTV / CAC' = DIVIDE([LTV 60d (Margin)], [Blended CAC])
+		formatString: #,0.00"x"
+		displayFolder: 03 Customer Value
+		lineageTag: ac23df80-7240-400f-abd9-704cf9491912
+
+	/// Share of a cohort ordering again within 90 days of their OWN first order. The months_since = 1 filter is load-bearing: cohort attributes repeat across all 11 age rows, so without it every cohort is counted 11 times. Falls 31.8% to 0.0% across fully-observed cohorts.
+	measure 'Repeat Rate 90d' =
+			VAR Repeats =
+			    CALCULATE(
+			        SUM(CohortRetention[repeat_within_90d]),
+			        CohortRetention[months_since] = 1,
+			        KEEPFILTERS(CohortRetention[has_full_90d_exposure] = TRUE())
+			    )
+			VAR Cohort =
+			    CALCULATE(
+			        SUM(CohortRetention[cohort_size]),
+			        CohortRetention[months_since] = 1,
+			        KEEPFILTERS(CohortRetention[has_full_90d_exposure] = TRUE())
+			    )
+			RETURN
+			    DIVIDE(Repeats, Cohort)
+		formatString: 0.0%
+		displayFolder: 04 Retention
+		lineageTag: 3170eab1-3043-4a6d-bbcd-5bca5fa50d91
+
+	/// CALENDAR-MONTH bucketed retention, guarded to fully-exposed cohort-ages. A zero here is an OBSERVED zero; an unobserved one returns blank. Different question to Repeat Rate 90d.
+	measure 'Retention Rate' =
+			VAR Repeats =
+			    CALCULATE(SUM(CohortRetention[repeat_customers]), KEEPFILTERS(CohortRetention[has_full_exposure] = TRUE()))
+			VAR Cohort =
+			    CALCULATE(SUM(CohortRetention[cohort_size]), KEEPFILTERS(CohortRetention[has_full_exposure] = TRUE()))
+			RETURN
+			    DIVIDE(Repeats, Cohort)
+		formatString: 0.00%
+		displayFolder: 04 Retention
+		lineageTag: 8cd551f5-9576-40a1-b6bb-d3720257b4d3
+
+	/// Customers acquired in the cohort month. Filtered to one age row because the attribute repeats across all 11.
+	measure 'Cohort Size' = CALCULATE(SUM(CohortRetention[cohort_size]), CohortRetention[months_since] = 1)
+		formatString: #,0
+		displayFolder: 04 Retention
+		lineageTag: bc44a414-a729-459e-ab18-e9ba1ee47ff4
+
+	/// Recomputed from summed numerators, never averaged from weekly rates - averaging would weight a 50-recipient week equally with a 2,000-recipient one. Welcome Series fell 51.6% to 40.2%.
+	measure 'Open Rate' = DIVIDE(SUM(FactEmailFlowWeekly[unique_opens]), SUM(FactEmailFlowWeekly[recipients]))
+		formatString: 0.0%
+		displayFolder: 05 Email
+		lineageTag: 1966f176-67c4-4501-8649-aeac129b256f
+
+	/// As Open Rate - recomputed from sums.
+	measure 'Click Rate' = DIVIDE(SUM(FactEmailFlowWeekly[unique_clicks]), SUM(FactEmailFlowWeekly[recipients]))
+		formatString: 0.0%
+		displayFolder: 05 Email
+		lineageTag: aa031365-4b63-478c-bb1f-446afdef895f
+
+	/// Orders per recipient. THE discriminator: engagement falling while this stays flat means a measurement or deliverability change, not lost demand. Welcome Series held at ~3.3% while opens fell 22%.
+	measure 'Email Conversion Rate' = DIVIDE(SUM(FactEmailFlowWeekly[unique_orders]), SUM(FactEmailFlowWeekly[recipients]))
+		formatString: 0.00%
+		displayFolder: 05 Email
+		lineageTag: 6f625e13-47f7-4510-b606-77ddff2d394a
+
+	/// Attributed order value from flows.
+	measure 'Email Revenue' = SUM(FactEmailFlowWeekly[order_value])
+		formatString: \£#,0
+		displayFolder: 05 Email
+		lineageTag: bd6f7b46-66ce-4539-ac4d-74c0b3554330
+
+	/// Units on non-cancelled orders.
+	measure 'Units Sold' = SUM(FactProductDaily[units])
+		formatString: #,0
+		displayFolder: 06 Product & Inventory
+		lineageTag: 575cca14-ce25-4e57-a917-d2c2a509ff53
+
+	/// Trailing 28-day mean units/day. PARTIAL for the first 27 days of the series - do not read the start of the trend as a real move.
+	measure 'Velocity 28d' = AVERAGE(FactProductDaily[velocity_28d])
+		formatString: #,0.00
+		displayFolder: 06 Product & Inventory
+		lineageTag: 3f713a62-ea1c-4101-bd1a-0b82e5205e7a
+
+	/// Inventory divided by trailing velocity. Uses a CURRENT stock snapshot applied historically, so meaningful only at the latest date. MIN is deliberate: the binding constraint is the worst-covered variant, not the average.
+	measure 'Days of Cover' = MIN(FactProductDaily[days_of_cover])
+		formatString: #,0.0
+		displayFolder: 06 Product & Inventory
+		lineageTag: 971f2438-7ba1-413e-8aa2-a5dc54fc8946
+
+	/// Source-days with no rows ingested. Currently 2: meta_ads_daily on 2025-03-15 and 2025-03-16. A naive detector reads these as spend dropping to zero.
+	measure 'Gap Days' = CALCULATE(COUNTROWS(FactDataQuality), FactDataQuality[is_gap] = TRUE())
+		formatString: #,0
+		displayFolder: 07 Data Quality
+		lineageTag: 2a0b5dc5-4dbf-4ab7-987e-f1e916eb2a95
+
+	/// Days on which every ad source reported. Blended CAC is computed only over these.
+	measure 'Complete Spend Days' = CALCULATE(DISTINCTCOUNT(FactDailyTrading[date_day]), FactDailyTrading[ad_spend_is_complete] = TRUE())
+		formatString: #,0
+		displayFolder: 07 Data Quality
+		lineageTag: 8f33b4db-da59-4055-8f8d-d0ddfe8f1d0f
+
+	partition #Measures = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows({}, {"Platzhalter"}),
+				    Leer = Table.RemoveColumns(Source, {"Platzhalter"})
+				in
+				    Leer
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+
