@@ -49,7 +49,11 @@
               "queryRef": "#Measures.LTV 60d (Margin)",
               "nativeQueryRef": "LTV 60d (Margin)",
               "displayName": "LTV 60d (Margin)"
-            },
+            }
+          ]
+        },
+        "Y2": {
+          "projections": [
             {
               "field": {
                 "Measure": {
@@ -67,6 +71,24 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "CohortLTV"
+                  }
+                },
+                "Property": "cohort_month"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
       }
     },
     "objects": {

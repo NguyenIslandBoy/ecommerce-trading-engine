@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p3_mx",
   "position": {
-    "x": 40,
-    "y": 495,
+    "x": 40.116392953968,
+    "y": 645.35066925948524,
     "z": 8000,
-    "height": 300,
-    "width": 600,
+    "height": 375.00106456970093,
+    "width": 699.42059019744215,
     "tabOrder": 8000
   },
   "visual": {
@@ -95,7 +95,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "10D"
                 }
               }
             }
@@ -108,7 +108,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "10D"
                 }
               }
             },
@@ -239,7 +239,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "10D"
                 }
               }
             }
@@ -290,6 +290,26 @@
           "properties": {},
           "selector": {
             "metadata": "#Measures.Retention Rate"
+          }
+        }
+      ],
+      "subTotals": [
+        {
+          "properties": {
+            "columnSubtotals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "rowSubtotals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
           }
         }
       ]
@@ -390,7 +410,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "50D"
+                  "Value": "30D"
                 }
               }
             }

@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p1_tiles",
   "position": {
-    "x": 1420,
-    "y": 695,
+    "x": 1486.0507302948147,
+    "y": 694.18801720344629,
     "z": 18000,
-    "height": 325,
-    "width": 440,
+    "height": 326.16371662573988,
+    "width": 373.25687357170227,
     "tabOrder": 18000
   },
   "visual": {
