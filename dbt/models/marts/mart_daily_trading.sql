@@ -33,7 +33,13 @@ line_facts as (
         order_date                                      as date_day,
         channel,
         sum(net_revenue)                                as net_revenue,
-        sum(contribution_margin)                        as contribution_margin
+        sum(contribution_margin)                        as contribution_margin,
+        -- Basket size and discount intensity, so AOV movement can be
+        -- decomposed rather than merely trended: a falling AOV caused by
+        -- smaller baskets is a different problem from one caused by
+        -- discounting, and they call for opposite actions.
+        sum(quantity)                                   as units,
+        sum(line_discount)                              as discounts
     from {{ ref('fct_order_line') }}
     where not is_cancelled
     group by order_date, channel
@@ -107,6 +113,16 @@ select
     coalesce(l.contribution_margin, 0)                  as contribution_margin,
     cast(l.net_revenue / nullif(o.orders, 0)
          as decimal(12,2))                              as aov,
+    coalesce(l.units, 0)                                as units,
+    coalesce(l.discounts, 0)                            as discounts,
+    -- AOV = units_per_order * revenue_per_unit. Kept as columns so a detector
+    -- reads the decomposition instead of re-deriving it.
+    cast(l.units * 1.0 / nullif(o.orders, 0)
+         as decimal(12,4))                              as units_per_order,
+    cast(l.net_revenue / nullif(l.units, 0)
+         as decimal(12,4))                              as revenue_per_unit,
+    cast(l.discounts / nullif(l.net_revenue + l.discounts, 0)
+         as decimal(12,6))                              as discount_rate,
 
     s.ad_spend,
     s.clicks,
