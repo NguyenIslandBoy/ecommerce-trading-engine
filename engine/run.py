@@ -145,7 +145,7 @@ if __name__ == "__main__":
     import sys
 
     warehouse = Warehouse()
-    cursor = sys.argv[1] if len(sys.argv) > 1 else str(warehouse.last_day)
+    cursor = sys.argv[1] if len(sys.argv) > 1 else str(warehouse.latest_cursor)
     frame = signals_frame(detect(warehouse.at(cursor)))
 
     print(f"\ncursor {cursor} -- {len(frame)} signals\n")

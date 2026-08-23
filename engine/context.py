@@ -89,6 +89,21 @@ class Warehouse:
     def first_day(self) -> dt.date:
         return _as_date(self.daily["date_day"].min())
 
+    @property
+    def latest_cursor(self) -> dt.date:
+        """The engine's natural "now": the day after the last day with orders.
+
+        NOT last_day. Ads and email land a day late, so standing on the final
+        day of data means that day's cost has not arrived and the engine is
+        permanently one day short -- which is exactly why dbt's as_of_date
+        defaults to 2025-07-01 rather than 2025-06-30.
+
+        This is load-bearing rather than cosmetic: cac_ltv_breach needs five
+        consecutive days of cost, and at last_day only four of the final five
+        are visible, so a real breach in the closing week went undetected.
+        """
+        return self.last_day + dt.timedelta(days=1)
+
     def at(self, cursor) -> Context:
         cursor = _as_date(cursor)
         end = visible_window_end(self.daily, cursor)

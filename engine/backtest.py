@@ -63,7 +63,7 @@ def replay(warehouse: Warehouse | None = None, step_days: int = 1,
     # Detectors need history before they can say anything; starting at day one
     # would score the engine on cursors where silence is the only correct answer.
     first = start or (warehouse.first_day + dt.timedelta(days=120))
-    last = end or warehouse.last_day
+    last = end or warehouse.latest_cursor
 
     cursors: list[dt.date] = []
     day = first

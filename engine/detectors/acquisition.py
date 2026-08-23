@@ -29,6 +29,43 @@ def _trailing(frame: pd.DataFrame, days: int) -> pd.DataFrame:
     return window.sort_values(["date_day", "channel"])
 
 
+def _last_days_with_spend(frame: pd.DataFrame, days: int) -> pd.DataFrame | None:
+    """The most recent ``days`` CONSECUTIVE days that actually have cost data.
+
+    Not the last N calendar days. Ad spend lands a day after the event, so a
+    trailing-N-calendar-day window contains only N-1 days of cost at every
+    cursor except the one sitting a day past the last order. Counting calendar
+    days made this detector structurally unable to fire during a backtest --
+    it scored zero across 245 cursors while a qualifying run existed in the data.
+
+    Returns None if there are not ``days`` of spend, or if the most recent ones
+    are not consecutive (an outage inside the window means "5 consecutive days"
+    was never observed, whatever the surviving rows look like).
+    """
+    rows = frame.dropna(subset=["ad_spend"]).sort_values("date_day")
+    rows = rows[rows["new_customers"] > 0]
+    if len(rows) < days:
+        return None
+
+    rows = rows.tail(days)
+    span = pd.to_datetime(rows["date_day"])
+    if (span.max() - span.min()).days != days - 1:
+        return None
+    return rows
+
+
+def _breach_severity(ratio: float, gate: float) -> float:
+    """Crossing the line is itself the event; the margin past it is secondary.
+
+    Scored as excess-over-threshold, a CAC 20%% above LTV read 0.20 -- which
+    understates "every new customer from this channel is bought at a loss".
+    A bare breach now starts at 0.5 and reaches 1.0 at twice the threshold.
+    """
+    if gate <= 0:
+        return 0.0
+    return float(min(0.5 + (ratio / gate - 1.0) / 2.0, 1.0))
+
+
 @register("cac_ltv_breach")
 def cac_ltv_breach(ctx) -> list[Signal]:
     """Cost to acquire a customer exceeding the value that customer returns.
@@ -63,26 +100,26 @@ def cac_ltv_breach(ctx) -> list[Signal]:
     persistence = cfg.get("persistence_days", 5)
     ratio_gate = cfg.get("breach_ratio", 1.0)
     min_customers = cfg.get("min_new_customers", 20)
-    window = _trailing(ctx.daily, persistence)
     signals: list[Signal] = []
 
     # Blended first: attribution-free, so it can carry a decision on its own.
-    blended = window.groupby("date_day", as_index=False).agg(
-        spend=("ad_spend", "sum"),
-        customers=("new_customers", "sum"),
+    daily_totals = ctx.daily.groupby("date_day", as_index=False).agg(
+        ad_spend=("ad_spend", "sum"),
+        new_customers=("new_customers", "sum"),
         complete=("ad_spend_is_complete", "max"),
     )
-    blended = blended[blended["complete"].astype(bool)]
-    blended = blended[blended["customers"] > 0]
-    if len(blended) >= persistence and blended["customers"].sum() >= min_customers:
-        cac = float(blended["spend"].sum() / blended["customers"].sum())
-        per_day = blended["spend"].astype(float) / blended["customers"].astype(float)
+    daily_totals = daily_totals[daily_totals["complete"].astype(bool)]
+    blended = _last_days_with_spend(daily_totals, persistence)
+    if blended is not None and blended["new_customers"].sum() >= min_customers:
+        cac = float(blended["ad_spend"].sum() / blended["new_customers"].sum())
+        per_day = (blended["ad_spend"].astype(float)
+                   / blended["new_customers"].astype(float))
         if bool((per_day / ltv > ratio_gate).all()):
             ratio = cac / ltv
             signals.append(Signal(
                 detector="cac_ltv_breach", entity_type="account", entity_id="blended",
                 as_of_date=ctx.as_of, fired_date=ctx.window_end,
-                severity=float(min((ratio - ratio_gate) / max(ratio_gate, 1e-9), 1.0)),
+                severity=_breach_severity(ratio, ratio_gate),
                 direction=Direction.DEGRADING,
                 attribution_tier=Tier.B,
                 evidence={
@@ -91,13 +128,15 @@ def cac_ltv_breach(ctx) -> list[Signal]:
                     "ratio": round(ratio, 3),
                     "reference_cohort": str(newest)[:10],
                     "consecutive_days": int(len(blended)),
+                    "window": (f"{blended['date_day'].min()} to "
+                               f"{blended['date_day'].max()}"),
                 },
             ))
 
     for channel in COST_CHANNELS:
-        rows = window[(window["channel"] == channel)].dropna(subset=["ad_spend"])
-        rows = rows[rows["new_customers"] > 0]
-        if len(rows) < persistence or rows["new_customers"].sum() < min_customers:
+        rows = _last_days_with_spend(
+            ctx.daily[ctx.daily["channel"] == channel], persistence)
+        if rows is None or rows["new_customers"].sum() < min_customers:
             continue
         cac = float(rows["ad_spend"].sum() / rows["new_customers"].sum())
         per_day = rows["ad_spend"].astype(float) / rows["new_customers"].astype(float)
@@ -107,7 +146,7 @@ def cac_ltv_breach(ctx) -> list[Signal]:
         signals.append(Signal(
             detector="cac_ltv_breach", entity_type="channel", entity_id=channel,
             as_of_date=ctx.as_of, fired_date=ctx.window_end,
-            severity=float(min((ratio - ratio_gate) / max(ratio_gate, 1e-9), 1.0)),
+            severity=_breach_severity(ratio, ratio_gate),
             direction=Direction.DEGRADING,
             attribution_tier=Tier.C,     # channel CAC depends on last-click
             evidence={
@@ -116,6 +155,7 @@ def cac_ltv_breach(ctx) -> list[Signal]:
                 "ratio": round(ratio, 3),
                 "reference_cohort": str(newest)[:10],
                 "consecutive_days": int(len(rows)),
+                "window": f"{rows['date_day'].min()} to {rows['date_day'].max()}",
             },
         ))
     return signals

@@ -86,8 +86,8 @@ earliest = warehouse.first_day + dt.timedelta(days=120)
 cursor = st.sidebar.slider(
     "As-of date",
     min_value=earliest,
-    max_value=warehouse.last_day,
-    value=warehouse.last_day,
+    max_value=warehouse.latest_cursor,
+    value=warehouse.latest_cursor,
     format="YYYY-MM-DD",
     help=("The engine is re-run as of this date, seeing only rows that had "
           "actually been ingested by then. Ads and email land a day late, so "
