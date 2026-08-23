@@ -156,3 +156,28 @@ def test_inventory_cover_finds_the_right_sku(final_signals):
 def test_tiktok_never_produces_a_cac_signal(final_signals):
     """No cost file exists. Zero spend and no data are different statements."""
     assert final_signals[final_signals["entity_id"] == "tiktok"].empty
+
+
+# --------------------------------------------------------------------------
+# Determinism
+# --------------------------------------------------------------------------
+
+@pytest.mark.parametrize("table", ["daily", "ads", "product", "email",
+                                   "retention", "ltv"])
+def test_signals_do_not_depend_on_row_order(warehouse, table):
+    """Shuffling any input must change nothing.
+
+    Theil-Sen and Mann-Kendall are sequence-dependent, so a trend computed over
+    a scrambled series is meaningless. DuckDB scans in parallel and gives no
+    ordering guarantee, and this held only by luck until a shuffle test turned
+    14 signals into 12. The estimators now sort their own inputs.
+    """
+    baseline = signals_frame(detect(warehouse.at(warehouse.last_day)))
+
+    shuffled = Warehouse()
+    setattr(shuffled, table,
+            getattr(shuffled, table).sample(frac=1.0, random_state=17)
+            .reset_index(drop=True))
+    after = signals_frame(detect(shuffled.at(shuffled.last_day)))
+
+    assert set(after["signal_id"]) == set(baseline["signal_id"])

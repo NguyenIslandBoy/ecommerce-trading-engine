@@ -252,7 +252,7 @@ cursors in ~24 seconds and scores it against hand labels in
 | | |
 |---|---|
 | Recall | 100% (6/6 labelled events) |
-| Precision | 84% of distinct commercial signals map to a labelled event |
+| Precision | 76% of distinct commercial signals map to a labelled event |
 | Trap violations | 0 of 4 |
 
 The traps matter more than the events. Anyone can build a detector that fires;

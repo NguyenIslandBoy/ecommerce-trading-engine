@@ -103,4 +103,8 @@ def daily_trading_as_of(daily: pd.DataFrame, cursor) -> pd.DataFrame:
         out.loc[affected, "ad_spend_is_complete"] = False
         out.loc[affected, "blended_cac"] = pd.NA
 
-    return out.reset_index(drop=True)
+    # Sorted, not merely filtered. Theil-Sen and Mann-Kendall are
+    # SEQUENCE-dependent: a trend computed over a scrambled series is
+    # meaningless, and DuckDB scans in parallel with no ordering guarantee. This
+    # held only by luck until a shuffle test showed 14 signals becoming 12.
+    return out.sort_values(["date_day", "channel"]).reset_index(drop=True)

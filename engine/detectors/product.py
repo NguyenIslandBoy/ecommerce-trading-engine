@@ -200,7 +200,7 @@ def aov_decomposition(ctx) -> list[Signal]:
         net_revenue=("net_revenue", "sum"),
         discounts=("discounts", "sum"),
     )
-    totals = totals[totals["orders"] > 0]
+    totals = totals[totals["orders"] > 0].sort_values("date_day")
     if len(totals) < 2 * ctx.config["trend"]["min_points"]:
         return []
 
