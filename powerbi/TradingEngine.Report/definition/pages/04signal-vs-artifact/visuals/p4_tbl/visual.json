@@ -4,10 +4,10 @@
   "position": {
     "x": 40,
     "y": 525,
-    "z": 15000,
+    "z": 8000,
     "height": 300,
     "width": 900,
-    "tabOrder": 15000
+    "tabOrder": 8000
   },
   "visual": {
     "visualType": "tableEx",
@@ -77,6 +77,9 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "isDefaultSort": true
       }
     },
     "visualContainerObjects": {

@@ -4,16 +4,16 @@
   "position": {
     "x": 40,
     "y": 755,
-    "z": 15000,
+    "z": 6000,
     "height": 265,
     "width": 900,
-    "tabOrder": 15000
+    "tabOrder": 6000
   },
   "visual": {
-    "visualType": "tableEx",
+    "visualType": "columnChart",
     "query": {
       "queryState": {
-        "Values": {
+        "Category": {
           "projections": [
             {
               "field": {
@@ -28,8 +28,13 @@
               },
               "queryRef": "DimChannel.channel_name",
               "nativeQueryRef": "Channel",
+              "active": true,
               "displayName": "Channel"
-            },
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
             {
               "field": {
                 "Measure": {
@@ -92,6 +97,24 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "#Measures"
+                  }
+                },
+                "Property": "Orders"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
       }
     },
     "visualContainerObjects": {

@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p2_tik",
   "position": {
     "x": 960,
     "y": 755,
-    "z": 15000,
+    "z": 7000,
     "height": 265,
     "width": 920,
-    "tabOrder": 15000
+    "tabOrder": 7000
   },
   "visual": {
     "visualType": "textbox",
@@ -17,40 +17,72 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
-                    "value": "Why two rows in that table are blank\n\n",
+                    "value": "Why two rows in that table are blank",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "13pt",
-                      "color": "#0B1A2E",
-                      "fontWeight": "bold"
+                      "color": "#0b1a2e"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
-                    "value": "TikTok drives 2,396 orders (9.0% of the business) and no cost file was supplied. Unattributed carries 7,139 orders with no usable referrer.\n\n",
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "TikTok drives 2,396 orders (9.0% of the business) and no cost file was supplied. Unattributed carries 7,139 orders with no usable referrer.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
-                    "value": "CAC is spend ÷ customers. With no spend, it is not computable — so the measure returns BLANK rather than £0.00.\n\n",
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "CAC is spend ÷ customers. With no spend, it is not computable — so the measure returns BLANK rather than £0.00.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
                     "value": "Rendering zero would claim free acquisition on a tenth of the business. ",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#C0392B",
-                      "fontWeight": "bold"
+                      "color": "#c0392b"
                     }
                   },
                   {
@@ -58,7 +90,7 @@
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
                   }
                 ]

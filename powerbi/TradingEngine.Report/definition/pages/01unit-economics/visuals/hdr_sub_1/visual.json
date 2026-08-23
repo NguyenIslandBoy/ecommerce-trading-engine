@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "hdr_sub_1",
   "position": {
-    "x": 40,
-    "y": 118,
-    "z": 6100,
-    "height": 28,
-    "width": 1500,
-    "tabOrder": 6100
+    "x": 40.198705987835318,
+    "y": 110.54644146654712,
+    "z": 2000,
+    "height": 41.873652070661791,
+    "width": 1499.0767441296921,
+    "tabOrder": 2000
   },
   "visual": {
     "visualType": "textbox",
@@ -17,14 +17,13 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
                     "value": "Cost per acquired customer and value per acquired customer moved against each other at the same time",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#6B7785"
+                      "color": "#6b7785"
                     }
                   }
                 ]
@@ -36,6 +35,19 @@
     },
     "visualContainerObjects": {
       "visualHeader": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
         {
           "properties": {
             "show": {

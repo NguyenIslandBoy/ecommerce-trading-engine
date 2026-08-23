@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p4_foot2",
   "position": {
     "x": 960,
     "y": 845,
-    "z": 15000,
+    "z": 5000,
     "height": 175,
     "width": 920,
-    "tabOrder": 15000
+    "tabOrder": 5000
   },
   "visual": {
     "visualType": "textbox",
@@ -17,7 +17,6 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
                     "value": "The same mechanism drives Layer 2\n\n",
@@ -36,7 +35,8 @@
                       "color": "#1A2332"
                     }
                   }
-                ]
+                ],
+                "horizontalTextAlignment": "left"
               }
             ]
           }

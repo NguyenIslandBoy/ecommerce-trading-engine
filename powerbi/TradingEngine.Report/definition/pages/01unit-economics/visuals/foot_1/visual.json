@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "foot_1",
   "position": {
-    "x": 40,
-    "y": 1035,
-    "z": 6000,
-    "height": 24,
-    "width": 1840,
-    "tabOrder": 6000
+    "x": 40.198705987835318,
+    "y": 1035.1166791867595,
+    "z": 0,
+    "height": 31.823975573702963,
+    "width": 1839.0907989434659,
+    "tabOrder": 0
   },
   "visual": {
     "visualType": "textbox",
@@ -17,7 +17,6 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
                     "value": "Source: dbt / DuckDB warehouse · 20 models · 92 tests · every figure reconciled",
@@ -35,7 +34,8 @@
                       "color": "#6B7785"
                     }
                   }
-                ]
+                ],
+                "horizontalTextAlignment": "left"
               }
             ]
           }
