@@ -32,8 +32,8 @@ These were established by profiling before any code was written. They are the re
 | Vitamin D3 breakout | 219 → 701 units/month (3.2×), sustained from 2025-02, while all 11 other products stayed flat. Combined inventory 812 units vs ~620/month run rate ≈ 5.7 weeks cover. Stockout risk. |
 | AOV erosion | £61.36 → £55.07 (−10%). Discount rate is flat at ~3.2%, so this is mix shift (D3 sells at £12.99–16.99 vs CBD Oil at £29.99–109.99), not promotional dependency. |
 | Blended CAC rise | £9.68 → £14.84 (+53%). Attribution-free. |
-| Cohort retention collapse | 90-day repeat rate falls monotonically across cohorts that ALL have full 90-day exposure: 31.8% (2024-07) → 15.8% (2024-09) → 2.4% (2024-11) → 0.2% (2025-01) → 0.0% (2025-03). Not a censoring artifact. Verified against the CSVs. |
-| Unit-economics compression | 60-day contribution-margin LTV £42.80 → £30.24 (−29%) while blended CAC rose 53%. LTV/CAC **4.4× → 2.1×** — more than halved in twelve months. This is the headline commercial finding. |
+| Cohort retention collapse | 90-day repeat rate falls from 31.8% (2024-07) to 0.0% (2025-03) across cohorts that ALL have full 90-day exposure — near-monotonically: 31.8% → 25.2% → 15.8% (2024-09) → 9.7% → 2.4% (2024-11) → 0.2% (2024-12) → 0.2% (2025-01) → 0.2% (2025-02) → 0.0% (2025-03), with 2025-01 → 2025-02 ticking up (0.17% → 0.23%) rather than declining. Not a censoring artifact. Verified against the CSVs. |
+| Unit-economics compression | 60-day contribution-margin LTV £42.80 → £30.24 (−29%) while blended CAC rose 53%. LTV/CAC **4.4× → 2.1×** — more than halved in twelve months. (This pairs each period's 60-day cohort LTV against 2025-06's blended CAC throughout, i.e. current unit economics, not each cohort's own acquisition-month CAC — the 2025-04 cohort read against its own contemporaneous CAC of £12.47 is 2.4×, still a clear compression.) This is the headline commercial finding. |
 
 ### 2.3 Traps — things that look like signals but are not
 

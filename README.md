@@ -95,13 +95,17 @@ if an email-based join would ever match more than 20% of orders.
 | Inventory is a snapshot | `products.csv` carries only CURRENT `inventory_quantity`, with no history | `mart_product_daily.days_of_cover` applies that snapshot to every historical day, so it is meaningful only at the latest date. Any backtest must read inventory signals at the run date, never historically. |
 | Cost is a snapshot | `products.csv` carries only a single CURRENT `cost` per variant, with no history | `fct_order_line` applies that present-day cost to every historical order (COGS = current `unit_cost` × quantity), so margin trends are affected by any cost change that actually occurred during the period, and the engine cannot see it or correct for it. |
 | Partial trailing windows at series start | Trailing-window columns average over fewer real days than their label implies until the window fills | `mart_product_daily.velocity_28d` and `days_of_cover` are unreliable for the first 27 days of the spine (2024-07-01 reads `velocity_28d` = 7.0 from a single day of data, `days_of_cover` = 67.4); `mart_email_flow_weekly`'s 8-week trailing means are likewise unreliable for the first 7 weeks. Not fixed here; a detector consuming these columns must discard the warm-up period. |
+| Every rebuild's newest day has NULL ad spend | Ad and email sources sync one day after event date, but `dim_date` clamps to `max(order_date)`, not to the ad/email max — so at ANY `as_of_date` cursor D, ad spend is complete only through D−1 | The newest day of every historical rebuild has NULL `ad_spend`, `channel_cac` and `blended_cac` in `mart_daily_trading`, by design (point-in-time correctness, not a bug). A Layer 3 backtest replaying `as_of_date` across ~365 cursors will hit this on every single run; the detection layer must expect and discard that trailing day rather than treat it as a data gap. |
 
 ## The retention trap
 
 Cohort retention really does collapse: the 90-day repeat rate (the share
 of a cohort placing a second order within 90 days of their first) falls
-monotonically from 31.8% (2024-07 cohort) to 0.0% (2025-03 cohort), and
-every one of those cohorts has full 90-day exposure — the observation
+from 31.8% (2024-07 cohort) to 0.0% (2025-03 cohort) across cohorts that
+all have full 90-day exposure — near-monotonically: 2025-01 and 2025-02
+sit level at ~0.2% before reaching zero (31.77, 25.17, 15.79, 9.65, 2.41,
+0.21, 0.17, 0.23, 0.00) — and every one of those cohorts has full 90-day
+exposure — the observation
 window has fully elapsed against the last date with data (2025-06-30).
 Censoring explains only the most recent two to three cohorts (2025-04
 onward), where the median 100-day gap to a second order means the window

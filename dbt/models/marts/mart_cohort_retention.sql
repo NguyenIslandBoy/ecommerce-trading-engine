@@ -67,10 +67,22 @@ activity as (
 
 ),
 
+bounds as (
+    -- Derived, not hardcoded: the oldest cohort could theoretically be
+    -- observed for this many months by the last date with data. A fixed
+    -- literal here would truncate SILENTLY (no relationship test protects
+    -- it, unlike dim_date's fixed range) if the data window grows.
+    select
+        datediff(
+            'month',
+            min(cohort_month),
+            (select max(date_day) from {{ ref('dim_date') }})
+        ) as max_months_since
+    from cohort_sizes
+),
+
 ages as (
-    -- 0-11 months covers the ~12-month data window (2024-07 through
-    -- 2025-06/07). Revisit this bound if the window grows.
-    select unnest(generate_series(0, 11)) as months_since
+    select unnest(generate_series(0, (select max_months_since from bounds))) as months_since
 ),
 
 grid as (
