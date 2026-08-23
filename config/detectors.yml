@@ -1,0 +1,105 @@
+# Detector thresholds. Deliberately here rather than in code: none of these came
+# from the client, so every one is the author's judgement and needs to be
+# arguable, overridable, and visible without reading Python.
+#
+# Nothing in the brief or the data specifies what "bad" means. Where a number
+# below is a guess, it says so.
+
+fdr:
+  # Benjamini-Hochberg across all detectors x entities at a cursor. 0.10 means
+  # up to 10% of fired signals are expected to be false discoveries -- looser
+  # than the 0.05 convention because missing a real CAC breach costs more than
+  # investigating a false one.
+  alpha: 0.10
+
+trend:
+  # Shared by the trend-based detectors.
+  window_days: 28          # trailing window for slope estimation
+  min_points: 8            # below this Mann-Kendall is not meaningful
+
+detectors:
+
+  cac_ltv_breach:
+    enabled: true
+    # Fires when a channel's trailing CAC exceeds the 60-day margin LTV of the
+    # most recent fully-exposed cohort. Ratio, not difference, so channels of
+    # different sizes stay comparable.
+    horizon_days: 60
+    breach_ratio: 1.0        # CAC/LTV above this is a breach
+    persistence_days: 5      # consecutive days required
+    min_new_customers: 20    # below this the daily CAC is too noisy to read
+
+  cac_trend:
+    enabled: true
+    # Theil-Sen slope on blended and channel CAC, significance by Mann-Kendall.
+    # Slope is expressed as % of the window's median per day.
+    #
+    # 90 days, not the shared 28. Measured on this data, blended CAC over the
+    # trailing 28 days gives slope -0.17%/day at p=0.42 -- no trend at all --
+    # while the same series over 90 days gives +0.25%/day at p=2.5e-08, and over
+    # the full year +29%. CAC drifts slowly, so a 28-day window cannot separate
+    # the drift from weekly noise and the detector would stay silent through the
+    # entire deterioration. Fast-moving metrics keep the 28-day default.
+    window_days: 90
+    min_pct_per_day: 0.15    # ~4.5% a month; below this is not worth an alert
+    max_p_value: 0.05
+
+  cpc_decomposition:
+    enabled: true
+    # Splits CPC movement into its CPM and CTR components. The split IS the
+    # finding: rising CPM with flat CTR is an auction problem (budget/targeting),
+    # falling CTR is a creative problem. They call for opposite actions.
+    min_cpc_change_pct: 10.0
+    dominance_ratio: 1.5     # one component must explain this much more than the other
+
+  product_velocity:
+    enabled: true
+    # Trailing 7d against lagged 28d, scored with a MAD z-score.
+    z_threshold: 3.0
+    min_units_28d: 20        # ignore long-tail variants where noise dominates
+    warmup_days: 28          # velocity_28d is unreliable until the window fills
+
+  inventory_cover:
+    enabled: true
+    # days_of_cover applies a CURRENT stock snapshot to every historical day, so
+    # it is only meaningful at the latest visible date. Never backtested.
+    critical_days: 14
+    warning_days: 28
+    latest_date_only: true
+
+  aov_decomposition:
+    enabled: true
+    # AOV = units_per_order * revenue_per_unit, with discount_rate alongside.
+    # Reports which component moved, because basket shrinkage and discounting
+    # are different problems.
+    min_change_pct: 5.0
+    max_p_value: 0.05
+
+  email_engagement_decay:
+    enabled: true
+    # The ARTIFACT test. Engagement falling while conversion holds is a
+    # measurement effect, not a commercial one -- so the co-movement check is
+    # what decides the classification, not the size of the drop.
+    min_open_rate_decline_pct: 10.0   # Theil-Sen decline over the visible window
+    # Scale-free co-movement test. Conversion must fall at least this fraction
+    # as fast as opens before the decline counts as commercial. A fixed
+    # percentage tolerance would classify differently for a 2% flow and a 50%
+    # one; the ratio asks the question that actually matters -- did the money
+    # follow the engagement.
+    comovement_ratio: 0.5
+    min_weeks: 8
+
+  cohort_retention_shift:
+    enabled: true
+    # Compares cohorts ONLY at equal exposure age, and only where the window has
+    # fully elapsed. Must fire on the genuine 31.8% -> 0.0% collapse and stay
+    # silent on censored cohorts. Both directions are tested.
+    min_cohort_size: 100
+    min_decline_pct: 25.0
+    min_cohorts: 4
+
+  data_completeness:
+    enabled: true
+    # Any source-day the warehouse flagged. Always DATA_QUALITY, never
+    # commercial, and it suppresses other detectors whose window overlaps.
+    suppression_window_days: 7
