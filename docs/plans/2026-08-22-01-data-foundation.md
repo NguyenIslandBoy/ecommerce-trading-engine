@@ -2679,7 +2679,7 @@ git commit -m "feat: add censoring-aware contribution-margin LTV mart"
 
 **Interfaces:**
 
-- Produces: `mart_email_flow_weekly`, grain `flow_id` × `week_start`. Columns: `flow_id`, `flow_name`, `week_start`, `recipients`, `open_rate`, `click_rate`, `conversion_rate`, `unsubscribe_rate`, `revenue_per_recipient`, `order_value`, plus 8-week trailing means `open_rate_8w`, `click_rate_8w`, `conversion_rate_8w`.
+- Produces: `mart_email_flow_weekly`, grain `flow_name` × `week_start`. Columns: `flow_name`, `week_start`, `recipients`, `open_rate`, `click_rate`, `conversion_rate`, `unsubscribe_rate`, `revenue_per_recipient`, `order_value`, plus 8-week trailing means `open_rate_8w`, `click_rate_8w`, `conversion_rate_8w`.
 
 The trailing means are what the email decay detector compares: engagement falling while conversion holds is the signature of a measurement artifact rather than lost demand.
 
@@ -2696,7 +2696,7 @@ Append to `dbt/models/marts/_marts.yml`:
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
-            combination_of_columns: [flow_id, week_start]
+            combination_of_columns: [flow_name, week_start]
     columns:
       - name: flow_name
         data_tests:
@@ -2730,6 +2730,14 @@ it does not report PASS — do not treat a NO-OP as a failure of this step.
 {#
   Flow-level weekly engagement.
 
+  GRAIN WARNING: the source's `Flow_ID` is NOT a flow identifier -- it is a
+  MESSAGE identifier. "Welcome Series" spans FL001, FL002 and FL003; there are
+  12 Flow_IDs across only 6 real flows, and exactly one Message_ID per Flow_ID.
+  Grouping on flow_id therefore yields 12 x 53 = 636 rows, which is the
+  message grain the fact table already has, not a rollup at all -- and
+  "Welcome Series open rate" would silently become three separate series.
+  The real flow identity is `flow_name`, so that is the grain here: 6 x 53 = 318.
+
   Rates are recomputed from summed numerators and denominators rather
   than averaged from message-level rates: averaging rates across messages
   with very different recipient counts weights a 50-recipient message
@@ -2739,7 +2747,6 @@ it does not report PASS — do not treat a NO-OP as a failure of this step.
 with rolled as (
 
     select
-        flow_id,
         flow_name,
         week_start,
         sum(recipients)                                 as recipients,
@@ -2749,7 +2756,7 @@ with rolled as (
         sum(unique_orders)                              as unique_orders,
         sum(order_value)                                as order_value
     from {{ ref('fct_email_flow_weekly') }}
-    group by flow_id, flow_name, week_start
+    group by flow_name, week_start
 
 ),
 
@@ -2769,17 +2776,17 @@ rated as (
 select
     *,
     avg(open_rate) over (
-        partition by flow_id order by week_start
+        partition by flow_name order by week_start
         rows between 7 preceding and current row
     )                                                   as open_rate_8w,
 
     avg(click_rate) over (
-        partition by flow_id order by week_start
+        partition by flow_name order by week_start
         rows between 7 preceding and current row
     )                                                   as click_rate_8w,
 
     avg(conversion_rate) over (
-        partition by flow_id order by week_start
+        partition by flow_name order by week_start
         rows between 7 preceding and current row
     )                                                   as conversion_rate_8w
 
@@ -2793,7 +2800,7 @@ cd "C:/Users/nguye/Downloads/DS_projects/de_task/dbt"
 ../venv/Scripts/dbt.exe build --profiles-dir . --select mart_email_flow_weekly
 ```
 
-Expected: 1 model built, all tests PASS.
+Expected: 1 model built, all tests PASS. Row count must be **318** (6 flows x 53 weeks). If you get 636 the grain is wrong -- you have grouped on `flow_id`, which is a message id, not a flow id.
 
 - [ ] **Step 5: Verify the decay-with-flat-conversion signature is present**
 
