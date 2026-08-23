@@ -29,7 +29,8 @@ These were established by profiling before any code was written. They are the re
 | Event | Evidence |
 |---|---|
 | Meta cost inflation | CPC £0.42 → £1.02 (+143%) from 2025-04, all 6 campaigns simultaneously. Decomposes into CPM £10.00 → £15.50 (+55%, auction pressure) and CTR 2.36% → 1.52% (−36%, creative relevance). Frequency flat ~1.22 all year, so not audience saturation. Google CPC flat at ~£0.19 all year. |
-| Vitamin D3 breakout | 219 → 701 units/month (3.2×), sustained from 2025-02, while all 11 other products stayed flat. Combined inventory 812 units vs ~620/month run rate ≈ 5.7 weeks cover. Stockout risk. |
+| Vitamin D3 breakout (velocity) | 219 -> 701 units/month (3.2x), sustained from 2025-02, while all 11 other products stayed flat. D3 now carries the two highest velocities in the catalogue (11.1 and 10.0 units/day). It was stocked for it, though: cover is 33.5 and 44.1 days. This is a demand signal, NOT the stockout signal. |
+| Inventory cover risk (separate finding) | The urgent reorder is CBD Oil 20% 30ml: **17.0 days** cover (109 units against 6.4/day), followed by CBD Muscle Balm 100ml at 21.8 and 50ml at 30.6. All three sit BELOW D3. Verified at the final as_of date. Conflating the velocity breakout with the cover risk points the reorder at the wrong SKU. |
 | AOV erosion | £61.36 → £55.07 (−10%). Discount rate is flat at ~3.2%, so this is mix shift (D3 sells at £12.99–16.99 vs CBD Oil at £29.99–109.99), not promotional dependency. |
 | Blended CAC rise | £9.68 → £14.84 (+53%). Attribution-free. |
 | Cohort retention collapse | 90-day repeat rate falls from 31.8% (2024-07) to 0.0% (2025-03) across cohorts that ALL have full 90-day exposure — near-monotonically: 31.8% → 25.2% → 15.8% (2024-09) → 9.7% → 2.4% (2024-11) → 0.2% (2024-12) → 0.2% (2025-01) → 0.2% (2025-02) → 0.0% (2025-03), with 2025-01 → 2025-02 ticking up (0.17% → 0.23%) rather than declining. Not a censoring artifact. Verified against the CSVs. |
