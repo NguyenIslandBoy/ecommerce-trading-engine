@@ -181,3 +181,53 @@ def test_signals_do_not_depend_on_row_order(warehouse, table):
     after = signals_frame(detect(shuffled.at(shuffled.last_day)))
 
     assert set(after["signal_id"]) == set(baseline["signal_id"])
+
+
+def test_the_briefs_worked_example_actually_fires(warehouse):
+    """The brief's own example: "Meta CAC has exceeded the 60-day LTV threshold
+    for 5 consecutive days".
+
+    This detector scored zero across every cursor of the backtest while a
+    qualifying run existed in the data. It counted the last five CALENDAR days,
+    but ad spend lands a day late, so the window held only four days of cost at
+    every cursor except one. A detector that can never fire fails silently, so
+    it gets an explicit test.
+    """
+    signals = signals_frame(detect(warehouse.at(warehouse.latest_cursor)))
+    breach = signals[signals["detector"] == "cac_ltv_breach"]
+
+    assert not breach.empty, "the brief's worked example never fires"
+    row = breach.iloc[0]
+    assert row["entity_id"] == "meta"
+    assert row["evidence"]["consecutive_days"] == 5
+    assert row["evidence"]["ratio"] > 1.0        # CAC above LTV, by definition
+    assert row["attribution_tier"] == "C"        # channel CAC is last-click
+
+
+def test_a_channel_breach_cannot_act_on_its_own(warehouse):
+    """Firing is not the same as acting.
+
+    The brief's example implies a reallocation. This engine declines to make one
+    unattended, because a channel-level CAC rests on last-click attribution and
+    26.8% of non-cancelled orders have no usable referrer. It is a Tier C signal,
+    so it monitors rather than executes — deliberately."""
+    from engine.recommend import dedupe, recommend
+
+    ctx = warehouse.at(warehouse.latest_cursor)
+    recs = dedupe(recommend(ctx, signals_frame(detect(ctx))))
+    breach = [r for r in recs if r.source_detector == "cac_ltv_breach"]
+
+    assert breach, "no recommendation produced for the breach"
+    assert all(r.autonomy in ("MONITOR", "FLAG FOR REVIEW") for r in breach)
+
+
+def test_the_engine_stands_a_day_past_the_last_order(warehouse):
+    """Ads land a day late, so standing on the final day of orders leaves the
+    engine permanently one day short of its own cost data."""
+    assert warehouse.latest_cursor == warehouse.last_day + dt.timedelta(days=1)
+
+    ctx = warehouse.at(warehouse.latest_cursor)
+    newest = ctx.daily[ctx.daily["date_day"].map(
+        lambda d: pd.Timestamp(d).date() == warehouse.last_day)]
+    assert not newest.empty
+    assert newest["ad_spend"].notna().any(), "final day's spend should be visible"

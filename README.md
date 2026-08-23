@@ -8,7 +8,7 @@ evidence can actually bear.
 | Layer | State |
 |---|---|
 | **1. Data foundation** | Built — 20 dbt models, 94 data tests, point-in-time correct |
-| **2. Signal detection** | Built — 9 detectors, replayed across 245 cursors |
+| **2. Signal detection** | Built — 9 detectors, replayed across 246 cursors |
 | **3. Recommendation & simulation** | Built — Monte Carlo, autonomy gate |
 | **Surfaces** | Streamlit app (`app.py`), Power BI report (`powerbi/`), Jupyter walkthrough (`notebooks/`) |
 
@@ -88,8 +88,8 @@ cd dbt && ../venv/Scripts/dbt.exe deps --profiles-dir .
 cd .. &&  venv/Scripts/python.exe scripts/export_marts.py  # marts -> Parquet
 
 venv/Scripts/python.exe -m engine.run          # detect at the latest cursor
-venv/Scripts/python.exe -m engine.backtest     # replay 245 cursors, ~25s
-venv/Scripts/python.exe -m pytest              # 47 tests
+venv/Scripts/python.exe -m engine.backtest     # replay 246 cursors, ~25s
+venv/Scripts/python.exe -m pytest              # 50 tests
 venv/Scripts/python.exe -m streamlit run app.py
 ```
 
@@ -223,6 +223,16 @@ the test is whether it stays silent on four things that look exactly like
 signals and are not — the Meta outage reading as a CAC improvement, censored
 cohorts reading as a collapse, the January trough manufacturing a crisis, and
 email decay that conversion never followed.
+
+**On the brief's worked example.** *"Meta CAC has exceeded the 60-day LTV
+threshold for 5 consecutive days"* does occur, and `cac_ltv_breach` fires on it:
+£36.40 against £30.24, a 1.20× breach over 2025-06-26 to 06-30. The engine then
+**declines to reallocate unattended**, and that refusal is deliberate rather than
+a gap. A channel-level CAC rests entirely on last-click attribution, and 26.8% of
+orders have no usable referrer — so it is Tier C, capped at 0.55 confidence, and
+monitors instead of acting. The attribution-free blended CAC (£12.23) is nowhere
+near the threshold, which is the more reassuring number and the one that would
+have been allowed to act.
 
 A 365-cursor replay is affordable only because `engine/pit.py` reconstructs any
 cursor in ~100ms against the ~35s a real dbt rebuild takes.
