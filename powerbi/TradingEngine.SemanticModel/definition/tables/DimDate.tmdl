@@ -3,7 +3,7 @@ table DimDate
 	lineageTag: 7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d
 	dataCategory: Time
 
-	/// Datum (Tageskorn).
+	/// Date, at day grain. The key of the model's date table.
 	column Date
 		dataType: dateTime
 		isKey
@@ -16,7 +16,7 @@ table DimDate
 
 		annotation UnderlyingDateTimeDataType = Date
 
-	/// Jahr (4-stellig).
+	/// Year, 4-digit.
 	column Year
 		dataType: int64
 		formatString: 0
@@ -26,7 +26,7 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Quartal (Q1, Q2, Q3, Q4).
+	/// Quarter within the year: Q1-Q4. Not unique across years - use YearQuarter on an axis.
 	column Quarter
 		dataType: string
 		lineageTag: 0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f50
@@ -35,7 +35,7 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Monat als Zahl (1-12). Sortier-Spalte für MonthName.
+	/// Month as a number, 1-12. Sort column for MonthName.
 	column Month
 		dataType: int64
 		formatString: 0
@@ -45,7 +45,8 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Monatsname auf Deutsch (Januar bis Dezember). Sortiert nach Month.
+	/// Month name, en-GB (January to December) - set by Date.MonthName(..., "en-GB") in the
+	/// partition M, so it does not follow the viewer's locale. Sorted by Month, not alphabetically.
 	column MonthName
 		dataType: string
 		lineageTag: 2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f506172
@@ -55,7 +56,7 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Jahr-Monat im Format YYYY-MM (z.B. 2026-05). Sortiert nach Date.
+	/// Year-month as YYYY-MM (e.g. 2025-06). Sorted by YearMonthNr. The default month axis.
 	column YearMonth
 		dataType: string
 		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617283
@@ -65,7 +66,7 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Jahr-Quartal im Format YYYY-Qn (z.B. 2026-Q1). Sortiert nach YearQuarterNr. Achse für 5-Quartals-Trends.
+	/// Year-quarter as YYYY-Qn (e.g. 2025-Q2). Sorted by YearQuarterNr.
 	column YearQuarter
 		dataType: string
 		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617284
@@ -73,7 +74,7 @@ table DimDate
 		sourceColumn: YearQuarter
 		sortByColumn: YearQuarterNr
 
-	/// Sortierschlüssel für YearQuarter (Year*10 + Quartal).
+	/// Sort key for YearQuarter (Year*10 + quarter).
 	column YearQuarterNr
 		dataType: int64
 		isHidden
@@ -84,7 +85,8 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Sortierschlüssel für YearMonth (Year*100 + Month). Muss dieselbe Kardinalität wie YearMonth haben (1 Wert pro Monat), damit PBI nicht implizit nach Date sub-groupt.
+	/// Sort key for YearMonth (Year*100 + month). Must have the same cardinality as YearMonth
+	/// (one value per month) or Power BI sub-groups the axis by Date underneath.
 	column YearMonthNr
 		dataType: int64
 		isHidden
@@ -95,7 +97,7 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Kalenderwoche (ISO 8601). Bereich 1..53.
+	/// Week of year, Monday-start. Range 1-53.
 	column Week
 		dataType: int64
 		formatString: 0
@@ -105,7 +107,7 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Jahr-Kalenderwoche im Format "KW01"..."KW53" (für X-Achse historischer Trend-Charts). Sortiert nach YearWeekNr.
+	/// Week label, "W01" to "W53", for weekly trend axes. Sorted by YearWeekNr.
 	column YearWeek
 		dataType: string
 		lineageTag: 3a4b5c6d-7e8f-9a0b-1c2d-3e4f50617288
@@ -113,7 +115,7 @@ table DimDate
 		sourceColumn: YearWeek
 		sortByColumn: YearWeekNr
 
-	/// Sortierschlüssel für YearWeek (Year*100 + Week).
+	/// Sort key for YearWeek (Year*100 + week).
 	column YearWeekNr
 		dataType: int64
 		isHidden
@@ -124,7 +126,9 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Monats-Offset relativ zum aktuellen Monat (TODAY): 0 = aktueller Monat, -1 = Vormonat, +1 = Folgemonat. Für rollierende Fenster (letzte 12 Monate = -11..0). Wird beim Refresh neu berechnet.
+	/// Month offset relative to TODAY(): 0 = current month, -1 = last month, +1 = next month.
+	/// For rolling windows (last 12 months = -11..0). Recomputed on every refresh - note this makes
+	/// it move over time, so it is unsuitable for the fixed 2024-07..2025-06 analysis period.
 	column 'Month Offset' = ( YEAR ( DimDate[Date] ) - YEAR ( TODAY () ) ) * 12 + ( MONTH ( DimDate[Date] ) - MONTH ( TODAY () ) )
 		dataType: int64
 		formatString: 0
@@ -133,7 +137,9 @@ table DimDate
 
 		annotation SummarizationSetBy = Automatic
 
-	/// Drill-down Hierarchie für Charts: Jahr → Quartal → Monat. Wichtig: nutzt UNIQUE-Spalten (YearQuarter "2026-Q1", YearMonth "2026-01") statt MonthName/Quarter, damit "Go to next level" funktioniert (sonst aggregiert PBI alle Jahre).
+	/// Drill-down hierarchy for charts: Year -> Quarter -> Month. Uses the UNIQUE columns
+	/// (YearQuarter "2025-Q2", YearMonth "2025-06") rather than Quarter/MonthName, so that
+	/// "go to next level" works - otherwise Power BI aggregates every year together.
 	/// Month-start of each date. Bridge column so cohort_month (a month-grain key on
 	/// CohortLTV / CohortRetention) can be TREATAS-mapped onto the daily calendar.
 	/// Hidden - not for direct use.
@@ -151,11 +157,11 @@ table DimDate
 			lineageTag: 5c6d7e8f-9a0b-4c5d-7e8f-9a0b1c2d3e4f
 			column: Year
 
-		level Quartal
+		level Quarter
 			lineageTag: 6d7e8f9a-0b1c-4d6e-8f9a-0b1c2d3e4f50
 			column: YearQuarter
 
-		level Monat
+		level Month
 			lineageTag: 7e8f9a0b-1c2d-4e7f-9a0b-1c2d3e4f5061
 			column: YearMonth
 

@@ -16,7 +16,7 @@ annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
 
 ref table DimDate
 ref table #Measures
-ref table Zeitvergleich
+ref table 'Time Comparison'
 ref table DimChannel
 ref table DimProduct
 ref table DimCampaign
