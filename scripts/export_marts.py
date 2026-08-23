@@ -69,8 +69,16 @@ def main() -> None:
     results = []
     for schema, table in EXPORTS:
         out_path = OUT_DIR / f"{table}.parquet"
+        # ORDER BY ALL, not a bare COPY. DuckDB scans in parallel and emits rows
+        # in whatever order threads finish, so two identical builds produced
+        # byte-different Parquet -- fct_ad_spend_daily's 4,003 rows came out
+        # shuffled every time. The DATA was identical, but a file that changes
+        # on every build cannot be diffed, cached or checksummed, and would hide
+        # a real change among the noise. Every table here is grain-unique, so
+        # ordering by all columns is total and deterministic.
         con.execute(
-            f"COPY {schema}.{table} TO '{out_path.as_posix()}' (FORMAT PARQUET)"
+            f"COPY (SELECT * FROM {schema}.{table} ORDER BY ALL) "
+            f"TO '{out_path.as_posix()}' (FORMAT PARQUET)"
         )
         row_count = con.execute(f"SELECT COUNT(*) FROM {schema}.{table}").fetchone()[0]
         results.append((table, row_count, out_path.stat().st_size))

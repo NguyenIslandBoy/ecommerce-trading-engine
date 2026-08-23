@@ -22,7 +22,11 @@ def _trailing(frame: pd.DataFrame, days: int) -> pd.DataFrame:
     if frame.empty:
         return frame
     cutoff = pd.Timestamp(frame["date_day"].max()) - pd.Timedelta(days=days - 1)
-    return frame[pd.to_datetime(frame["date_day"]) >= cutoff]
+    window = frame[pd.to_datetime(frame["date_day"]) >= cutoff]
+    # Explicit, even though the Context already sorts. Every caller feeds this
+    # into a sequence-dependent estimator, so the ordering is a correctness
+    # requirement of this function rather than an assumption about its input.
+    return window.sort_values(["date_day", "channel"])
 
 
 @register("cac_ltv_breach")
