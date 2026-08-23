@@ -17,11 +17,19 @@ from engine.stats import (
 
 @register("product_velocity")
 def product_velocity(ctx) -> list[Signal]:
-    """Variants selling materially faster or slower than their own recent norm.
+    """Variants gaining or losing SHARE of the catalogue, not raw velocity.
 
-    Scored per variant against its own history with a MAD z-score, so a
-    catalogue containing both a 3x bestseller and a long tail does not have the
-    tail permanently flagged for being small.
+    Share, not absolute units, and that distinction is the whole detector. Scored
+    against its own history in raw velocity, this fired on 23 of 24 variants at
+    2024-11-30 -- because in peak season every product is anomalous relative to
+    its own pre-peak past, and a detector that flags the entire catalogue has
+    detected nothing.
+
+    Dividing by the catalogue total cancels the common seasonal move exactly,
+    with no seasonal model to fit -- which matters here, because 12 months of
+    data contains exactly one November and an annual factor is not estimable.
+    What survives is genuine relative movement, which is what the finding
+    actually was: Vitamin D3 tripled "while all 11 other products stayed flat".
 
     The first 28 days of the spine are skipped: velocity_28d averages over
     fewer real days than its name implies until the window fills, and reads
@@ -45,6 +53,15 @@ def product_velocity(ctx) -> list[Signal]:
     min_units = cfg.get("min_units_28d", 20)
     signals: list[Signal] = []
 
+    # Catalogue velocity per day. Every variant is measured as a share of this,
+    # so a peak that lifts the whole catalogue cancels instead of firing.
+    catalogue = (product.groupby("date_day")["velocity_7d"].sum()
+                 .replace(0, np.nan))
+    product = product.assign(
+        share=product["velocity_7d"].astype(float)
+        / product["date_day"].map(catalogue).astype(float)
+    )
+
     for variant_id, rows in product.groupby("variant_id"):
         rows = rows.sort_values("date_day")
         current = rows[rows["date_day"] == latest]
@@ -52,7 +69,7 @@ def product_velocity(ctx) -> list[Signal]:
             continue
         current = current.iloc[0]
 
-        history = rows[rows["date_day"] < latest]["velocity_7d"].dropna().astype(float)
+        history = rows[rows["date_day"] < latest]["share"].dropna().astype(float)
         if len(history) < 14:
             continue
 
@@ -62,7 +79,7 @@ def product_velocity(ctx) -> list[Signal]:
         if recent_units < min_units:
             continue    # long tail: noise would dominate any z-score
 
-        point = float(current["velocity_7d"]) if pd.notna(current["velocity_7d"]) else None
+        point = float(current["share"]) if pd.notna(current["share"]) else None
         if point is None:
             continue
 
@@ -79,11 +96,14 @@ def product_velocity(ctx) -> list[Signal]:
             attribution_tier=Tier.A,     # units sold, no attribution involved
             evidence={
                 "product_title": str(current.get("product_title", "")),
-                "velocity_7d": round(point, 3),
+                "catalogue_share": round(point, 5),
+                "catalogue_share_median": round(float(np.median(history)), 5),
+                "velocity_7d": (round(float(current["velocity_7d"]), 3)
+                                if pd.notna(current["velocity_7d"]) else None),
                 "velocity_28d": (round(float(current["velocity_28d"]), 3)
                                  if pd.notna(current["velocity_28d"]) else None),
-                "history_median": round(float(np.median(history)), 3),
                 "mad_z": round(float(z), 2),
+                "basis": "share of catalogue velocity - cancels seasonality",
                 "units_28d": int(recent_units),
             },
         ))
