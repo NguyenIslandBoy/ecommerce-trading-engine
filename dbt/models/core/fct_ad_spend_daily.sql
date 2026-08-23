@@ -26,7 +26,12 @@ select
     cast(1000.0 * a.spend / nullif(a.impressions, 0)
          as decimal(12,4))                                          as cpm,
     cast(a.clicks * 1.0 / nullif(a.impressions, 0)
-         as decimal(8,6))                                           as ctr
+         as decimal(8,6))                                           as ctr,
+
+    -- Date this row became visible to the warehouse. Carried through so a
+    -- backtest can reconstruct any cursor without a full rebuild: dbt keeps
+    -- ownership of WHEN a row is available, Python only compares dates.
+    cast(a.synced_at as date)                                       as available_on
 
 from {{ ref('stg_ads_daily') }} a
 inner join {{ ref('dim_campaign') }} c
