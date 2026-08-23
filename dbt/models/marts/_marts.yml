@@ -61,9 +61,11 @@ models:
   - name: mart_cohort_retention
     description: >
       Cohort retention with an explicit censoring guard. retention_rate is
-      NULL wherever the observation window has not fully elapsed as of
-      var('as_of_date'). raw_retention_rate is always populated and exists
-      only to demonstrate the artifact the guard prevents.
+      NULL wherever the observation window has not fully elapsed as of the
+      LAST DATE WITH DATA (max(dim_date.date_day)) -- deliberately NOT as of
+      var('as_of_date'), which sits one day past period close to absorb
+      ad/email ingestion lag. raw_retention_rate is always populated and
+      exists only to show the difference the guard makes.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
