@@ -33,3 +33,6 @@ data/marts/
 # The task brief itself - marked confidential by eComplete, so it stays out
 # of a repo that will be shared.
 brief/
+
+# Personal reference walkthrough - kept local, not part of the deliverable.
+docs/project-guide.html
