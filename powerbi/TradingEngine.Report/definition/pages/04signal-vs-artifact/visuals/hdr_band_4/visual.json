@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "hdr_band_4",
   "position": {
     "x": 0,
     "y": 0,
-    "z": 6000,
+    "z": 1000,
     "height": 56,
     "width": 1920,
-    "tabOrder": 6000
+    "tabOrder": 1000
   },
   "visual": {
     "visualType": "textbox",
@@ -17,26 +17,36 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
                     "value": "eCOMMERCE TRADING ENGINE",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#FFFFFF",
-                      "fontWeight": "bold"
+                      "fontSize": "18pt",
+                      "color": "#ffffff",
+                      "lineHeight": "0",
+                      "position": "relative",
+                      "verticalAlign": "baseline",
+                      "scriptType": "sub",
+                      "bottom": "-0.25em"
                     }
                   },
                   {
                     "value": "   ·   Layer 1  ·  dbt / DuckDB  ·  GBP ex-VAT",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
-                      "fontSize": "11pt",
-                      "color": "#B8C2CC"
+                      "fontSize": "18pt",
+                      "color": "#b8c2cc",
+                      "lineHeight": "0",
+                      "position": "relative",
+                      "verticalAlign": "baseline",
+                      "scriptType": "sub",
+                      "bottom": "-0.25em"
                     }
                   }
-                ]
+                ],
+                "indent": 1
               }
             ]
           }

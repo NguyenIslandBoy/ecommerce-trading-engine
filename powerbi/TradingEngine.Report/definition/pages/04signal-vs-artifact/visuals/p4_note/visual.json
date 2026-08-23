@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p4_note",
   "position": {
     "x": 1240,
     "y": 175,
-    "z": 15000,
+    "z": 6000,
     "height": 330,
     "width": 640,
-    "tabOrder": 15000
+    "tabOrder": 6000
   },
   "visual": {
     "visualType": "textbox",
@@ -17,58 +17,90 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
-                    "value": "Artifact, not lost demand\n\n",
+                    "value": "Artifact, not lost demand",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "13pt",
-                      "color": "#0B1A2E",
-                      "fontWeight": "bold"
+                      "color": "#0b1a2e"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
                     "value": "Looks like:  ",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#C0392B",
-                      "fontWeight": "bold"
+                      "color": "#c0392b"
                     }
                   },
                   {
-                    "value": "\"Engagement is collapsing across all six flows — fix the flows.\"\n\n",
+                    "value": "\"Engagement is collapsing across all six flows — fix the flows.\"",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
                     "value": "Actually:  ",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#2E8B57",
-                      "fontWeight": "bold"
+                      "color": "#2e8b57"
                     }
                   },
                   {
-                    "value": "opens and clicks fell; orders per recipient did not. The flows monetise exactly as before — a deliverability or open-tracking change.\n\n",
+                    "value": "opens and clicks fell; orders per recipient did not. The flows monetise exactly as before — a deliverability or open-tracking change.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
                     "value": "The rule:  ",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332",
-                      "fontWeight": "bold"
+                      "color": "#1a2332"
                     }
                   },
                   {
@@ -76,7 +108,7 @@
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
                   }
                 ]

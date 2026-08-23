@@ -4,10 +4,10 @@
   "position": {
     "x": 296,
     "y": 335,
-    "z": 15000,
+    "z": 4000,
     "height": 400,
     "width": 924,
-    "tabOrder": 15000
+    "tabOrder": 4000
   },
   "visual": {
     "visualType": "lineChart",
@@ -64,7 +64,11 @@
               "queryRef": "#Measures.CPM",
               "nativeQueryRef": "CPM",
               "displayName": "CPM"
-            },
+            }
+          ]
+        },
+        "Y2": {
+          "projections": [
             {
               "field": {
                 "Measure": {
@@ -112,6 +116,32 @@
               "expr": {
                 "Literal": {
                   "Value": "'Top'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "logAxisScale": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "y2Axis": [
+        {
+          "properties": {
+            "secLogAxisScale": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
                 }
               }
             }

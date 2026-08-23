@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "hdr_title_4",
   "position": {
-    "x": 40,
-    "y": 74,
-    "z": 6100,
-    "height": 44,
-    "width": 1400,
-    "tabOrder": 6100
+    "x": 40.198705987835318,
+    "y": 73.697627644364758,
+    "z": 3000,
+    "height": 58.623112898926507,
+    "width": 1400.2549252429303,
+    "tabOrder": 3000
   },
   "visual": {
     "visualType": "textbox",
@@ -17,15 +17,14 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
                     "value": "Two things that look like problems and are not",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "22pt",
-                      "color": "#0B1A2E",
-                      "fontWeight": "bold"
+                      "color": "#0b1a2e"
                     }
                   }
                 ]
@@ -37,6 +36,19 @@
     },
     "visualContainerObjects": {
       "visualHeader": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
         {
           "properties": {
             "show": {

@@ -1,13 +1,13 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p3_note2",
   "position": {
-    "x": 960,
-    "y": 525,
-    "z": 15000,
-    "height": 200,
-    "width": 920,
-    "tabOrder": 15000
+    "x": 959.74410545956823,
+    "y": 524.25812392468561,
+    "z": 8000,
+    "height": 236.1673976785325,
+    "width": 919.54539947173294,
+    "tabOrder": 8000
   },
   "visual": {
     "visualType": "textbox",
@@ -17,58 +17,90 @@
           "properties": {
             "paragraphs": [
               {
-                "horizontalTextAlignment": "left",
                 "textRuns": [
                   {
-                    "value": "Two cells, same number, opposite meaning\n\n",
+                    "value": "Two cells, same number, opposite meaning",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "13pt",
-                      "color": "#0B1A2E",
-                      "fontWeight": "bold"
+                      "color": "#0b1a2e"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
                     "value": "2024-10 at M+3 → 0.0%.  ",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#C0392B",
-                      "fontWeight": "bold"
+                      "color": "#c0392b"
                     }
                   },
                   {
-                    "value": "Window fully elapsed. This zero is an observed fact — a real collapse.\n\n",
+                    "value": "Window fully elapsed. This zero is an observed fact — a real collapse.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
                     "value": "2025-04 at M+3 → blank.  ",
                     "textStyle": {
+                      "fontWeight": "bold",
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#6B7785",
-                      "fontWeight": "bold"
+                      "color": "#6b7785"
                     }
                   },
                   {
-                    "value": "Window has not closed. Median gap to a second order is 100 days, so this cohort has not had the chance yet. Reporting it as 0% would be wrong.\n\n",
+                    "value": "Window has not closed. Median gap to a second order is 100 days, so this cohort has not had the chance yet. Reporting it as 0% would be wrong.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
-                      "color": "#1A2332"
+                      "color": "#1a2332"
                     }
-                  },
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
                   {
                     "value": "Leave blanks blank in the matrix. Formatting them as zero erases the distinction the model exists to make.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
+                      "fontStyle": "italic",
                       "fontSize": "10pt",
-                      "color": "#6B7785",
-                      "fontStyle": "italic"
+                      "color": "#6b7785"
                     }
                   }
                 ]
