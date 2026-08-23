@@ -1,11 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
-    "type": "Report",
+    "type": "SemanticModel",
     "displayName": "TradingEngine"
   },
   "config": {
     "version": "2.0",
-    "logicalId": "c3a5d2b8-4e6f-4091-8b32-9d7f0e1a2345"
+    "logicalId": "b2f4c1a7-3d5e-4f80-9a21-7c6e8d0f1234"
   }
 }
