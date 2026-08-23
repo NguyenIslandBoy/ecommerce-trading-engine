@@ -4,7 +4,7 @@
 **Status:** Awaiting client validation
 **Wireframe:** [`docs/wireframe/eCommerce_Trading_Engine_Wireframe.html`](wireframe/eCommerce_Trading_Engine_Wireframe.html) — single standalone file, 1920x1080 canvas, 4 tabs
 **Design doc:** [`docs/specs/2026-08-22-ecommerce-trading-engine-design.md`](specs/2026-08-22-ecommerce-trading-engine-design.md)
-**Warehouse:** `dbt/` — 20 models, 95 test nodes, point-in-time correct
+**Warehouse:** `dbt/` — 20 models, 92 data tests, point-in-time correct
 
 ---
 
