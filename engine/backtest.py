@@ -72,17 +72,21 @@ def replay(warehouse: Warehouse | None = None, step_days: int = 1,
         day += dt.timedelta(days=step_days)
 
     began = time.time()
-    frames: list[pd.DataFrame] = []
+    # Accumulated as records rather than concatenated frames. Some detectors
+    # leave p_value entirely NA at a given cursor, and pd.concat over frames
+    # where a column is all-NA in some of them is deprecated in pandas 3 -- the
+    # resulting dtype is about to change. Building one frame from records sides
+    # steps that and is clearer about what a row is.
+    records: list[dict] = []
     for index, cursor in enumerate(cursors):
         frame = signals_frame(detect(warehouse.at(cursor)))
-        if not frame.empty:
-            frame = frame.copy()
-            frame["cursor"] = cursor
-            frames.append(frame)
+        for record in frame.to_dict("records"):
+            record["cursor"] = cursor
+            records.append(record)
         if progress is not None:
             progress(index + 1, len(cursors))
 
-    stacked = (pd.concat(frames, ignore_index=True) if frames
+    stacked = (pd.DataFrame.from_records(records) if records
                else signals_frame([]).assign(cursor=pd.Series(dtype="object")))
     return Replay(signals=stacked, cursors=cursors, seconds=time.time() - began)
 
