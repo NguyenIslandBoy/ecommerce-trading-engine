@@ -1,9 +1,9 @@
 /// eCommerce Trading Engine - Layer 1 semantic model. Star schema over Parquet exports of a dbt/DuckDB warehouse (20 models, 92 tests). Every measure reconciles to warehouse figures guarded by those tests.
 model Model
-	culture: de-DE
+	culture: en-GB
 	defaultPowerBIDataSourceVersion: powerBI_V3
 	discourageImplicitMeasures
-	sourceQueryCulture: de-DE
+	sourceQueryCulture: en-GB
 	dataAccessOptions
 		legacyRedirects
 		returnErrorValuesAsNull
