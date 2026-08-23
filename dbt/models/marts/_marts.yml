@@ -19,7 +19,11 @@ models:
     description: >
       Daily trading metrics by last-click channel. channel_cac and
       channel_roas are Tier C (attribution-dependent); blended_cac is
-      Tier B and is repeated on every row of a given day.
+      Tier B and is repeated on every row of a given day. ad_spend_is_complete
+      is false whenever any ad source (meta_ads_daily, google_ads_daily) has
+      a missing day per mart_data_quality; on those days blended_cac is NULL
+      rather than a spend total computed from whichever sources happen to
+      have rows, which would otherwise read as a fabricated CAC improvement.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

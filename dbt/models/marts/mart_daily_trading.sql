@@ -73,6 +73,22 @@ daily_spend as (
 
 ),
 
+ad_spend_completeness as (
+
+    -- blended_cac sums whatever spend rows exist for the day, so a source
+    -- with a missing day (meta_ads_daily on 2025-03-15/16) silently reads
+    -- as a partial total rather than an incomplete one. This flag makes
+    -- that absence explicit so blended_cac can be NULLed instead of
+    -- fabricating a CAC improvement out of missing spend.
+    select
+        date_day,
+        not bool_or(is_gap)                             as ad_spend_is_complete
+    from {{ ref('mart_data_quality') }}
+    where source_name in ('meta_ads_daily', 'google_ads_daily')
+    group by date_day
+
+),
+
 grid as (
     select d.date_day, c.channel
     from {{ ref('dim_date') }} d
@@ -103,8 +119,14 @@ select
          as decimal(12,4))                              as channel_margin_roas,
 
     -- Tier B: attribution-free, identical across a day's channel rows.
-    cast(ds.total_ad_spend / nullif(dt.total_new_customers, 0)
-         as decimal(12,2))                              as blended_cac,
+    -- NULL whenever any ad source is missing a day's rows: a partial spend
+    -- total divided by the full new-customer count reads as a fabricated
+    -- CAC improvement, not as "unknown".
+    coalesce(ac.ad_spend_is_complete, false)            as ad_spend_is_complete,
+    case when coalesce(ac.ad_spend_is_complete, false)
+        then cast(ds.total_ad_spend / nullif(dt.total_new_customers, 0)
+                  as decimal(12,2))
+    end                                                  as blended_cac,
 
     d.is_peak_season,
     d.iso_dow,
@@ -116,4 +138,5 @@ left join line_facts   l  on l.date_day = g.date_day and l.channel = g.channel
 left join spend_facts  s  on s.date_day = g.date_day and s.channel = g.channel
 left join daily_totals dt on dt.date_day = g.date_day
 left join daily_spend  ds on ds.date_day = g.date_day
+left join ad_spend_completeness ac on ac.date_day = g.date_day
 inner join {{ ref('dim_date') }} d on d.date_day = g.date_day

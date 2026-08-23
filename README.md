@@ -19,6 +19,7 @@ uv venv --python 3.12 venv
 uv pip install --python venv/Scripts/python.exe -r requirements.txt
 
 cd dbt
+../venv/Scripts/dbt.exe deps --profiles-dir .
 ../venv/Scripts/dbt.exe build --profiles-dir .
 ```
 
