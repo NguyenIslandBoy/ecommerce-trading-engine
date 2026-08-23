@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p1_note",
   "position": {
-    "x": 1240,
+    "x": 660,
     "y": 335,
-    "z": 5000,
-    "height": 400,
-    "width": 640,
-    "tabOrder": 5000
+    "z": 12000,
+    "height": 340,
+    "width": 340,
+    "tabOrder": 12000
   },
   "visual": {
     "visualType": "textbox",
@@ -37,7 +37,7 @@
                     }
                   },
                   {
-                    "value": "Acquisition got 53% more expensive while each customer became 29% less valuable. Neither alone would be alarming; together the ratio more than halved.\n\n",
+                    "value": "Acquisition got 53% more expensive while each customer became 29% less valuable. Neither alone would be alarming; together the ratio fell 45% — 4.42x to 2.43x.\n\n",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
@@ -45,7 +45,7 @@
                     }
                   },
                   {
-                    "value": "Payback is now marginal.  ",
+                    "value": "Meta is now below break-even.  ",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
@@ -54,7 +54,7 @@
                     }
                   },
                   {
-                    "value": "At 2.09x on a 60-day horizon, Meta-acquired customers (CAC £34.74) sit close to break-even before overheads.\n\n",
+                    "value": "Meta-acquired customers cost £34.83 on trailing CAC and return £31.01 of 60-day margin — 0.89x, a loss before overheads. Channel figures are last-click, so this sizes a test rather than settling a verdict.\n\n",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",
@@ -62,7 +62,7 @@
                     }
                   },
                   {
-                    "value": "The cause is on page 3.  ",
+                    "value": "The cause is on page 2.  ",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "11pt",

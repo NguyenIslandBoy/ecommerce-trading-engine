@@ -2,9 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json",
   "pageOrder": [
     "01unit-economics",
-    "02acquisition-cost",
-    "03customer-value",
-    "04signal-vs-artifact"
+    "02signal-vs-artifact"
   ],
   "activePageName": "01unit-economics"
 }
