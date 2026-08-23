@@ -52,30 +52,56 @@ spend_within as (
        and l.order_date <  c.first_order_date + h.horizon_days
     group by c.cohort_month, c.acquisition_channel, h.horizon_days
 
+),
+
+exposure as (
+
+    select
+        s.cohort_month,
+        s.acquisition_channel,
+        h.horizon_days,
+        s.cohort_size,
+
+        -- The last-acquired customer in the cohort must have had the full
+        -- horizon to spend, or the cohort's LTV is understated.
+        (s.last_acquisition_date + h.horizon_days)
+            <= (select max(date_day) from {{ ref('dim_date') }})  as has_full_exposure,
+
+        coalesce(w.cum_net_revenue, 0)                      as cum_net_revenue,
+        coalesce(w.cum_contribution_margin, 0)              as cum_contribution_margin
+
+    from cohort_sizes s
+    cross join horizons h
+    left join spend_within w
+        on w.cohort_month = s.cohort_month
+       and w.acquisition_channel = s.acquisition_channel
+       and w.horizon_days = h.horizon_days
+
 )
 
 select
-    s.cohort_month,
-    s.acquisition_channel,
-    h.horizon_days,
-    s.cohort_size,
+    cohort_month,
+    acquisition_channel,
+    horizon_days,
+    cohort_size,
+    has_full_exposure,
 
-    -- The last-acquired customer in the cohort must have had the full
-    -- horizon to spend, or the cohort's LTV is understated.
-    (s.last_acquisition_date + h.horizon_days)
-        <= (select max(date_day) from {{ ref('dim_date') }})  as has_full_exposure,
+    -- Raw sums stay populated even when censored, mirroring
+    -- mart_cohort_retention's raw_retention_rate.
+    cum_net_revenue,
+    cum_contribution_margin,
 
-    coalesce(w.cum_net_revenue, 0)                      as cum_net_revenue,
-    coalesce(w.cum_contribution_margin, 0)              as cum_contribution_margin,
+    -- Censored cohorts publish NULL, not a partial-window figure that looks
+    -- like a completed measurement. Left unguarded, a less-censored cohort
+    -- can read ABOVE the last fully-exposed one (fewer high spenders have
+    -- had time to churn out of the average yet), which inverts the
+    -- headline LTV finding into an apparent recovery.
+    case when has_full_exposure
+        then cum_net_revenue * 1.0 / nullif(cohort_size, 0)
+    end                                                  as ltv_revenue,
 
-    coalesce(w.cum_net_revenue, 0) * 1.0
-        / nullif(s.cohort_size, 0)                      as ltv_revenue,
-    coalesce(w.cum_contribution_margin, 0) * 1.0
-        / nullif(s.cohort_size, 0)                      as ltv_margin
+    case when has_full_exposure
+        then cum_contribution_margin * 1.0 / nullif(cohort_size, 0)
+    end                                                  as ltv_margin
 
-from cohort_sizes s
-cross join horizons h
-left join spend_within w
-    on w.cohort_month = s.cohort_month
-   and w.acquisition_channel = s.acquisition_channel
-   and w.horizon_days = h.horizon_days
+from exposure

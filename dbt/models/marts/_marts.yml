@@ -86,7 +86,11 @@ models:
       and 90 day horizons. Censoring-aware: has_full_exposure is false where
       the horizon extends past the LAST DATE WITH DATA (max(dim_date.date_day))
       -- deliberately NOT var('as_of_date'), which sits one day past period
-      close to absorb ad/email ingestion lag.
+      close to absorb ad/email ingestion lag. ltv_revenue and ltv_margin are
+      NULL wherever has_full_exposure is false, mirroring
+      mart_cohort_retention's guard on retention_rate; cum_net_revenue and
+      cum_contribution_margin stay populated regardless so the raw sums are
+      always visible.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
