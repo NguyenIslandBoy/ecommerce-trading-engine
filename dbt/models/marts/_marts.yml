@@ -5,7 +5,11 @@ models:
     description: >
       Per-source, per-day completeness and drift audit. Detectors join to
       this table to reclassify a signal as DATA_QUALITY when its window
-      overlaps a known incident.
+      overlaps a known incident. issue_type is 'missing_day' when a source
+      has no row at all for a day, 'partial_day' when an ad platform has
+      SOME rows but fewer than expected_count (the modal, data-derived
+      campaign count for that platform -- e.g. one of Meta's 6 daily
+      campaigns absent), and 'ok' otherwise.
     columns:
       - name: source_name
         data_tests:
@@ -21,9 +25,10 @@ models:
       channel_roas are Tier C (attribution-dependent); blended_cac is
       Tier B and is repeated on every row of a given day. ad_spend_is_complete
       is false whenever any ad source (meta_ads_daily, google_ads_daily) has
-      a missing day per mart_data_quality; on those days blended_cac is NULL
-      rather than a spend total computed from whichever sources happen to
-      have rows, which would otherwise read as a fabricated CAC improvement.
+      a missing OR partial day per mart_data_quality's issue_type; on those
+      days blended_cac is NULL rather than a spend total computed from
+      whichever sources/campaigns happen to have rows, which would
+      otherwise read as a fabricated CAC improvement.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -48,6 +53,18 @@ models:
           Average order value, ex-VAT and excluding shipping (net_revenue /
           orders). Does not match a VAT-inclusive AOV quoted elsewhere, e.g.
           in the design doc.
+      - name: channel_roas
+        description: >
+          net_revenue / ad_spend. net_revenue is ex-VAT, so this does not
+          match a VAT-inclusive ROAS quoted by an ad platform's own
+          dashboard (e.g. Meta Ads Manager) for the same spend -- roughly
+          17% lower here, not a pipeline error.
+      - name: channel_margin_roas
+        description: >
+          contribution_margin / ad_spend. contribution_margin is computed
+          on ex-VAT revenue, so this does not match a VAT-inclusive ROAS
+          quoted by an ad platform's own dashboard for the same spend --
+          roughly 17% lower here, not a pipeline error.
 
   - name: mart_product_daily
     description: >

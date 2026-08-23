@@ -25,9 +25,6 @@ vars:
   as_of_date: '2025-07-01'
   # Path to the raw CSVs, relative to the dbt project directory.
   data_dir: '../data'
-  # Reserved for the Layer-2 CAC/LTV detector. mart_ltv itself hardcodes its
-  # horizons to [30, 60, 90] and does not read this var.
-  ltv_horizon_days: 60
   # UK VAT. Source prices are VAT-inclusive; product costs are not.
   vat_rate: 0.20
 
