@@ -19,34 +19,44 @@
   noted as an assumption in the README.
 #}
 
+with lines as (
+
+    select
+        l.order_line_id,
+        l.order_id,
+        o.customer_id,
+        l.variant_id,
+        l.product_id,
+        l.sku,
+        o.order_date,
+        o.channel,
+        o.is_cancelled,
+        l.quantity,
+
+        -- VAT-inclusive, reconciles to orders.total_line_items_price
+        cast(l.unit_price * l.quantity as decimal(12,2))         as gross_revenue_incl_vat,
+        l.total_discount                                          as line_discount,
+        cast(l.unit_price * l.quantity - l.total_discount
+             as decimal(12,2))                                    as net_revenue_incl_vat,
+
+        -- Ex-VAT, rounded ONCE. contribution_margin is derived below from
+        -- this already-rounded value minus cogs (exact decimal subtraction)
+        -- rather than re-deriving the ex-VAT figure a second time, which let
+        -- the two round independently and disagree on the published margin.
+        cast((l.unit_price * l.quantity - l.total_discount)
+             / cast(1 + {{ var('vat_rate') }} as decimal(12,6))
+             as decimal(12,2))                                    as net_revenue,
+        cast(p.unit_cost * l.quantity as decimal(12,2))          as cogs
+
+    from {{ ref('stg_order_lines') }} l
+    inner join {{ ref('fct_order') }} o
+        on o.order_id = l.order_id
+    inner join {{ ref('dim_product') }} p
+        on p.variant_id = l.variant_id
+
+)
+
 select
-    l.order_line_id,
-    l.order_id,
-    o.customer_id,
-    l.variant_id,
-    l.product_id,
-    l.sku,
-    o.order_date,
-    o.channel,
-    o.is_cancelled,
-    l.quantity,
-
-    -- VAT-inclusive, reconciles to orders.total_line_items_price
-    cast(l.unit_price * l.quantity as decimal(12,2))         as gross_revenue_incl_vat,
-    l.total_discount                                          as line_discount,
-    cast(l.unit_price * l.quantity - l.total_discount
-         as decimal(12,2))                                    as net_revenue_incl_vat,
-
-    -- Ex-VAT. This is the revenue every downstream metric uses.
-    cast((l.unit_price * l.quantity - l.total_discount)
-         / (1 + {{ var('vat_rate') }}) as decimal(12,2))      as net_revenue,
-    cast(p.unit_cost * l.quantity as decimal(12,2))          as cogs,
-    cast((l.unit_price * l.quantity - l.total_discount)
-         / (1 + {{ var('vat_rate') }})
-         - p.unit_cost * l.quantity as decimal(12,2))         as contribution_margin
-
-from {{ ref('stg_order_lines') }} l
-inner join {{ ref('fct_order') }} o
-    on o.order_id = l.order_id
-inner join {{ ref('dim_product') }} p
-    on p.variant_id = l.variant_id
+    *,
+    net_revenue - cogs                                          as contribution_margin
+from lines
