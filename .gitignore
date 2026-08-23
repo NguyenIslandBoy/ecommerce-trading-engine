@@ -13,11 +13,9 @@ dbt/.user.yml
 data/marts/
 
 # Client template — NOT for this repo. See docs/spec.md §PII.
-data_viz/
 
 # Client artefacts — must never be committed
 *.pbix
-Support_Service*
 
 # PBIP per-user / per-machine state - never share these
 **/.pbi/localSettings.json   # DPAPI-encrypted credential bindings
