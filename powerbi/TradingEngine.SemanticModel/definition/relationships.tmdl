@@ -1,0 +1,36 @@
+relationship 684da434-8d8f-4772-a78e-a89884522ca8
+	fromColumn: FactDailyTrading.date_day
+	toColumn: DimDate.date_day
+
+relationship d82b3b79-fbc9-4c3e-9be3-b326b5b02814
+	fromColumn: FactProductDaily.date_day
+	toColumn: DimDate.date_day
+
+relationship 1c5fe44f-f1fe-461e-97a8-007a3d09dcfa
+	fromColumn: FactDataQuality.date_day
+	toColumn: DimDate.date_day
+
+relationship 0446add2-1e9e-4f3a-a022-7fb6b5ab4b11
+	fromColumn: FactAdSpendDaily.ad_date
+	toColumn: DimDate.date_day
+
+relationship d28fe583-6b52-4a44-bf65-9666bdc2f427
+	fromColumn: FactEmailFlowWeekly.week_start
+	toColumn: DimDate.date_day
+
+relationship 768b4759-1e27-4d2e-bf54-6888d09d7387
+	fromColumn: FactDailyTrading.channel
+	toColumn: DimChannel.channel
+
+relationship 2a894799-7ce8-46d9-9f5b-6bc7b31b9cb3
+	fromColumn: CohortLTV.acquisition_channel
+	toColumn: DimChannel.channel
+
+relationship 99adccdb-ba2c-4940-824a-f2087428a675
+	fromColumn: FactProductDaily.variant_id
+	toColumn: DimProduct.variant_id
+
+relationship a0da837c-99c6-4017-a5dc-64331f23bc00
+	fromColumn: FactAdSpendDaily.campaign_key
+	toColumn: DimCampaign.campaign_key
+

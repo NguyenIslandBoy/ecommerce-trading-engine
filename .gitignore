@@ -11,3 +11,6 @@ dbt/.user.yml
 .env
 .superpowers/
 data/marts/
+
+# Client template — NOT for this repo. See docs/spec.md §PII.
+data_viz/
