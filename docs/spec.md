@@ -145,7 +145,11 @@ The report is therefore built on **contrast pairs** — the naive reading beside
 
 Answers question 1. Both series on one £ axis so the convergence is literal rather than inferred.
 
-Headline: LTV/CAC **4.42× → 2.09×**. Cost per customer +53%, value per customer −29%. Neither alone would alarm; together the ratio more than halved.
+Headline: LTV/CAC **4.42× → 2.43×** across fully-exposed cohorts (2024-07 → 2025-04) — a 45% fall. Cost per customer +29% (£9.68 → £12.47), value per customer −29% (£42.81 → £30.24). Neither alone would alarm; together the ratio nearly halved.
+
+**An earlier draft of this spec quoted 4.42× → 2.09×.** That endpoint was the 2025-06 cohort, whose 60-day window cannot have closed — the extract ends 2025-06-30. It is precisely the censoring artifact §4.3 is about, and it had been sitting in this document's own headline. The model returns BLANK there.
+
+CAC is the half of the ratio that stays observable: it is complete for every month and reaches **£14.84 by 2025-06, +53% on July**, while the LTV series goes dark. The cost line keeps climbing after the value line stops reporting — which is the sharper version of the finding, not a weaker one.
 
 Secondary tiles separate two findings the design doc originally conflated: Vitamin D3 is the **velocity** story (3.2×, highest in catalogue, adequately stocked at 33.5d); CBD Oil 20% 30ml is the **cover** story (17.0d — the actual reorder).
 

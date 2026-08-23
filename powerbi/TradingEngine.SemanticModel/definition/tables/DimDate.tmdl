@@ -134,6 +134,16 @@ table DimDate
 		annotation SummarizationSetBy = Automatic
 
 	/// Drill-down Hierarchie für Charts: Jahr → Quartal → Monat. Wichtig: nutzt UNIQUE-Spalten (YearQuarter "2026-Q1", YearMonth "2026-01") statt MonthName/Quarter, damit "Go to next level" funktioniert (sonst aggregiert PBI alle Jahre).
+	/// Month-start of each date. Bridge column so cohort_month (a month-grain key on
+	/// CohortLTV / CohortRetention) can be TREATAS-mapped onto the daily calendar.
+	/// Hidden - not for direct use.
+	column MonthStart = DATE ( YEAR ( DimDate[Date] ), MONTH ( DimDate[Date] ), 1 )
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 4145863f-c6d9-4786-abc6-6699cf4aa375
+		summarizeBy: none
+
 	hierarchy 'Date Hierarchy'
 		lineageTag: 4b5c6d7e-8f9a-4b5c-6d7e-8f9a0b1c2d3e
 

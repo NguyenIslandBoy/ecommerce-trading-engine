@@ -56,6 +56,32 @@ table #Measures
 		displayFolder: 02 Acquisition
 		lineageTag: af49dcf4-0172-43e4-a005-ae64da50a08a
 
+	/// Blended CAC for the cohort acquired in a given month: spend in that month /
+	/// new customers in that month. CohortLTV has no relationship to the calendar, so
+	/// cohort_month is mapped onto DimDate[MonthStart] via TREATAS. With no cohort in
+	/// context this collapses to the all-period figure. Unlike LTV, CAC is fully
+	/// observed for every month - it keeps reporting after the LTV series goes blank.
+	measure 'Cohort CAC' =
+			VAR CohortMonths =
+			    VALUES ( CohortLTV[cohort_month] )
+			RETURN
+			    CALCULATE (
+			        DIVIDE (
+			            CALCULATE (
+			                SUM ( FactDailyTrading[ad_spend] ),
+			                KEEPFILTERS ( FactDailyTrading[ad_spend_is_complete] = TRUE () )
+			            ),
+			            CALCULATE (
+			                SUM ( FactDailyTrading[new_customers] ),
+			                KEEPFILTERS ( FactDailyTrading[ad_spend_is_complete] = TRUE () )
+			            )
+			        ),
+			        TREATAS ( CohortMonths, DimDate[MonthStart] )
+			    )
+		formatString: \u00a3#,0.00
+		displayFolder: 02 Acquisition
+		lineageTag: 6a6b1488-129e-4199-b0d6-9792b760712b
+
 	/// TIER C - depends on last-click attribution, unreliable here (26.9% of orders carry no usable referrer). Returns BLANK for TikTok and Unattributed rather than zero: zero would claim free acquisition on 9% of the business.
 	measure 'Channel CAC' =
 			IF(
@@ -135,7 +161,11 @@ table #Measures
 		lineageTag: 5be21bfd-0a20-4487-ba7e-b625d0658902
 
 	/// Unit economics headline. Fell 4.42x to 2.09x over twelve months - cost per customer +53% while value per customer -29%.
-	measure 'LTV / CAC' = DIVIDE([LTV 60d (Margin)], [Blended CAC])
+	/// 60-day margin LTV of a cohort divided by what it cost to acquire that cohort.
+	/// Both sides are cohort-scoped: dividing by [Blended CAC] instead would use the
+	/// all-period figure as the denominator and flatten the trend to a straight line.
+	/// Blank for cohorts whose 60-day window has not closed.
+	measure 'LTV / CAC' = DIVIDE ( [LTV 60d (Margin)], [Cohort CAC] )
 		formatString: #,0.00"x"
 		displayFolder: 03 Customer Value
 		lineageTag: ac23df80-7240-400f-abd9-704cf9491912
