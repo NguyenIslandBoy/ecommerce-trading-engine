@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "p3_note",
   "position": {
-    "x": 1280,
-    "y": 815,
+    "x": 1390.1202254048912,
+    "y": 814.53719606535037,
     "z": 14000,
-    "height": 205,
-    "width": 600,
+    "height": 205.81453776383586,
+    "width": 490.11767043760909,
     "tabOrder": 14000
   },
   "visual": {

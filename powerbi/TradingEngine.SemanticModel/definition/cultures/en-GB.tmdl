@@ -148,19 +148,7 @@ cultureInfo en-GB
 			          "ConceptualProperty": "Margin %"
 			        }
 			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "Margin rate": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        }
-			      ]
+			      "State": "Generated"
 			    },
 			    "measures.orders": {
 			      "Definition": {
@@ -274,16 +262,6 @@ cultureInfo en-GB
 			            },
 			            "Weight": 0.9
 			          }
-			        },
-			        {
-			          "CPM — auction component": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
 			        }
 			      ]
 			    },
@@ -305,16 +283,6 @@ cultureInfo en-GB
 			            },
 			            "Weight": 0.9
 			          }
-			        },
-			        {
-			          "CTR — creative component": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
 			        }
 			      ]
 			    },
@@ -325,19 +293,7 @@ cultureInfo en-GB
 			          "ConceptualProperty": "Frequency"
 			        }
 			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "Frequency (flat = not saturation)": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        }
-			      ]
+			      "State": "Generated"
 			    },
 			    "measures.ad_spend": {
 			      "Definition": {
@@ -629,19 +585,7 @@ cultureInfo en-GB
 			          "ConceptualProperty": "platform"
 			        }
 			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "Platform": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        }
-			      ]
+			      "State": "Generated"
 			    },
 			    "dimcampaign.funnel_stage": {
 			      "Definition": {
@@ -650,19 +594,7 @@ cultureInfo en-GB
 			          "ConceptualProperty": "funnel_stage"
 			        }
 			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "Funnel stage": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        }
-			      ]
+			      "State": "Generated"
 			    },
 			    "dimchannel.channel_name": {
 			      "Definition": {
@@ -734,19 +666,7 @@ cultureInfo en-GB
 			          "ConceptualProperty": "flow_name"
 			        }
 			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "Email flow": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        }
-			      ]
+			      "State": "Generated"
 			    },
 			    "factdataquality.source_name": {
 			      "Definition": {
