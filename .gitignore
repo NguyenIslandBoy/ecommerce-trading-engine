@@ -10,3 +10,4 @@ dbt/logs/
 dbt/.user.yml
 .env
 .superpowers/
+data/marts/
