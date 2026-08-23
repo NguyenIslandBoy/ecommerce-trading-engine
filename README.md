@@ -7,9 +7,10 @@ brand's operational data.
 
 | Layer | State |
 |---|---|
-| 1. Data foundation | Built |
-| 2. Signal detection | Planned |
-| 3. Recommendation and simulation | Planned |
+| 1. Data foundation | Built — 20 dbt models, 94 data tests |
+| 2. Signal detection | Built — 9 detectors, backtested over 245 cursors |
+| 3. Recommendation and simulation | Built — Monte Carlo, autonomy gate |
+| Surfaces | Power BI report (`powerbi/`) and Streamlit app (`app.py`) |
 
 ## Quickstart
 
@@ -41,6 +42,15 @@ venv/Scripts/python.exe scripts/export_marts.py
 This writes the six marts plus `dim_date`, `dim_product` and
 `dim_campaign` to `data/marts/*.parquet` (also gitignored — regenerate,
 don't commit).
+
+Then run the engine:
+
+```bash
+venv/Scripts/python.exe -m engine.run          # detect at the latest cursor
+venv/Scripts/python.exe -m engine.backtest     # replay all 245 cursors
+venv/Scripts/python.exe -m pytest              # 41 tests
+venv/Scripts/python.exe -m streamlit run app.py
+```
 
 ## Data model
 
@@ -173,7 +183,97 @@ explicitly alongside any CAC/LTV verdict. This is the same class of error as the
 trap `mart_cohort_retention` already guards -- measuring different cohorts over different
 effective windows -- arriving through a different door.
 
+## Layer 2 — signal detection
+
+Nine detectors over the metric spine. Each returns a `Signal` carrying its
+evidence, classification, attribution tier and confidence — not just a verdict.
+
+Robust statistics throughout, because this series has a November/December peak
+and a January trough: **Theil–Sen** slopes (≈29% breakdown point) rather than
+least squares, **Mann–Kendall** rather than a t-test, **MAD z-scores** rather
+than standard deviations, and **Benjamini–Hochberg** FDR at 0.10 — nine
+detectors across ~20 entities at 365 cursors manufactures false positives by
+construction, and Bonferroni at that scale rejects everything real too.
+
+Day-of-week seasonality is removed multiplicatively. **Month-of-year is not**:
+12 months of data contains exactly one January, so the month effect is
+perfectly confounded with trend and cannot be identified. Stated rather than
+fitted. Where a detector needed seasonal defence anyway — product velocity —
+it scores *share of catalogue* instead, which cancels the common move exactly
+without a seasonal model.
+
+Adjudication happens in `engine/run.py`, not in the detectors, so all nine are
+judged on the same terms: outage suppression, then FDR, then confidence as
+severity × tier reliability × window cleanliness. A **Tier C signal cannot
+exceed 0.55** by construction — 26.8% of orders are unattributed, so last-click
+evidence can never carry an unattended decision.
+
+Two thresholds were set by measurement rather than taste, and both are recorded
+in `config/detectors.yml`:
+
+- `cac_trend` uses a **90-day** window, not 28. On this data the trailing 28
+  days gives slope −0.17%/day at *p* = 0.42 — no trend at all — while the same
+  series over 90 days gives +0.25%/day at *p* = 2.5 × 10⁻⁸. A 28-day window
+  stays silent through the entire CAC deterioration.
+- `email_engagement_decay` tests co-movement as a **ratio** and requires the
+  conversion trend to be statistically significant. Comparing half-means read
+  −8% where the trend is −20%, and treating any negative drift as "the money
+  followed" turned 35 artifacts into commercial signals.
+
+## Layer 3 — recommendation, simulation, autonomy
+
+Monte Carlo over every proposed action, 10,000 draws. Nothing returns a point
+estimate: outputs are a median, `P(margin gain)` and an 80% credible interval.
+
+The load-bearing assumption is the marginal CAC curve. Budget moved into a
+channel does not buy customers at that channel's *average* cost, so
+`CAC(spend) = CAC₀ · (spend/spend₀)^β`, with β estimated from the observed
+log-log relationship and sampled with its own standard error. **β = 0 would
+make every reallocation free** and is the most common way this kind of model
+produces nonsense, so it is floored rather than fitted to zero.
+
+Reversibility sets the **ceiling** on autonomy; confidence sets the
+**magnitude**. An inventory purchase is reviewed at any confidence, because
+capital committed cannot be unspent. A reversible test in the medium band
+executes at a capped 10%, so being wrong stays cheap.
+
+The gate also consults the simulation: an action whose own Monte Carlo says
+`P(gain)` is below 55% is not taken, however confident the signal. Confidence
+says the *signal* is real; `P(gain)` says *acting on it* pays. They are
+different questions, and the engine was recommending a creative refresh with a
+median of −£817 until that gate existed.
+
+## Backtest
+
+`venv/Scripts/python.exe -m engine.backtest` replays detection at all 245
+cursors in ~24 seconds and scores it against hand labels in
+`config/ground_truth.yml`.
+
+| | |
+|---|---|
+| Recall | 100% (6/6 labelled events) |
+| Precision | 75% of distinct commercial signals map to a labelled event |
+| Trap violations | 0 of 4 |
+
+The traps matter more than the events. Anyone can build a detector that fires;
+the test is whether it stays silent on four things that look exactly like
+signals and are not — the Meta outage reading as a CAC improvement, censored
+cohorts reading as a retention collapse, the January trough manufacturing a
+crisis, and email engagement decay that conversion never followed.
+
+A 365-cursor replay is only affordable because `engine/pit.py` reconstructs any
+cursor in memory in ~100ms rather than the ~35s a real dbt rebuild takes.
+`scripts/verify_pit.py` proves that shortcut by rebuilding the warehouse at
+three cursors and asserting the reconstruction is identical on every column.
+
+**Stated limitation:** the ground-truth labels are the author's own reading of
+the dataset, and the detectors were written by the same person. This measures
+internal consistency, not external validity.
+
 ## What I would build next
 
-Layer 2 (detection) and Layer 3 (recommendation and simulation) — see the
-design spec.
+Write the Jupyter notebook walkthrough the brief names. Extend the backtest to
+score *lead time against outcome* rather than against labelled onset, which
+needs an outcome definition nobody has supplied. And revisit the fixed 60-day
+LTV horizon — as recorded above, it is not comparable across cohorts, and
+comparing at equal observed age would be more defensible.
