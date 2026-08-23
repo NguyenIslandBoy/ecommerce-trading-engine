@@ -86,12 +86,25 @@ models:
 
   - name: mart_cohort_retention
     description: >
-      Cohort retention with an explicit censoring guard. retention_rate is
-      NULL wherever the observation window has not fully elapsed as of the
-      LAST DATE WITH DATA (max(dim_date.date_day)) -- deliberately NOT as of
-      var('as_of_date'), which sits one day past period close to absorb
-      ad/email ingestion lag. raw_retention_rate is always populated and
-      exists only to show the difference the guard makes.
+      Cohort retention with an explicit censoring guard, carrying TWO
+      distinct retention measures -- use the right one for the question
+      being asked. retention_rate is calendar-month bucketed: a cohort's
+      M+K value is activity that happened in that specific calendar
+      month, K months after acquisition; NULL wherever that month-K
+      window has not fully elapsed as of the LAST DATE WITH DATA
+      (max(dim_date.date_day)) -- deliberately NOT as of var('as_of_date'),
+      which sits one day past period close to absorb ad/email ingestion
+      lag. raw_retention_rate is always populated and exists only to show
+      the difference the guard makes. repeat_rate_90d is instead a
+      rolling window measured from each customer's OWN first order date
+      -- did they place a further order within 90 days of it, regardless
+      of calendar month; NULL wherever has_full_90d_exposure is false.
+      This is the metric behind the headline "31.8% -> 0.0%" repeat-rate
+      claim in the README/design doc; retention_rate answers a related
+      but different question (month-by-month cohort activity) and will
+      not reproduce that number. Both measures are cohort-level and
+      repeat identically across all 11 months_since rows for a given
+      cohort_month.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -106,6 +119,23 @@ models:
           Last calendar day of the cohort's month-K window (cohort_month +
           months_since + 1 month, minus 1 day). Compared against the LAST
           DATE WITH DATA to derive has_full_exposure.
+      - name: repeat_within_90d
+        description: >
+          Distinct customers in the cohort who placed a further
+          (strictly later) non-cancelled order within 90 days of their
+          OWN first order date. Not bucketed by calendar month.
+      - name: has_full_90d_exposure
+        description: >
+          True when the LATEST first_order_date in the cohort plus 90
+          days falls on or before the LAST DATE WITH DATA -- the worst
+          case within the cohort, mirroring has_full_exposure's logic but
+          keyed to a rolling 90-day window instead of the calendar-month
+          window boundary.
+      - name: repeat_rate_90d
+        description: >
+          repeat_within_90d / cohort_size, NULL wherever
+          has_full_90d_exposure is false. The source of the headline
+          "31.8% -> 0.0%" repeat-rate figure.
 
   - name: mart_ltv
     description: >

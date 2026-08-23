@@ -26,12 +26,27 @@
   2024 cohorts still buying and MASKS the collapse rather than refuting
   it. This guard separates observed zeros from unobserved ones; it does
   not explain the decline away.
+
+  repeat_rate_90d is a SEPARATE metric from retention_rate and answers a
+  different question. retention_rate is calendar-month bucketed: a
+  cohort's M+3 value is activity that happened in that specific calendar
+  month, K months after acquisition. repeat_rate_90d is a rolling window
+  measured from each customer's OWN first order date: it asks whether the
+  customer placed a further (strictly later) order within 90 days of
+  their first order, regardless of which calendar month that fell in. It
+  is this rolling number, not the calendar-bucketed one, that the
+  headline "31.8% -> 0.0%" claim in the README/design doc refers to.
+  has_full_90d_exposure is the same idea as has_full_exposure but keyed
+  off the LATEST first_order_date within the cohort (the worst case: the
+  last customer to join has the least time to repeat) plus 90 days,
+  compared against the last date with data.
 #}
 
 with customers as (
 
     select
         customer_id,
+        first_order_date,
         first_order_month                               as cohort_month
     from {{ ref('dim_customer') }}
     where first_order_date is not null
@@ -40,6 +55,42 @@ with customers as (
 
 cohort_sizes as (
     select cohort_month, count(*) as cohort_size
+    from customers
+    group by cohort_month
+),
+
+-- Rolling 90-day repeat rate: a customer counts here if they placed a
+-- further (strictly later) non-cancelled order within 90 days of their
+-- OWN first order date. Distinct from the `orders`/`activity` CTEs below,
+-- which bucket by calendar month for retention_rate.
+repeat_orders_90d as (
+
+    select distinct
+        c.customer_id,
+        c.cohort_month
+    from customers c
+    inner join {{ ref('fct_order') }} o
+        on o.customer_id = c.customer_id
+       and not o.is_cancelled
+       and o.order_date > c.first_order_date
+       and o.order_date <= c.first_order_date + 90
+
+),
+
+repeat_90d_by_cohort as (
+    select cohort_month, count(distinct customer_id) as repeat_within_90d
+    from repeat_orders_90d
+    group by cohort_month
+),
+
+exposure_90d as (
+    -- Worst case within the cohort: the last customer to join has the
+    -- least time to repeat, so exposure is judged off the LATEST
+    -- first_order_date in the cohort, not the cohort boundary itself.
+    select
+        cohort_month,
+        max(first_order_date) + 90 <= (select max(date_day) from {{ ref('dim_date') }})
+                                                         as has_full_90d_exposure
     from customers
     group by cohort_month
 ),
@@ -111,22 +162,33 @@ exposure as (
 )
 
 select
-    cohort_month,
-    months_since,
-    cohort_size,
-    active_customers                                    as repeat_customers,
-    window_end,
-    window_end <= (select max(date_day) from {{ ref('dim_date') }})  as has_full_exposure,
+    e.cohort_month,
+    e.months_since,
+    e.cohort_size,
+    e.active_customers                                  as repeat_customers,
+    e.window_end,
+    e.window_end <= (select max(date_day) from {{ ref('dim_date') }})  as has_full_exposure,
 
     -- The guarded metric. NULL where the window has not elapsed.
     case
-        when window_end <= (select max(date_day) from {{ ref('dim_date') }})
-        then active_customers * 1.0 / nullif(cohort_size, 0)
+        when e.window_end <= (select max(date_day) from {{ ref('dim_date') }})
+        then e.active_customers * 1.0 / nullif(e.cohort_size, 0)
     end                                                 as retention_rate,
 
     -- The unguarded metric, retained ONLY to demonstrate the artifact.
     -- Never consume this in a detector.
-    active_customers * 1.0 / nullif(cohort_size, 0)     as raw_retention_rate
+    e.active_customers * 1.0 / nullif(e.cohort_size, 0) as raw_retention_rate,
 
-from exposure
-where months_since > 0
+    -- Rolling 90-day repeat rate. Cohort-level: identical across all
+    -- months_since rows for a given cohort_month. See header comment.
+    coalesce(r90.repeat_within_90d, 0)                  as repeat_within_90d,
+    exp90.has_full_90d_exposure,
+    case
+        when exp90.has_full_90d_exposure
+        then coalesce(r90.repeat_within_90d, 0) * 1.0 / nullif(e.cohort_size, 0)
+    end                                                 as repeat_rate_90d
+
+from exposure e
+left join repeat_90d_by_cohort r90 on r90.cohort_month = e.cohort_month
+left join exposure_90d exp90 on exp90.cohort_month = e.cohort_month
+where e.months_since > 0
