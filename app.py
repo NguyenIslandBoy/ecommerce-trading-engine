@@ -26,6 +26,10 @@ from engine.signals import Classification
 
 st.set_page_config(page_title="Trading Engine", page_icon="🧭", layout="wide")
 
+# Note on sizing: st.dataframe takes width="stretch"; st.altair_chart still only
+# takes use_container_width in Streamlit 1.50 and has no width parameter, so the
+# two are written differently on purpose.
+
 INK = "#12655E"
 WARN = "#B4661E"
 MUTED = "#6B7780"
@@ -272,9 +276,16 @@ with tab_backtest:
         "taken from the profiling done before any detector was written."
     )
     step = st.select_slider(
-        "Cursor step", options=[1, 3, 7], value=7,
-        help="Every day, every third day, or weekly. Daily takes ~25 seconds.",
+        "Cursor step", options=[1, 3, 7], value=1,
+        help=("Every day, every third day, or weekly. Daily takes ~25 seconds "
+              "and is the figure quoted in the README."),
     )
+    if step > 1:
+        st.caption(
+            f"Sampling every {step} days. Recall can read lower than the daily "
+            f"figure — a short-lived first fire may fall between two cursors, "
+            f"so the event looks missed when it was only unsampled."
+        )
 
     if st.button("Run backtest", type="primary"):
         report = backtest_report(step)
@@ -286,7 +297,7 @@ with tab_backtest:
         columns[3].metric("Time", f"{report['seconds']:.0f}s")
 
         st.subheader("Events — did it find what profiling said was there")
-        st.dataframe(report["events"], use_container_width=True, hide_index=True)
+        st.dataframe(report["events"], width="stretch", hide_index=True)
 
         st.subheader("Traps — did it stay quiet about what profiling said was not")
         traps = report["traps"]
@@ -296,7 +307,7 @@ with tab_backtest:
                           (f"color:{WARN}" if v is False else ""),
                 subset=["clean"],
             ),
-            use_container_width=True, hide_index=True,
+            width="stretch", hide_index=True,
         )
         st.caption(
             "The traps are the half that matters. Anyone can build a detector "
