@@ -1,22 +1,31 @@
+# Python
 venv/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# dbt / DuckDB — the warehouse is rebuilt from source, never committed
 *.duckdb
 *.duckdb.wal
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
 dbt/.user.yml
-.env
-.superpowers/
+
+# Mart exports — regenerate with scripts/export_marts.py
 data/marts/
 
-# Client template — NOT for this repo. See docs/spec.md §PII.
+# Secrets
+.env
 
-# Client artefacts — must never be committed
+# Agent scratch
+.superpowers/
+
+# Power BI: compiled report binaries. The .pbip source folders ARE committed.
 *.pbix
 
-# PBIP per-user / per-machine state - never share these
-**/.pbi/localSettings.json   # DPAPI-encrypted credential bindings
-**/.pbi/cache.abf            # binary model data cache (748KB and grows)
+# PBIP per-user / per-machine state.
+# localSettings.json holds DPAPI-encrypted credential bindings;
+# cache.abf is a binary model data cache. Neither is portable.
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
