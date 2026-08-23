@@ -68,6 +68,8 @@ activity as (
 ),
 
 ages as (
+    -- 0-11 months covers the ~12-month data window (2024-07 through
+    -- 2025-06/07). Revisit this bound if the window grows.
     select unnest(generate_series(0, 11)) as months_since
 ),
 

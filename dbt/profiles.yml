@@ -5,5 +5,3 @@ trading_engine:
       type: duckdb
       path: trading_engine.duckdb
       threads: 4
-      extensions:
-        - httpfs
