@@ -13,8 +13,8 @@ evidence can actually bear.
 | **Surfaces** | Streamlit app (`app.py`), Power BI report (`powerbi/`), Jupyter walkthrough (`notebooks/`) |
 
 **Start here:** [`notebooks/walkthrough.ipynb`](notebooks/walkthrough.ipynb) — the
-narrative version, executed, with charts. [`docs/project-guide.html`](docs/project-guide.html)
-is the reference companion.
+narrative version of everything below, executed, with charts. It answers the
+commercial questions first and shows the working underneath.
 
 ---
 
@@ -123,7 +123,6 @@ rebuilds.
 | `powerbi/` | Two-page report, `.pbip` source so it diffs |
 | `notebooks/` | The executed walkthrough |
 | `scripts/verify_pit.py` | Proves the fast backtest equals a real rebuild |
-| `docs/project-guide.html` | Full reference walkthrough |
 | `docs/specs/…design.md` | The design doc, written before any code |
 | `docs/BUILD-LOG*.md` | 37 decisions with their reasoning and cost-if-wrong |
 
