@@ -8,7 +8,12 @@
   approved_on): a revision replaces the original from the day it is
   approved. budget_version_used says which.
 
-  Variance convention: budget_variance = recognised_expense -
+  The synthetic budgets are MEDIA budgets: agency fees are not budgeted in
+  this data. So the comparison is against recognised_media_expense
+  (GREATEST(delivered, media_invoiced)); fee_invoiced and the all-in
+  recognised_expense are shown alongside, not compared.
+
+  Variance convention: budget_variance = recognised_media_expense -
   approved_budget. Positive means overspend. NULL whenever either side is
   NULL: TikTok has a budget but no cost source, and must never read as a
   100% underspend.
@@ -45,12 +50,13 @@ select
     c.fee_invoiced,
     c.invoiced_amount,
     c.estimated_unbilled_accrual,
+    c.recognised_media_expense,
     c.recognised_expense,
-    cast(b.approved_amount - c.recognised_expense as decimal(12,2))
+    cast(b.approved_amount - c.recognised_media_expense as decimal(12,2))
                                                             as remaining_budget,
-    cast(c.recognised_expense - b.approved_amount as decimal(12,2))
+    cast(c.recognised_media_expense - b.approved_amount as decimal(12,2))
                                                             as budget_variance,
-    cast((c.recognised_expense - b.approved_amount)
+    cast((c.recognised_media_expense - b.approved_amount)
          / nullif(b.approved_amount, 0) as decimal(12,6))   as budget_variance_pct,
     c.data_status,
     true                                                    as is_synthetic_finance_input

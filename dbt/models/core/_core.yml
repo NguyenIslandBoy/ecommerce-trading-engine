@@ -142,6 +142,8 @@ models:
       recognised_expense is invoiced_amount if any invoice exists, else NULL.
       Only delivered-but-unrecorded media is accrued; fees are recognised on
       receipt. No GL, no journal entries, no true-ups.
+      recognised_media_expense is the media part alone (GREATEST(delivered,
+      media_invoiced)), which the media budgets are compared against.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

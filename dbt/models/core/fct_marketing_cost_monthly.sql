@@ -26,6 +26,11 @@
       recognised_expense         = invoiced_amount if any invoice line
                                    exists, else NULL
 
+  recognised_media_expense is the media part alone: GREATEST(delivered_spend,
+  media_invoiced) where delivered is known, else media_invoiced if any media
+  line exists, else NULL. The synthetic budgets are MEDIA budgets, so budget
+  variance is measured against this, not against recognised_expense.
+
   Fees are compared with nothing: delivered spend is media only, so adding
   fees to the comparison would turn every month into a variance. A fee is
   recognised when its invoice is received; with no contract data it cannot
@@ -80,7 +85,8 @@ invoiced as (
                                                             as media_invoiced,
         sum(allocated_amount) filter (where cost_type = 'fee')
                                                             as fee_invoiced,
-        count(*)                                            as invoice_rows
+        count(*)                                            as invoice_rows,
+        count(*) filter (where cost_type = 'media')         as media_rows
     from {{ ref('fct_invoice_allocated') }}
     group by all
 
@@ -107,7 +113,8 @@ base as (
         coalesce(d.delivered_days, 0)                       as delivered_days,
         cast(coalesce(i.media_invoiced, 0) as decimal(12,2)) as media_invoiced,
         cast(coalesce(i.fee_invoiced, 0) as decimal(12,2))  as fee_invoiced,
-        coalesce(i.invoice_rows, 0)                         as invoice_rows
+        coalesce(i.invoice_rows, 0)                         as invoice_rows,
+        coalesce(i.media_rows, 0)                           as media_rows
     from (select * from grid union all select * from unallocated_months) g
     left join delivered d
         on d.month_start = g.month_start and d.channel = g.channel
@@ -133,6 +140,12 @@ select
         when invoice_rows > 0
             then media_invoiced + fee_invoiced
     end as decimal(12,2))                                   as recognised_expense,
+    cast(case
+        when delivered_spend is not null
+            then greatest(delivered_spend, media_invoiced)
+        when media_rows > 0
+            then media_invoiced
+    end as decimal(12,2))                                   as recognised_media_expense,
     delivered_days,
     days_in_month,
     invoice_rows,

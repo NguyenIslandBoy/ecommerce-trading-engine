@@ -7,6 +7,8 @@
     delivered NULL:  recognised = invoiced if any invoice exists, else NULL
                      accrual    = NULL
 
+  recognised_media_expense is the same without fees (media lines only).
+
   Media is a platform-billed line, fees an agency-billed one, classified here
   from billed_channel directly rather than the model's cost_type.
 #}
@@ -24,7 +26,8 @@ inv as (
            channel,
            sum(allocated_amount) filter (where billed_channel != 'agency') as media,
            sum(allocated_amount) filter (where billed_channel = 'agency')  as fees,
-           count(*) as n
+           count(*) as n,
+           count(*) filter (where billed_channel != 'agency') as n_media
     from {{ ref('fct_invoice_allocated') }}
     group by all
 ),
@@ -43,6 +46,13 @@ expected as (
             when m.channel in ('meta', 'google') and d.delivered is not null
                 then greatest(d.delivered - coalesce(i.media, 0), 0)
         end as expected_accrual,
+        case
+            when m.channel in ('meta', 'google') and d.delivered is not null
+                then greatest(d.delivered, coalesce(i.media, 0))
+            when coalesce(i.n_media, 0) > 0
+                then i.media
+        end as expected_media,
+        m.recognised_media_expense,
         m.recognised_expense,
         m.estimated_unbilled_accrual
     from {{ ref('fct_marketing_cost_monthly') }} m
@@ -54,3 +64,4 @@ select *
 from expected
 where recognised_expense is distinct from expected_recognised
    or estimated_unbilled_accrual is distinct from expected_accrual
+   or recognised_media_expense is distinct from expected_media
