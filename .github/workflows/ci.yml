@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # The source CSVs are committed and read in place, so the build needs no
+      # secrets. The warehouse file is rebuilt from scratch on every run.
+      - run: cd dbt && dbt deps --profiles-dir . && dbt build --profiles-dir .
+
+      # The integration tests read data/marts/*.parquet and skip when it is
+      # absent, so export first or 20 of the 50 tests never run.
+      - run: python scripts/export_marts.py
+
+      - run: python -m pytest
