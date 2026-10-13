@@ -565,3 +565,23 @@ Final check (default cursor):
 | `as_of_date` column on the new marts | The pack and page must stamp the cursor | Logged |
 | Two sample packs (2025-06, 2025-03), not 2025-01 | 2025-01 reconciles quietly at the default cursor | Logged |
 | Task 8 skipped | No Looker instance | User |
+
+## Follow-up — stale numbers outside the original scope (user request, after merge)
+
+The user asked for the stale numbers that Task 1 listed as out of scope to be fixed:
+- `powerbi/…/p1_note/visual.json`: "53% more expensive" → "29% more expensive".
+- `powerbi/…/#Measures.tmdl`, `LTV / CAC`: "4.42x to 2.09x … +53%" → "4.42x (2024-07) to 2.43x (2025-04,
+  the last cohort whose 60-day window has closed) … +29%".
+- `powerbi/…/#Measures.tmdl`, `CPC`: "+143%" → "+144%" (£0.41715 → £1.01699 = +143.8%).
+- `engine/backtest.py` docstring: "a full 365-day replay … under a minute … 3.5 hours" → 246 cursors,
+  0.1–0.3 s per cursor depending on the machine (about 25–70 s in total), and about 2.4 hours
+  (246 × ~35 s) for real rebuilds.
+
+Only comments, descriptions and display text changed. No measure expression, no visual binding and
+no engine logic was touched.
+
+Left as is and reported to the user:
+- `engine/stats.py:97` says "11 detectors × ~20 entities × 365 cursors". It is a rationale for the
+  FDR correction, and the counts are wrong (10 and 246).
+- `engine/detectors/product.py:132` and `acquisition.py:39` say "245-cursor replay". They record
+  past runs, so changing them would rewrite history.
