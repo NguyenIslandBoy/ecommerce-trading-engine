@@ -30,7 +30,7 @@ data/marts/
 **/.pbi/localSettings.json
 **/.pbi/cache.abf
 
-# The task brief itself - marked confidential by eComplete, so it stays out
+# The task brief itself - marked confidential by its author, so it stays out
 # of a repo that will be shared.
 brief/
 
