@@ -182,3 +182,100 @@ models:
               arguments:
                 min_value: 0
                 max_value: 1
+
+  # ---- Marketing reporting (SYNTHETIC Finance inputs) ---------------------
+
+  - name: mart_marketing_budget_vs_actual
+    description: >
+      SYNTHETIC Finance inputs. Month x channel: latest visible approved
+      budget against recognised expense from fct_marketing_cost_monthly.
+      budget_variance = recognised_expense - approved_budget; positive means
+      overspend. NULL, never 0, where either side is unknown (TikTok has no
+      cost source).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month_start, channel]
+    columns:
+      - name: month_start
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unallocated']
+      - name: budget_version_used
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['original', 'revised']
+      - name: data_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['complete', 'partial_month', 'source_gap', 'no_cost_source', 'unallocated']
+
+  - name: mart_marketing_pacing_daily
+    description: >
+      SYNTHETIC budgets. Date x channel planned against delivered spend for
+      every calendar day of each month in the spine. forecast_month_end is a
+      simple 7-day run-rate forecast (delivered to date + run_rate_7d x days
+      remaining), not a model: it ignores seasonality and planned changes.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [date_day, channel]
+    columns:
+      - name: date_day
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok']
+      - name: spend_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'not_yet_visible', 'missing', 'no_cost_source']
+      - name: pacing_profile
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['linear', 'front_loaded']
+
+  - name: mart_marketing_invoice_recon
+    description: >
+      SYNTHETIC Finance inputs. Month x channel: delivered platform spend
+      against platform MEDIA invoices (agency fees shown, not compared).
+      difference = media_invoiced - delivered_spend. recon_status uses
+      var('recon_tolerance_pct').
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month_start, channel]
+    columns:
+      - name: month_start
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unallocated']
+      - name: recon_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['within_tolerance', 'exception', 'unbilled', 'no_cost_source', 'unallocated_cost']
+      - name: data_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['complete', 'partial_month', 'source_gap', 'no_cost_source', 'unallocated']
