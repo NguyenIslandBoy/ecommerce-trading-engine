@@ -441,3 +441,32 @@ Verification:
   should, because the mart was built at 1%.
 
 Not verified here: opening in Microsoft Excel itself. That is the user's STOP check.
+
+## Task 7 — Publish marts to BigQuery
+
+Ruling: publish all nine `mart_*` tables, not just the three new ones. The plan allowed it "if
+cheap". The largest table has 8,760 rows. Dimensions and `fct_ad_spend_daily` are left out:
+they are Power BI inputs, not reporting marts. Cost if wrong: none.
+
+Ruling: `decimal_target_types=["NUMERIC", "BIGNUMERIC"]` on the load. The existing marts carry
+`DECIMAL(38,2)` sums. That is 36 integer digits, more than NUMERIC's 29, so a NUMERIC-only load
+would be rejected. Cost if wrong: none; BigQuery picks NUMERIC where it fits.
+
+Ruling: the script reads a `.env` with a ten-line parser rather than adding `python-dotenv`. The
+real environment wins over the file. `--dry-run` never imports the BigQuery client, so it works
+without `requirements-bq.txt`. Cost if wrong: an exotic `.env` (multi-line values, `export`
+prefixes) is not parsed. `.env.example` uses only plain `KEY=VALUE`.
+
+Ruling: the BigQuery client is pinned in `requirements-bq.txt`, not `requirements.txt`. CI and
+the core build never need it. Cost if wrong: none.
+
+Verification:
+- `--dry-run` lists 9 tables whose row counts match the Parquet files: 37, 1,095, 37, 1,460,
+  8,760, 132, 144, 318 and 1,095.
+- With `requirements-bq.txt` installed, `pip check` is clean and the `LoadJobConfig` builds.
+- Without credentials the script exits 1 with a clear message.
+- `.env` is gitignored, and no key file is in the repo.
+
+**Not run: a real load.** This machine has `BQ_PROJECT_ID` set but no
+`GOOGLE_APPLICATION_CREDENTIALS` and no gcloud account, so per the plan it stays dry-run only. The
+README says so.
