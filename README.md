@@ -25,7 +25,7 @@ detection layer is built more to stay quiet than to fire.
 
 | | Finding | Reading |
 |---|---|---|
-| 1 | **LTV/CAC 4.42× → 2.43×** across fully-exposed cohorts | Real. Cost +53%, value −29%; neither alone alarming |
+| 1 | **LTV/CAC 4.42× → 2.43×** across fully-exposed cohorts | Real. Cost +29%, value −29%; neither alone alarming |
 | 2 | **90-day repeat rate 31.8% → 0.0%** | Real, and hidden by a flat 24% blended rate |
 | 3 | **Meta CPC £0.42 → £1.02** (+144%) | Real, but only *half* is yours to fix |
 | 4 | **AOV £49.69 → £44.38** (−11%, ex-VAT) | Real — mix shift, not discounting (discount rate steady at 3.5–4.1%) |
@@ -138,7 +138,7 @@ downstream reads.
 
 **Detection** — ten detectors, each returning a `Signal` with its evidence,
 classification, attribution tier and confidence. Adjudication happens centrally
-so all nine are judged on the same terms: outage suppression, then
+so all ten are judged on the same terms: outage suppression, then
 Benjamini–Hochberg FDR at 0.10, then confidence as severity × tier reliability ×
 window cleanliness.
 
@@ -158,7 +158,7 @@ email at +1 day on 100% of theirs.
 `as_of_date` defaults to **2025-07-01** — the day *after* the period closes —
 because an engine running on 2025-06-30 could not yet see that day's ad spend.
 A consequence worth stating: the newest day of *every* historical rebuild has
-orders and NULL spend, by design. A backtest hits that 365 times and must
+orders and NULL spend, by design. A backtest hits that 246 times and must
 discard it rather than read it as a gap.
 
 **VAT comes out before margin goes in.** Source prices are VAT-inclusive
@@ -207,7 +207,7 @@ engine misbehave: it recommended a creative refresh its own simulation gave a
 
 ## Backtest
 
-`venv/Scripts/python.exe -m engine.backtest` replays detection at all 245
+`venv/Scripts/python.exe -m engine.backtest` replays detection at all 246
 cursors in ~25 seconds and scores it against hand labels in
 `config/ground_truth.yml`.
 
@@ -233,7 +233,7 @@ monitors instead of acting. The attribution-free blended CAC (£12.23) is nowher
 near the threshold, which is the more reassuring number and the one that would
 have been allowed to act.
 
-A 365-cursor replay is affordable only because `engine/pit.py` reconstructs any
+A 246-cursor replay is affordable only because `engine/pit.py` reconstructs any
 cursor in ~100ms against the ~35s a real dbt rebuild takes.
 `scripts/verify_pit.py` proves that shortcut: it rebuilds the warehouse at three
 cursors and asserts the reconstruction is identical **on every column**.
