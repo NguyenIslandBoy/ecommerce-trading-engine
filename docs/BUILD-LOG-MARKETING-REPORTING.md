@@ -511,3 +511,57 @@ Verification:
 - `app.py` still runs without exceptions.
 - `streamlit run app.py` served both pages, and a full-page Chromium screenshot was checked by eye:
   no overlaps, and the banner, tables and chart render.
+
+## Task 10 — Docs and final check
+
+The README gains:
+- the section "Marketing spend, budget and Finance reconciliation (synthetic Finance inputs)":
+  questions, models and grain, accrual rule, variance convention, the five scenarios, how to run,
+  limitations;
+- a Marketing reporting row in the layer table;
+- updated counts: 28 models, 153 tests, 55 pytest, 71 build-log decisions;
+- new rows in the repo map.
+
+There is no Looker mention anywhere, and no CV wording.
+
+Worked example: `docs/worked-example-month-end-close.md` closes January 2025 at cursors 2025-02-03
+and 2025-03-05. Full builds at both cursors pass (PASS=179, WARN=2; the second warning is the
+scenarios check, correctly warning about scenarios not yet reached).
+
+Ruling: the worked example states a limitation the plan's rule creates rather than changing the
+rule. `GREATEST(delivered, invoiced)` with no true-ups leaves a residual accrual whenever the final
+invoice comes in below delivered spend (Meta 2025-01: £27.30). A real close would treat the final
+invoice as authoritative. Changing it means a true-up rule, which the plan places out of scope
+("no GL, no true-ups"). Cost if wrong: small residual accruals sit on reconciled months. They are
+visible in `estimated_unbilled_accrual` and documented in the README limitations.
+
+Ruling: the worked example warns against `--select` subsets at a non-default cursor. Running one
+that way failed four existing reconciliation tests, because views and tables were left at
+different cursors. This is the same mechanism as gotcha #2 in `docs/BUILD-LOG.md`. A full build
+passes.
+
+Final check (default cursor):
+- `dbt build`: PASS=180 WARN=1 ERROR=0, which is 28 models and 153 tests. The warning is the
+  existing, designed `assert_source_date_completeness`.
+- `pytest`: 55 passed.
+- CI green on every pushed commit.
+- `git status` clean after commit.
+- Credential scan clean: no key files, no API keys, no `.env`, and the BigQuery project id is not
+  in any tracked file.
+- The company name is gone from tracked files. It remains in git history (earlier commits), which
+  this work does not rewrite.
+
+## Summary of deviations from the plan
+
+| Deviation | Why | Approved |
+|---|---|---|
+| Branch `claude/trusting-cray-2dahbe`, not `feat/marketing-reporting` | Session-pinned branch | Noted at Task 0 |
+| `requirements.txt`: streamlit 1.50 → 1.65, + pyarrow 25.0.1, + openpyxl 3.1.5 | The file was uninstallable; tests needed pyarrow; the pack needs openpyxl | User (deps) |
+| Media and fees kept apart (option A) | The literal rule made every month an exception and made fees depend on invoice arrival order | User |
+| Budgets are media budgets; variance on recognised **media** expense (option 1) | Fees would otherwise put 11 of 12 months over budget and hide scenario 1 | User |
+| Remainder row = `ROUND(amount × Σpct) − Σothers` | Makes the allocation test falsifiable | Logged |
+| Three identity tests proven by model mutation, not data corruption | No data change can break an identity; a mutation is the honest proof | Logged |
+| Extra `data_status` values (`source_gap`, `unallocated`) and `spend_status` | Without them the Meta 2025-03 gap, the unallocated bucket and not-yet-visible days would be unlabelled | Logged |
+| `as_of_date` column on the new marts | The pack and page must stamp the cursor | Logged |
+| Two sample packs (2025-06, 2025-03), not 2025-01 | 2025-01 reconciles quietly at the default cursor | Logged |
+| Task 8 skipped | No Looker instance | User |
