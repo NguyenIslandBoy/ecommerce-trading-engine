@@ -9,10 +9,11 @@ evidence can actually bear.
 
 | Layer | State |
 |---|---|
-| **1. Data foundation** | Built — 20 dbt models, 94 data tests, point-in-time correct |
+| **1. Data foundation** | Built — 28 dbt models, 153 data tests, point-in-time correct |
 | **2. Signal detection** | Built — 10 detectors, replayed across 246 cursors |
 | **3. Recommendation & simulation** | Built — Monte Carlo, autonomy gate |
-| **Surfaces** | Streamlit app (`app.py`), Power BI report (`powerbi/`), Jupyter walkthrough (`notebooks/`) |
+| **Marketing reporting** | Built — budget vs actual, pacing and invoice reconciliation on **synthetic** Finance inputs ([below](#marketing-spend-budget-and-finance-reconciliation-synthetic-finance-inputs)) |
+| **Surfaces** | Streamlit app (`app.py` + marketing page), Power BI report (`powerbi/`), Jupyter walkthrough (`notebooks/`), Excel month-end pack (`reports/month_end/`) |
 
 **Start here:** [`notebooks/walkthrough.ipynb`](notebooks/walkthrough.ipynb) — the
 narrative version of everything below, executed, with charts. It answers the
@@ -86,12 +87,12 @@ uv venv --python 3.12 venv
 uv pip install --python venv/Scripts/python.exe -r requirements.txt
 
 cd dbt && ../venv/Scripts/dbt.exe deps --profiles-dir .
-          ../venv/Scripts/dbt.exe build --profiles-dir .   # 20 models, 94 tests
+          ../venv/Scripts/dbt.exe build --profiles-dir .   # 28 models, 153 tests
 cd .. &&  venv/Scripts/python.exe scripts/export_marts.py  # marts -> Parquet
 
 venv/Scripts/python.exe -m engine.run          # detect at the latest cursor
 venv/Scripts/python.exe -m engine.backtest     # replay 246 cursors, ~25s
-venv/Scripts/python.exe -m pytest              # 50 tests
+venv/Scripts/python.exe -m pytest              # 55 tests
 venv/Scripts/python.exe -m streamlit run app.py
 ```
 
@@ -133,6 +134,88 @@ A real run re-reads each table's row count from BigQuery and exits non-zero on a
 the Parquet file. **Status:** the dry run has been executed. A real load has not been run from this
 repo yet.
 
+## Marketing spend, budget and Finance reconciliation (synthetic Finance inputs)
+
+> **The Finance inputs are SYNTHETIC.** The budgets, vendor invoices and allocations in
+> `data/finance/` are invented by a seeded generator (`scripts/generate_finance_inputs.py`, seed
+> 20240701), sized against the real-shaped ad spend so the variances are plausible. Vendors are
+> placeholders. Every figure below that involves a budget or an invoice inherits that.
+
+**Questions it answers**
+- Is each channel over or under its media budget this month?
+- Is spend pacing to plan, and where will the month land?
+- Do platform invoices agree with the spend the platforms reported?
+- How much delivered spend has not been invoiced yet, and so must be accrued at month-end?
+
+| Model | Grain | What it holds |
+|---|---|---|
+| `stg_marketing_budget`, `stg_vendor_invoice_lines`, `stg_invoice_line_allocations` | source rows | Cast to `DECIMAL(12,2)` / `DATE`. A budget is visible from `approved_on`, an invoice from `received_date`. |
+| `fct_invoice_allocated` | invoice line × channel | Penny-exact allocation. A line with no allocation becomes an `unallocated` row and is never dropped. |
+| `fct_marketing_cost_monthly` | month × channel | The single source of truth: delivered, media and fee invoiced, accrual, recognised expense, `data_status`. |
+| `mart_marketing_budget_vs_actual` | month × channel | Latest visible media budget against recognised media expense. |
+| `mart_marketing_pacing_daily` | date × channel | Planned against delivered cumulative spend, with a 7-day run-rate forecast. |
+| `mart_marketing_invoice_recon` | month × channel | Media invoiced against delivered spend, with `recon_status`. |
+
+**Accrual rule.** Delivered spend is media only, so platform media invoices and agency fees are
+kept apart.
+- `estimated_unbilled_accrual = MAX(delivered_spend − media_invoiced, 0)`. Only delivered media
+  that has not been invoiced is accrued.
+- `recognised_media_expense = GREATEST(delivered_spend, media_invoiced)`.
+- `recognised_expense = recognised_media_expense + fee_invoiced`.
+- When delivered spend is unknown, the accrual is NULL and recognised expense is whatever has
+  been invoiced, or NULL if nothing has.
+
+**Variance convention.** `budget_variance = recognised_media_expense − approved_budget`. **Positive
+means overspend.** The synthetic budgets are media budgets: agency fees are shown, not budgeted.
+
+**Recon status.** In order of precedence:
+1. `unallocated_cost`
+2. `no_cost_source`
+3. `unbilled`: no media invoice yet
+4. `within_tolerance`: within `recon_tolerance_pct`, default 1.0%
+5. `exception`
+
+**The five scenarios** (plus one exception case), all built into the synthetic data and checked by
+`assert_all_five_scenarios_present`:
+
+| # | Scenario | Where |
+|---|---|---|
+| 1 | Forecast overspend | Meta 2025-05. The forecast on the 14th is £13,539 against a £12,750 budget; the month ends +9.1%. |
+| 2 | Delivered in M, invoiced in M+1 | Every month. At the default cursor, June is `unbilled` and £20,489 is accrued. |
+| 3 | Agency invoice split 60/40 Meta/Google | Every monthly retainer. |
+| 4 | Missing cost source | TikTok has a budget but no cost file: spend and variance are NULL, never a 100% underspend. |
+| 5 | Unallocated invoice line | 2025-02, £1,250. It surfaces as its own row. |
+| + | Recon exception | Meta 2025-03, +6.9%. The synthetic invoice bills the two days missing from the Meta extract (finding 6). |
+
+**Run it**
+
+```bash
+venv/Scripts/python.exe scripts/generate_finance_inputs.py        # regenerate data/finance (deterministic)
+cd dbt && ../venv/Scripts/dbt.exe build --profiles-dir . && cd ..  # includes the marketing models
+venv/Scripts/python.exe scripts/export_marts.py
+venv/Scripts/python.exe scripts/build_month_end_pack.py --month 2025-06   # Excel pack
+venv/Scripts/python.exe -m streamlit run app.py                    # then open "Marketing Budget"
+```
+
+- **Excel pack:** every figure in `Month_End` is a formula over the pasted mart rows, and the
+  `Checks` sheet ties the workbook back to the marts. The committed samples recalculate with every
+  check TRUE in LibreOffice and in Excel.
+- **Worked example:** [`docs/worked-example-month-end-close.md`](docs/worked-example-month-end-close.md)
+  replays January's close at two cursors and shows the accrual estimate against the final invoices.
+
+**Limitations**
+- **Synthetic Finance inputs.** No conclusion about real budgets or vendors can be drawn from them.
+- **Channel grain only.** Invoices bill at account level and the orders carry no UTMs, so there are
+  no campaign-level budgets.
+- **No GL, journal entries or true-ups.** When a final invoice comes in *below* delivered spend, the
+  difference stays accrued (Meta 2025-01: £27.30); a real close would release it. Fees are
+  recognised on receipt and never accrued.
+- **Simple run-rate forecast.** Delivered to date + 7-day average × days left. It ignores
+  seasonality and planned changes.
+- **No attribution or incrementality claims.** Budget variance says nothing about what the spend
+  returned.
+- **TikTok has no cost source.** Its spend, accrual and variance are unknown.
+
 ---
 
 ## What's in the repo
@@ -140,15 +223,19 @@ repo yet.
 | Path | |
 |---|---|
 | `data/*.csv` | The seven source extracts. Synthetic, no PII |
-| `dbt/` | The warehouse — 20 models, 94 tests, 2 macros |
+| `data/finance/` | **Synthetic** Finance inputs (budgets, invoice lines, allocations), seeded generator in `scripts/generate_finance_inputs.py` |
+| `dbt/` | The warehouse — 28 models, 153 tests, 3 macros |
 | `engine/` | Layers 2 and 3 — detectors, simulation, backtest |
 | `config/` | Every threshold, in YAML rather than in code |
 | `app.py` | Streamlit: as-of slider, signals, simulated outcomes, backtest |
+| `pages/1_Marketing_Budget.py` | Streamlit page: budget vs actual, pacing, invoice recon (synthetic Finance inputs) |
+| `reports/month_end/` | Formula-driven Excel month-end packs (synthetic), built by `scripts/build_month_end_pack.py` |
+| `.github/workflows/ci.yml` | CI: `dbt build`, mart export and `pytest` on every push to `main` and every PR |
 | `powerbi/` | Two-page report, `.pbip` source so it diffs |
 | `notebooks/` | The executed walkthrough |
 | `scripts/verify_pit.py` | Proves the fast backtest equals a real rebuild |
 | `docs/specs/…design.md` | The design doc, written before any code |
-| `docs/BUILD-LOG*.md` | 37 decisions with their reasoning and cost-if-wrong |
+| `docs/BUILD-LOG*.md` | 71 decisions with their reasoning and cost-if-wrong |
 
 ---
 
