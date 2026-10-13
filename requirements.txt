@@ -13,3 +13,5 @@ pytest==8.4.2
 # pandas needs a Parquet engine: the integration tests and the Streamlit app read data/marts/*.parquet.
 pyarrow==25.0.1
 streamlit==1.65.0
+# Builds the Excel month-end pack (scripts/build_month_end_pack.py).
+openpyxl==3.1.5

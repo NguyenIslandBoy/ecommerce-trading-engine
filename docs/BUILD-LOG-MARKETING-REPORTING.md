@@ -399,3 +399,45 @@ at the default cursor.
   passes.
 - `pytest`: 50 passed.
 - Anchors unchanged: 860 rows, max 2025-01-31, at cursor 2025-01-31; 1,460 rows at the default.
+
+## Task 6 — Excel month-end pack
+
+Ruling: the three new marts gain an `as_of_date` column, the cursor the build ran at. Parquet
+carries no build metadata, and the pack (and the Task 9 page) must stamp what the warehouse
+knew. Only the new marts change. Cost if wrong: one constant column per row.
+
+Ruling: two committed samples, not one. 2025-06 is the actual close at the default cursor
+(unbilled, a £20,489 accrual). 2025-03 shows the exception path (the Meta invoice is +6.9% against a
+`source_gap` month). The plan's example month 2025-01 reconciles quietly at the default cursor,
+so it would demonstrate nothing. Cost if wrong: one extra 10 KB file.
+
+Ruling: `Month_End` pulls the pasted figures with direct row references and `SUMIFS`, and computes
+accrual, recognised expense, variance, recon difference and status with `IF`, `MAX`, `ROUND` and `ABS`.
+Every formula carries a blank through as blank: `""` is tested before any arithmetic, because
+Excel treats an empty cell as 0. `INDEX/MATCH` is used in `Commentary` to find the channel with the
+largest variance and the exception. No `LET`, `LAMBDA`, `XLOOKUP` or spilling functions. The total
+variance % is a ratio of sums (total variance ÷ budget of channels with known spend), via a helper
+column, not an average of percentages.
+
+Ruling: `Commentary` sentences are formulas, not text written by Python. They update if `Inputs`
+or the tolerance change, which keeps the "logic lives in formulas" rule. The exception sentence
+checks `data_status`. On a `source_gap` month it says the missing days may explain the gap and
+recommends getting them before querying the invoice, rather than blaming the vendor.
+
+Ruling: the committed workbooks are recalculated in LibreOffice (`recalc.py`), so previewers and
+`pandas` see values. Formulas, fonts and fills survive the rewrite; this was checked by reloading.
+Cost if wrong: none; Excel recalculates on open regardless.
+
+Verification:
+- `tests/test_month_end_pack.py` (5 tests) builds a pack and asserts:
+  - every `Month_End` figure, `Checks` result and `Commentary` sentence is a formula;
+  - `Inputs` holds only values;
+  - TikTok spend and variance are blank, not 0;
+  - every sheet says SYNTHETIC.
+- pytest: **55 passed** (50 + 5).
+- LibreOffice recalculation of both samples: 93 formulas, 0 errors, all 23 `Checks` TRUE.
+- Tolerance drives the logic. Setting `B3` to 10 flips Meta 2025-03 from `exception` to
+  `within_tolerance`, and the commentary changes. The status checks then read FALSE, as they
+  should, because the mart was built at 1%.
+
+Not verified here: opening in Microsoft Excel itself. That is the user's STOP check.

@@ -165,6 +165,8 @@ select
               then running_delivered + trailing_mean * (days_in_month - day_of_month)
                    - approved_budget end
          as decimal(12,2))                                  as forecast_overspend,
-    true                                                    as is_synthetic_finance_input
+    true                                                    as is_synthetic_finance_input,
+    -- The cursor this build ran at, so an export can say what it knew when.
+    cast('{{ var("as_of_date") }}' as date)                as as_of_date
 
 from delivered
