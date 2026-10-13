@@ -470,3 +470,44 @@ Verification:
 **Not run: a real load.** This machine has `BQ_PROJECT_ID` set but no
 `GOOGLE_APPLICATION_CREDENTIALS` and no gcloud account, so per the plan it stays dry-run only. The
 README says so.
+
+## Task 8 — Looker: skipped
+
+The user has no running Looker instance, so the task was skipped as the plan requires. Nothing
+Looker-related is in the repo.
+
+## Task 9 — Streamlit page
+
+`pages/1_Marketing_Budget.py`. Streamlit picks it up next to `app.py`, which is unchanged. It
+reads the three marketing marts from Parquet. The page has:
+- a SYNTHETIC banner with the as-of date (from the marts' `as_of_date`) and the data-through date;
+- a month selector;
+- the budget vs actual table and metrics, with variance written as "+£x over" / "−£x under";
+- the cumulative planned vs delivered chart with the run-rate forecast;
+- the recon table filtered by `recon_status`.
+
+Every NULL renders as "no data", never £0.
+
+Ruling: a "Forecast from day" slider replays the forecast as it stood on any visible day of the
+month. The mart's forecast on row d uses only spend up to d, so this is honest within the cursor.
+At the default cursor every month is complete, so without the slider the forecast would always
+be a zero-length line, and scenario 1 (Meta 2025-05 forecasting an overspend on the 14th) could not be
+seen. Cost if wrong: the replay uses the budget version visible at the cursor, not the one visible
+on day d. That only matters for Google 2024-11 before 11-08. Accepted.
+
+Ruling: chart colours are slots 1–2 of the dataviz reference palette (blue for delivered, orange
+for planned), stepped per Streamlit theme. Both pairs pass the palette validator on their own
+surface: lightness, chroma, CVD ΔE ≥ 24, and contrast. The app's own teal (`#12655E`) failed the
+chroma floor for a data series. The budget is a recessive grey dotted rule. The forecast is the
+delivered hue, dashed. The legend is always shown, and tooltips appear on hover.
+
+Verification:
+- `streamlit.testing.AppTest` on the page:
+  - no exceptions;
+  - Meta 2025-05 viewed from the 14th shows £13,539.18 forecast, "+£789.18 over" and 105.0%
+    pacing;
+  - TikTok shows "no data" and the no-cost-source message;
+  - the exception filter returns only Meta 2025-03.
+- `app.py` still runs without exceptions.
+- `streamlit run app.py` served both pages, and a full-page Chromium screenshot was checked by eye:
+  no overlaps, and the banner, tables and chart render.
