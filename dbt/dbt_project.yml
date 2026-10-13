@@ -27,6 +27,9 @@ vars:
   data_dir: '../data'
   # UK VAT. Source prices are VAT-inclusive; product costs are not.
   vat_rate: 0.20
+  # Invoice reconciliation: a platform invoice within this many percent of
+  # delivered spend is 'within_tolerance'; beyond it, an 'exception'.
+  recon_tolerance_pct: 1.0
 
 models:
   trading_engine:
