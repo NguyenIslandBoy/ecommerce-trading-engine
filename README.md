@@ -1,5 +1,7 @@
 # eCommerce Trading Engine
 
+[![CI](https://github.com/NguyenIslandBoy/ecommerce-trading-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/NguyenIslandBoy/ecommerce-trading-engine/actions/workflows/ci.yml)
+
 Twelve months of a D2C brand's operations turned into a tested metric spine, a
 detection layer that separates real commercial movements from measurement
 artifacts, and a recommendation layer that sizes each action to how much its
