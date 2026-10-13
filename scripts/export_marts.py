@@ -35,6 +35,10 @@ EXPORTS = [
     ("main_marts", "mart_ltv"),
     ("main_marts", "mart_email_flow_weekly"),
     ("main_marts", "mart_data_quality"),
+    # Marketing reporting marts, built on SYNTHETIC Finance inputs.
+    ("main_marts", "mart_marketing_budget_vs_actual"),
+    ("main_marts", "mart_marketing_pacing_daily"),
+    ("main_marts", "mart_marketing_invoice_recon"),
     ("main_core", "dim_date"),
     ("main_core", "dim_product"),
     ("main_core", "dim_campaign"),
