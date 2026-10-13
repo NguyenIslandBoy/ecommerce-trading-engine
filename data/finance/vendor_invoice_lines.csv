@@ -1,0 +1,38 @@
+invoice_line_id,invoice_id,vendor,billed_channel,service_period_start,service_period_end,invoice_date,received_date,line_description,amount,currency,is_synthetic
+IL-0001,INV-META-202407,Platform Meta,meta,2024-07-01,2024-07-31,2024-08-02,2024-08-06,Media spend,10357.97,GBP,true
+IL-0002,INV-GOOGLE-202407,Platform Google,google,2024-07-01,2024-07-31,2024-08-03,2024-08-05,Media spend,7847.08,GBP,true
+IL-0003,INV-AGENCYA-202407,Agency A,agency,2024-07-01,2024-07-31,2024-08-01,2024-08-02,Monthly management retainer,2833.33,GBP,true
+IL-0004,INV-META-202408,Platform Meta,meta,2024-08-01,2024-08-31,2024-09-02,2024-09-08,Media spend,10376.05,GBP,true
+IL-0005,INV-GOOGLE-202408,Platform Google,google,2024-08-01,2024-08-31,2024-09-03,2024-09-09,Media spend,7852.64,GBP,true
+IL-0006,INV-AGENCYA-202408,Agency A,agency,2024-08-01,2024-08-31,2024-09-01,2024-09-05,Monthly management retainer,2833.33,GBP,true
+IL-0007,INV-META-202409,Platform Meta,meta,2024-09-01,2024-09-30,2024-10-02,2024-10-04,Media spend,11640.59,GBP,true
+IL-0008,INV-GOOGLE-202409,Platform Google,google,2024-09-01,2024-09-30,2024-10-03,2024-10-08,Media spend,8741.47,GBP,true
+IL-0009,INV-AGENCYA-202409,Agency A,agency,2024-09-01,2024-09-30,2024-10-01,2024-10-03,Monthly management retainer,2833.33,GBP,true
+IL-0010,INV-META-202410,Platform Meta,meta,2024-10-01,2024-10-31,2024-11-02,2024-11-05,Media spend,11933.16,GBP,true
+IL-0011,INV-GOOGLE-202410,Platform Google,google,2024-10-01,2024-10-31,2024-11-03,2024-11-08,Media spend,8925.13,GBP,true
+IL-0012,INV-AGENCYA-202410,Agency A,agency,2024-10-01,2024-10-31,2024-11-01,2024-11-03,Monthly management retainer,2833.33,GBP,true
+IL-0013,INV-META-202411,Platform Meta,meta,2024-11-01,2024-11-30,2024-12-02,2024-12-05,Media spend,15894.89,GBP,true
+IL-0014,INV-GOOGLE-202411,Platform Google,google,2024-11-01,2024-11-30,2024-12-03,2024-12-07,Media spend,11970.14,GBP,true
+IL-0015,INV-AGENCYA-202411,Agency A,agency,2024-11-01,2024-11-30,2024-12-01,2024-12-03,Monthly management retainer,2833.33,GBP,true
+IL-0016,INV-META-202412,Platform Meta,meta,2024-12-01,2024-12-31,2025-01-02,2025-01-04,Media spend,15953.13,GBP,true
+IL-0017,INV-GOOGLE-202412,Platform Google,google,2024-12-01,2024-12-31,2025-01-03,2025-01-06,Media spend,12036.82,GBP,true
+IL-0018,INV-AGENCYA-202412,Agency A,agency,2024-12-01,2024-12-31,2025-01-01,2025-01-03,Monthly management retainer,2833.33,GBP,true
+IL-0019,INV-META-202501,Platform Meta,meta,2025-01-01,2025-01-31,2025-02-02,2025-02-05,Media spend,8778.05,GBP,true
+IL-0020,INV-GOOGLE-202501,Platform Google,google,2025-01-01,2025-01-31,2025-02-03,2025-02-06,Media spend,6476.36,GBP,true
+IL-0021,INV-AGENCYA-202501,Agency A,agency,2025-01-01,2025-01-31,2025-02-01,2025-02-03,Monthly management retainer,2833.33,GBP,true
+IL-0022,INV-META-202502,Platform Meta,meta,2025-02-01,2025-02-28,2025-03-02,2025-03-07,Media spend,9479.36,GBP,true
+IL-0023,INV-GOOGLE-202502,Platform Google,google,2025-02-01,2025-02-28,2025-03-03,2025-03-08,Media spend,7006.63,GBP,true
+IL-0024,INV-AGENCYA-202502,Agency A,agency,2025-02-01,2025-02-28,2025-03-01,2025-03-04,Monthly management retainer,2833.33,GBP,true
+IL-0025,INV-AGENCYA-202502,Agency A,agency,2025-02-01,2025-02-28,2025-03-01,2025-03-04,Creative production (one-off),1250.00,GBP,true
+IL-0026,INV-META-202503,Platform Meta,meta,2025-03-01,2025-03-31,2025-04-02,2025-04-06,"Media spend (includes 2025-03-15/16, absent from the extract)",11547.01,GBP,true
+IL-0027,INV-GOOGLE-202503,Platform Google,google,2025-03-01,2025-03-31,2025-04-03,2025-04-08,Media spend,8637.19,GBP,true
+IL-0028,INV-AGENCYA-202503,Agency A,agency,2025-03-01,2025-03-31,2025-04-01,2025-04-03,Monthly management retainer,2833.33,GBP,true
+IL-0029,INV-META-202504,Platform Meta,meta,2025-04-01,2025-04-30,2025-05-02,2025-05-05,Media spend,11749.22,GBP,true
+IL-0030,INV-GOOGLE-202504,Platform Google,google,2025-04-01,2025-04-30,2025-05-03,2025-05-06,Media spend,7998.99,GBP,true
+IL-0031,INV-AGENCYA-202504,Agency A,agency,2025-04-01,2025-04-30,2025-05-01,2025-05-04,Monthly management retainer,2833.33,GBP,true
+IL-0032,INV-META-202505,Platform Meta,meta,2025-05-01,2025-05-31,2025-06-02,2025-06-06,Media spend,13907.25,GBP,true
+IL-0033,INV-GOOGLE-202505,Platform Google,google,2025-05-01,2025-05-31,2025-06-03,2025-06-07,Media spend,8618.01,GBP,true
+IL-0034,INV-AGENCYA-202505,Agency A,agency,2025-05-01,2025-05-31,2025-06-01,2025-06-04,Monthly management retainer,2833.33,GBP,true
+IL-0035,INV-META-202506,Platform Meta,meta,2025-06-01,2025-06-30,2025-07-02,2025-07-07,Media spend,13040.95,GBP,true
+IL-0036,INV-GOOGLE-202506,Platform Google,google,2025-06-01,2025-06-30,2025-07-03,2025-07-07,Media spend,7454.11,GBP,true
+IL-0037,INV-AGENCYA-202506,Agency A,agency,2025-06-01,2025-06-30,2025-07-01,2025-07-02,Monthly management retainer,2833.33,GBP,true
