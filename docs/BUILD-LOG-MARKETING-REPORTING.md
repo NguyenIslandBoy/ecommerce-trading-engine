@@ -212,3 +212,101 @@ inconsistent. Cost if wrong: none; scenario 3 is still findable at 2024-07 (`IL-
 
 Ruling: no column changes from the plan. Media lines and fee lines are told apart by
 `billed_channel` (`meta`/`google` = platform media, `agency` = fees), which already exists.
+
+## Task 4 — Staging and core models
+
+### Plan defect, ruled by the user: option A (media and fees kept apart)
+
+As written, the plan set `recognised = GREATEST(delivered, invoiced)` and compared total invoiced
+with delivered, while also allocating the agency retainer 60/40 to `meta`/`google`. Delivered spend
+is media only. The literal rule therefore:
+- made every Meta and Google month a +15–20% recon "exception";
+- made a month's recognised expense depend on which invoice arrived first. With the agency invoice
+  in and the platform invoice not yet received, the fee disappeared into the accrual
+  (Meta 2025-01: £8,805.35, then £10,478.05 once the platform invoice landed).
+
+Decision (user-approved): `cost_type` (`media` from platform-billed lines, `fee` from agency-billed
+lines) splits `invoiced_amount` into `media_invoiced + fee_invoiced`.
+- `estimated_unbilled_accrual = MAX(delivered − media_invoiced, 0)`.
+- `recognised_expense = GREATEST(delivered, media_invoiced) + fee_invoiced`.
+- The recon compares media only.
+- The singular test is renamed `assert_recognised_equals_greatest_of_delivered_and_media_invoiced_plus_fees`.
+
+Cost if wrong: fees are recognised only on receipt, never accrued, so a month whose agency invoice
+is late understates fees until it arrives. That is a stated limitation; there is no contract
+data to accrue from.
+
+### Other rulings
+
+Ruling: allocation visibility is enforced in `fct_invoice_allocated`, not in
+`stg_invoice_line_allocations`. The README's staging rule forbids cross-source joins in staging,
+and allocation rows have no date of their own. The fact starts from the already-filtered visible
+lines, so an allocation can never appear before its line. Cost if wrong: none for correctness.
+`stg_invoice_line_allocations` on its own shows all allocations at any cursor, which is harmless
+because nothing reads it without the line.
+
+Ruling: the remainder row is `ROUND(amount × Σpct, 2) − Σ(other rounded rows)`, not
+`amount − Σ(other rows)`. When the allocations sum to 100% the two are identical, which is the
+plan's rule. When they don't (e.g. 60/30), the plan's literal version silently hands the missing
+10% to the last channel, so no data corruption could ever make
+`assert_invoice_allocation_sums_to_line` fail. With this version a misallocation stays visible
+and the test catches it. Cost if wrong: none; it is strictly stricter.
+
+Ruling: `invoiced_amount`, `media_invoiced` and `fee_invoiced` are 0.00, not NULL, when no invoice
+has been received. "No invoice received yet" is a known fact at the cursor, not missing data. It
+is what makes `unbilled` and the accrual computable. `delivered_spend`, `estimated_unbilled_accrual`
+and `recognised_expense` stay NULL where the input is genuinely unknown. Cost if wrong: a reader
+takes TikTok's 0.00 invoiced for spend. Its `recognised_expense` and `delivered_spend` are NULL
+and its `data_status` is `no_cost_source`.
+
+Ruling: `data_status` gains `source_gap` (complete month, fewer spend days than calendar days)
+and `unallocated` (the bucket row), alongside the plan's `partial_month` and `no_cost_source`, plus
+`complete`. Meta 2025-03 is a source gap. Its delivered spend is understated by the two days the
+extract never received, and a status of `complete` would hide that. It is computed from
+`fct_ad_spend_daily`'s own day count, not from `mart_data_quality`, so core never depends on a mart.
+`partial_month` means `month_end >= as_of_date`: the month's last day of spend is not yet visible
+(1-day lag). Cost if wrong: an extra status value for downstream consumers to handle;
+accepted_values pins the set.
+
+Ruling: the month spine is `dim_date`'s months, so a month appears once its first day is in the
+date spine. Budgets approved for a month that has not started are visible in staging but have no
+row in the monthly fact yet. Cost if wrong: the budget mart cannot show next month's approved
+budget before the month starts. Acceptable for a month-end view.
+
+### Proving the singular tests can fail
+
+The data was copied to the scratchpad, never edited in place, and passed with
+`--vars "{data_dir: <copy>}"`.
+
+| Test | Corruption | Result |
+|---|---|---|
+| `assert_invoice_allocation_sums_to_line` | `IL-0003` google 0.4000 → 0.3000 | FAIL 1 |
+| `assert_no_double_counted_invoice_line` | duplicated the `IL-0003,meta` allocation row | FAIL 1 (models run first, then the test; under `dbt build` the upstream unique test fails and SKIPs it) |
+| `assert_service_period_within_one_month` | `IL-0001` service end 2024-07-31 → 2024-08-05 | FAIL 1 |
+| `assert_recognised_equals_greatest_of_delivered_and_media_invoiced_plus_fees` | **model mutation**: the plan's literal rule `GREATEST(delivered, media + fee)` | FAIL 12 |
+| `assert_missing_spend_is_null_not_zero` | **model mutation**: `coalesce(delivered_spend, 0)` | FAIL 13 (12 TikTok months + the unallocated row) |
+
+Ruling: the last two are proven by mutating the model, not the data. Both are identities of model
+logic: no input data can make TikTok acquire a cost source, or make the recognised formula
+disagree with itself. A data-only proof would be impossible, not merely skipped. The mutations
+are the realistic regressions: reverting to the plan's rule, and coalescing NULL to zero. The
+model was restored byte-for-byte (`cmp` clean) and the warehouse was rebuilt at the default cursor.
+
+### Results
+
+- `dbt build` at the default cursor: PASS=149 WARN=1 ERROR=0. That is **25 models and 125 tests**
+  (was 20 and 94); the warning is the existing designed one.
+- `pytest`: 50 passed.
+- Anchors unchanged: `mart_daily_trading` has 860 rows, max 2025-01-31, at cursor 2025-01-31, and
+  1,460 rows at the default cursor.
+
+The new models change with the cursor:
+
+| | Cursor 2025-01-31 | Default cursor (2025-07-01) |
+|---|---|---|
+| Visible invoice lines | 18 (max received 2025-01-06) | 45 allocated rows (June invoices not yet received) |
+| Meta 2025-01 | delivered £8,531.24 (through 01-30), `partial_month`, fully accrued | complete, invoiced |
+| Budgets | 2025-02 visible (approved 01-20) | — |
+
+At cursor 2024-11-07, Google 2024-11 has only the original £11,500 budget; the revision is
+approved 11-08.
