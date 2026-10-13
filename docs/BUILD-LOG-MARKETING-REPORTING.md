@@ -310,3 +310,92 @@ The new models change with the cursor:
 
 At cursor 2024-11-07, Google 2024-11 has only the original £11,500 budget; the revision is
 approved 11-08.
+
+## Task 5 — Marts
+
+### Plan defect, ruled by the user: option 1 (budgets are media budgets)
+
+After option A, `recognised_expense` included agency fees. The synthetic budgets had been sized
+against media only, so variance on the plan's literal definition put 11 of 12 Meta months over
+budget (average +14.1%) and 11 of 12 Google months over (+10.2%):
+- scenario 1 (Meta 2025-05) was indistinguishable from the rest;
+- pacing, which can only see media, measured a different thing from the budget mart.
+
+Decision (user-approved): the synthetic budgets are **media budgets**.
+- `fct_marketing_cost_monthly` gains `recognised_media_expense = GREATEST(delivered, media_invoiced)`
+  (`media_invoiced` if delivered is NULL and a media line exists, else NULL).
+- The budget mart's variance is `budget_variance = recognised_media_expense − approved_budget`.
+  The sign convention is unchanged: positive means overspend.
+- `fee_invoiced` and the all-in `recognised_expense` are shown, not compared. Fees are unbudgeted
+  in this data.
+
+Result: Meta is over budget in 6 of 12 months (average +0.5%) and Google in 4 of 12 (−1.9%).
+Meta 2025-05 is the largest overspend at +9.1%.
+
+Cost if wrong: the plan's global wording "variance = recognised_expense − budget" now reads
+"recognised *media* expense". A reader who assumes the budget covers fees understates the
+overspend by the fee. The mart description, the column name and the README say "media budget".
+
+### Other rulings
+
+Ruling: pacing rows cover **every calendar day of each month** in the date spine, not just days up
+to the cursor. At a mid-month cursor the plan still runs to month-end (needed for the chart and
+for "plan sums to budget"), and days after the cursor are `not_yet_visible` with NULL delivered.
+Cost if wrong: 3 channels × up to 30 extra rows per run, all clearly flagged.
+
+Ruling: the plan is rounded **cumulatively**: `planned_cumulative = ROUND(budget × W(d), 2)`, and
+`planned_spend` is the day-on-day difference. A month's plan therefore sums to its budget to the
+penny, with no remainder day. `W(n)` is pinned to 1 so float error cannot leave a penny.
+- An unknown pacing profile returns NULL rather than defaulting to linear.
+- The front-loaded profile is half linear and half straight-line decline: day 1 plans about 1.5× an
+  average day, the last day about 0.5×. The formula is documented in `macros/pacing_weights.sql`.
+
+Cost if wrong: none for the totals. The front-loaded shape is a documented judgement.
+
+Ruling: `spend_status` separates `not_yet_visible` (the cursor) from `missing` (the source never
+delivered: Meta 2025-03-15/16). On `missing` days the cumulative carries flat; on
+`not_yet_visible` and `no_cost_source` it is NULL. Cost if wrong: a reader sees a flat cumulative
+on gap days. The status says why, and the budget mart flags the month `source_gap`.
+
+Ruling: `run_rate_7d` is the mean over the days **with spend** in the trailing 7 calendar days, not
+sum ÷ 7. A gap day therefore does not drag the run rate down as if spend were zero. The window
+crosses month boundaries. The forecast on row d uses only data up to d, so the 2025-05-14 row
+reproduces the mid-month view the scenario describes: £13,539.18 against a £12,750 budget. The
+generator printed £13,539.17; it truncates rather than rounds.
+
+Ruling: the recon compares **media only**. `difference = media_invoiced − delivered_spend`, which
+is the plan's "invoiced minus delivered" applied to the comparable part. `unallocated_invoiced_amount`
+is the amount on the `unallocated` row and 0.00 on channel rows, so it sums correctly.
+`recon_status` precedence: `unallocated_cost`, `no_cost_source`, `unbilled` (no media invoice
+yet), `within_tolerance`, `exception`.
+
+Ruling: `assert_all_five_scenarios_present` also checks the recon exception. It is warn-only by
+plan. At cursor 2025-01-31 it warns on 3 scenarios that have not happened yet (the May
+overspend, the March exception, the February unallocated line). That is correct, and is why it
+cannot be an error.
+
+### Proving the singular tests can fail
+
+| Test | How | Result |
+|---|---|---|
+| `assert_pacing_cumulative_monotonic` | data copy: Meta 2024-07 budget → −10,500.00 | FAIL 30 |
+| `assert_pacing_plan_sums_to_budget` | data copy: Google 2024-08 `pacing_profile` → `back_loaded` | FAIL 1 |
+| `assert_budget_and_recon_agree` | model mutation: budget mart recomputes accrual as `delivered − media_invoiced` | FAIL 10 |
+| `assert_recon_ties_to_ad_spend` | model mutation: cost fact drops day 1 of each month from delivered | FAIL 24 |
+| `assert_budget_variance_identity` | model mutation: variance sign flipped | FAIL 24 |
+| `assert_all_five_scenarios_present` | data copy: TikTok budget rows removed | WARN 1, naming `4_tiktok_null_not_zero` |
+| `assert_recognised_…_plus_fees` (re-proven for the new media branch) | model mutation: `recognised_media_expense = delivered_spend` | FAIL 10 |
+
+The mutation-proven tests compare two readings of the same upstream fact. No data change can make
+them disagree, only a code change can, so a mutation is the honest proof. Every mutation was
+reverted (`cmp` clean). The `--store-failures` audit schema was dropped and the warehouse rebuilt
+at the default cursor.
+
+### Results
+
+- `dbt build` at the default cursor: PASS=180 WARN=1 ERROR=0. That is **28 models and 153 tests**
+  (baseline 20 and 94); the one warning is the existing designed one.
+- `export_marts.py`: 13 files, including the 3 new marts (37 / 1,095 / 37 rows). The zero-row check
+  passes.
+- `pytest`: 50 passed.
+- Anchors unchanged: 860 rows, max 2025-01-31, at cursor 2025-01-31; 1,460 rows at the default.
