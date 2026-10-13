@@ -585,3 +585,7 @@ Left as is and reported to the user:
   FDR correction, and the counts are wrong (10 and 246).
 - `engine/detectors/product.py:132` and `acquisition.py:39` say "245-cursor replay". They record
   past runs, so changing them would rewrite history.
+
+Then, on the user's request, `engine/stats.py:97` also changed from "11 detectors × ~20 entities ×
+365 cursors" to "10 … × 246 cursors". The two "245-cursor" comments in the detectors stay as
+records of past runs.

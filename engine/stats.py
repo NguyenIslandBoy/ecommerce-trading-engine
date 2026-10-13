@@ -94,7 +94,7 @@ def mad_zscore(values, point=None) -> float:
 def benjamini_hochberg(p_values, alpha: float = 0.10) -> np.ndarray:
     """Step-up FDR control. Returns a boolean mask of the discoveries kept.
 
-    11 detectors x ~20 entities x 365 cursors manufactures false positives by
+    10 detectors x ~20 entities x 246 cursors manufactures false positives by
     construction. Controlling the family-wise error rate (Bonferroni) at that
     scale would reject everything; controlling the false DISCOVERY rate keeps
     power while bounding the share of fired signals that are noise.
