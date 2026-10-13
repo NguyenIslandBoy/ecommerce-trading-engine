@@ -188,10 +188,12 @@ models:
   - name: mart_marketing_budget_vs_actual
     description: >
       SYNTHETIC Finance inputs. Month x channel: latest visible approved
-      budget against recognised expense from fct_marketing_cost_monthly.
-      budget_variance = recognised_expense - approved_budget; positive means
-      overspend. NULL, never 0, where either side is unknown (TikTok has no
-      cost source).
+      MEDIA budget against recognised media expense from
+      fct_marketing_cost_monthly. budget_variance = recognised_media_expense
+      - approved_budget; positive means overspend. NULL, never 0, where
+      either side is unknown (TikTok has no cost source). Agency fees are not
+      budgeted in this data: fee_invoiced and the all-in recognised_expense
+      are shown, not compared.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
