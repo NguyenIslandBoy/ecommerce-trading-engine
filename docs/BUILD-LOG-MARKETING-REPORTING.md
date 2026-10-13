@@ -182,3 +182,33 @@ ERROR=0 (20 models, 94 tests), the export writes 10 files, and pytest gives **50
 
 Triggers are push to `main` and pull requests, as the plan says. A push to this feature branch
 therefore does not run CI. The first run happens when a PR is opened.
+
+## Task 3 — Synthetic Finance inputs
+
+Output: 37 budget rows (36 original + 1 revised), 37 invoice lines (24 platform + 12 agency
+retainer + 1 one-off) and 48 allocation rows (24 × 100% platform + 12 × 60/40 agency).
+Two runs with seed 20240701 give identical SHA-256 hashes on all three files.
+
+Ruling: delivered spend inside the generator is computed in DuckDB with the **same per-row cast**
+as `stg_ads_daily`: `cast(spend as decimal(12,2))`, and `cast(cost_micros / 1e6 as decimal(12,2))`.
+50 Google rows have sub-penny `cost_micros`, so summing in Python from the raw micros would
+drift by pennies from what the warehouse reports. Cost if wrong: the "within tolerance" months
+would carry penny noise that does not come from the invoice.
+
+Ruling: the above-tolerance recon case is Meta 2025-03, not an arbitrary overbilling. The
+synthetic invoice bills the two days missing from `meta_ads_daily.csv` (03-15/16), estimated
+as the mean of 03-14 and 03-17. The exception is then explained by a real property of the
+extract and ties to the existing data-quality finding (README finding 6). Cost if wrong: a
+reader takes the exception for real overbilling. The data README and the line description both
+say what it is.
+
+Ruling: no TikTok invoices. With no invoice and no cost file, recognised expense is NULL. That
+is the cleanest test of "never a 100% underspend". Cost if wrong: none for this scope.
+`billed_channel` has no TikTok value in the plan either.
+
+Ruling: the 60/40 split is applied to all 12 agency retainers, not one. A one-off split would
+leave `meta`/`google` month rows with and without fee content, which makes the series
+inconsistent. Cost if wrong: none; scenario 3 is still findable at 2024-07 (`IL-0003`).
+
+Ruling: no column changes from the plan. Media lines and fee lines are told apart by
+`billed_channel` (`meta`/`google` = platform media, `agency` = fees), which already exists.
