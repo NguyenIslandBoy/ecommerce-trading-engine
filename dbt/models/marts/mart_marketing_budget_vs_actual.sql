@@ -59,7 +59,9 @@ select
     cast((c.recognised_media_expense - b.approved_amount)
          / nullif(b.approved_amount, 0) as decimal(12,6))   as budget_variance_pct,
     c.data_status,
-    true                                                    as is_synthetic_finance_input
+    true                                                    as is_synthetic_finance_input,
+    -- The cursor this build ran at, so an export can say what it knew when.
+    cast('{{ var("as_of_date") }}' as date)                as as_of_date
 
 from {{ ref('fct_marketing_cost_monthly') }} c
 left join budget b

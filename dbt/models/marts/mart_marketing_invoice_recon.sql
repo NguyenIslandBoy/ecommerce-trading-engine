@@ -46,6 +46,8 @@ select
         else 'exception'
     end                                                     as recon_status,
     data_status,
-    true                                                    as is_synthetic_finance_input
+    true                                                    as is_synthetic_finance_input,
+    -- The cursor this build ran at, so an export can say what it knew when.
+    cast('{{ var("as_of_date") }}' as date)                as as_of_date
 
 from {{ ref('fct_marketing_cost_monthly') }}
