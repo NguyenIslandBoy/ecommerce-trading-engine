@@ -111,6 +111,28 @@ Neither the `.duckdb` file nor `data/marts/*.parquet` is committed. Both are
 build outputs, reproducible in under a minute, and byte-identical across
 rebuilds.
 
+### Publishing the marts to BigQuery (optional, manual)
+
+The warehouse is **built in DuckDB** by dbt. `scripts/publish_to_bigquery.py` only **publishes**
+the exported marts to BigQuery so they can be queried there; it does not build anything natively
+on BigQuery.
+- **What it loads:** the nine `mart_*` Parquet files, one table each, into dataset
+  `trading_engine_marts`, with `WRITE_TRUNCATE`.
+- **Labelling:** the three `mart_marketing_*` tables are labelled as built on synthetic Finance
+  inputs in their table descriptions.
+- **Not in CI:** it is a manual step.
+
+```bash
+uv pip install --python venv/Scripts/python.exe -r requirements-bq.txt   # optional deps
+cp .env.example .env    # set BQ_PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, BQ_LOCATION (default US)
+venv/Scripts/python.exe scripts/publish_to_bigquery.py --dry-run         # tables + row counts, no connection
+venv/Scripts/python.exe scripts/publish_to_bigquery.py                   # load, then compare row counts
+```
+
+A real run re-reads each table's row count from BigQuery and exits non-zero on any mismatch with
+the Parquet file. **Status:** the dry run has been executed. A real load has not been run from this
+repo yet.
+
 ---
 
 ## What's in the repo
