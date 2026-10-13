@@ -33,6 +33,7 @@ import datetime as dt
 import math
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -78,6 +79,7 @@ INPUT_COLUMNS = [
     ("recon_difference", "difference"),
     ("recon_status", "recon_status"),
     ("data_status", "data_status"),
+    ("is_media_final", "is_media_final"),
 ]
 
 
@@ -111,6 +113,8 @@ def cell_value(value):
         return None
     if pd.isna(value):
         return None
+    if isinstance(value, (bool, np.bool_)):  # before the number check: bool is an int
+        return bool(value)
     if hasattr(value, "is_finite") or isinstance(value, (int, float)):  # Decimal or number
         return round(float(value), 2)
     return str(value)
@@ -168,6 +172,7 @@ def build(month: dt.date, out: Path, tolerance: float) -> Path:
         "Budget variance (+ = overspend)", "Budget variance %", "Remaining budget",
         "Recon difference (invoiced - delivered)", "Recon difference %", "Recon status",
         "Data status", "|Variance| (helper)", "Budget with known spend (helper)",
+        "Final invoice received (TRUE = true-up applied)",
     ]
     header_row = 7
     for col, text in enumerate(headers, start=1):
@@ -186,9 +191,11 @@ def build(month: dt.date, out: Path, tolerance: float) -> Path:
             "C": f'=IF(Inputs!D{i}="","",Inputs!D{i})',
             "D": f"=SUMIFS(Inputs!$E$2:$E${n + 1},Inputs!$A$2:$A${n + 1},$A{r})",
             "E": f"=SUMIFS(Inputs!$F$2:$F${n + 1},Inputs!$A$2:$A${n + 1},$A{r})",
-            "F": f'=IF(C{r}="","",ROUND(MAX(C{r}-D{r},0),2))',
-            "G": f'=IF(C{r}="",IF(D{r}>0,D{r},""),ROUND(MAX(C{r},D{r}),2))',
-            "H": f'=IF(C{r}="",IF(D{r}+E{r}>0,ROUND(D{r}+E{r},2),""),ROUND(G{r}+E{r},2))',
+            # Once the final invoice is in (R = TRUE) it replaces the estimate:
+            # accrual 0 and recognised media = media invoiced (the true-up).
+            "F": f'=IF(C{r}="","",IF(R{r}=TRUE,0,ROUND(MAX(C{r}-D{r},0),2)))',
+            "G": f'=IF(R{r}=TRUE,D{r},IF(C{r}="",IF(D{r}>0,D{r},""),ROUND(MAX(C{r},D{r}),2)))',
+            "H": f'=IF(G{r}<>"",ROUND(G{r}+E{r},2),IF(D{r}+E{r}>0,ROUND(D{r}+E{r},2),""))',
             "I": f'=IF(OR(B{r}="",G{r}=""),"",ROUND(G{r}-B{r},2))',
             "J": f'=IF(I{r}="","",IF(B{r}=0,"",I{r}/B{r}))',
             "K": f'=IF(I{r}="","",ROUND(B{r}-G{r},2))',
@@ -200,11 +207,12 @@ def build(month: dt.date, out: Path, tolerance: float) -> Path:
             "O": f"=Inputs!M{i}",
             "P": f'=IF(I{r}="","",ABS(I{r}))',
             "Q": f'=IF(I{r}="","",B{r})',
+            "R": f"=Inputs!N{i}",
         }
         for letter, formula in f.items():
             c = me[f"{letter}{r}"]
             c.value = formula
-            c.font = GREEN if letter in ("A", "B", "C", "D", "E", "O") else BLACK
+            c.font = GREEN if letter in ("A", "B", "C", "D", "E", "O", "R") else BLACK
             if letter in "BCDEFGHIKLQP":
                 c.number_format = GBP
             if letter in "JM":
@@ -337,8 +345,12 @@ def build(month: dt.date, out: Path, tolerance: float) -> Path:
         ("Media invoiced", "Platform media invoice lines for the month, received by the cursor."),
         ("Fee invoiced", "Agency fee lines allocated to the channel (60/40 Meta/Google retainer). "
                          "Not budgeted and not compared with delivered spend."),
-        ("Estimated unbilled accrual", "MAX(delivered - media invoiced, 0): delivered media not yet invoiced."),
-        ("Recognised media expense", "MAX(delivered, media invoiced). Blank delivered: media invoiced if any."),
+        ("Final invoice received", "A platform media invoice covering the whole month has arrived. It then "
+                                   "replaces the estimate: accrual 0, recognised media = media invoiced (the true-up)."),
+        ("Estimated unbilled accrual", "Before the final invoice: MAX(delivered - media invoiced, 0), delivered "
+                                       "media not yet invoiced. After it: 0."),
+        ("Recognised media expense", "After the final invoice: media invoiced. Before it: MAX(delivered, media "
+                                     "invoiced). Blank delivered: media invoiced if any."),
         ("Recognised expense (incl. fees)", "Recognised media expense + fee invoiced."),
         ("Approved media budget", "Latest budget version visible at the cursor. Budgets cover media only."),
         ("Budget variance", "Recognised media expense - approved media budget. POSITIVE = OVERSPEND."),

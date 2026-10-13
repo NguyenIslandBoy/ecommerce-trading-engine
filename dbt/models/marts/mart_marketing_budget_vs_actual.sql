@@ -50,6 +50,7 @@ select
     c.fee_invoiced,
     c.invoiced_amount,
     c.estimated_unbilled_accrual,
+    c.is_media_final,
     c.recognised_media_expense,
     c.recognised_expense,
     cast(b.approved_amount - c.recognised_media_expense as decimal(12,2))

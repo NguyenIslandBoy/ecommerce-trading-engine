@@ -589,3 +589,43 @@ Left as is and reported to the user:
 Then, on the user's request, `engine/stats.py:97` also changed from "11 detectors × ~20 entities ×
 365 cursors" to "10 … × 246 cursors". The two "245-cursor" comments in the detectors stay as
 records of past runs.
+
+## Follow-up — accrual true-up (user request, after merge)
+
+The user asked for the true-up gap reported in Task 10 to be fixed. Before this change,
+`GREATEST(delivered, media_invoiced)` never let a received invoice lower the figure. A final
+invoice that came in below delivered spend left the difference accrued forever (Meta 2025-01:
+£27.30 across 12 month × channel rows).
+
+Ruling: a received platform media invoice covering the **whole service month** is final. It then
+replaces the estimate in both directions: `estimated_unbilled_accrual = 0` and
+`recognised_media_expense = media_invoiced`. The new flag `is_media_final` is carried to both
+marts and to the Excel pack. Before a final invoice the old rule applies unchanged, so month-end
+close figures and every scenario are as before. The recon `difference` is the size of the true-up.
+- "Final" means the service period equals the calendar month. Every invoice line in this data
+  qualifies.
+- A month billed in partial-period invoices would stay on the estimate. That is the conservative
+  choice, and it is documented as a limitation.
+
+Cost if wrong: a platform that later issues a supplementary invoice for an already-final month
+would be counted by the sum of media lines, but no longer accrued. There is no such case in this
+data.
+
+Ruling: the identity test is renamed `assert_recognised_expense_follows_accrual_rule`. It derives
+"final" independently, from the service period in `fct_invoice_allocated`, and checks
+`is_media_final` as well. Proven by mutation: restoring the old rule (ignoring the final invoice)
+fails it on 12 rows, the months whose invoice came in below delivered spend.
+
+Ruling: in the Excel pack, `Inputs!N` carries `is_media_final` and `Month_End!R` links it.
+Accrual (F), recognised media (G) and recognised expense (H) apply the true-up as formulas.
+`cell_value` now writes booleans as TRUE/FALSE, not 1.0. A bool is an int in Python, so it used to
+take the number branch. Both samples recalculate: 99 formulas, 0 errors, all 23 checks TRUE. A
+scratch 2025-01 pack, the month that exercises the true-up, also passes all 23 checks, with Meta
+accrual 0 and recognised £8,778.05.
+
+Results:
+- `dbt build`: PASS=181 WARN=1 ERROR=0 (28 models, 154 tests; +1 `not_null` on `is_media_final`).
+- pytest: 55 passed. Anchors unchanged.
+- At cursor 2025-02-03, January is still a full estimate (no final invoice yet).
+- Over-budget counts and the worst month are unchanged: Meta 6 of 12 months, worst 2025-05 at
+  +9.1%; Google 4 of 12.

@@ -50,6 +50,9 @@ def test_month_end_figures_are_formulas(workbook):
             assert isinstance(value, str) and value.startswith("="), f"Month_End!{col}{row} is not a formula"
     # Accrual and status use the stated rule and the tolerance cell.
     assert "MAX(C8-D8,0)" in sheet["F8"].value
+    # The true-up: a final invoice (R) zeroes the accrual and replaces the estimate.
+    assert "R8=TRUE,0" in sheet["F8"].value
+    assert sheet["G8"].value.startswith("=IF(R8=TRUE,D8")
     assert "$B$3" in sheet["N8"].value
     assert sheet["B3"].value == 1, "tolerance input cell holds a number, not a formula"
 
@@ -67,7 +70,7 @@ def test_checks_and_commentary_are_formulas(workbook):
 @needs_marts
 def test_inputs_are_values_and_missing_stays_blank(workbook):
     sheet = workbook["Inputs"]
-    for row in sheet.iter_rows(min_row=2, max_col=13):
+    for row in sheet.iter_rows(min_row=2, max_col=14):
         for cell in row:
             assert not (isinstance(cell.value, str) and cell.value.startswith("="))
     tiktok = next(r for r in range(2, sheet.max_row + 1) if sheet.cell(r, 1).value == "tiktok")

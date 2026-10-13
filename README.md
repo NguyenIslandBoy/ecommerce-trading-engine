@@ -9,7 +9,7 @@ evidence can actually bear.
 
 | Layer | State |
 |---|---|
-| **1. Data foundation** | Built — 28 dbt models, 153 data tests, point-in-time correct |
+| **1. Data foundation** | Built — 28 dbt models, 154 data tests, point-in-time correct |
 | **2. Signal detection** | Built — 10 detectors, replayed across 246 cursors |
 | **3. Recommendation & simulation** | Built — Monte Carlo, autonomy gate |
 | **Marketing reporting** | Built — budget vs actual, pacing and invoice reconciliation on **synthetic** Finance inputs ([below](#marketing-spend-budget-and-finance-reconciliation-synthetic-finance-inputs)) |
@@ -87,7 +87,7 @@ uv venv --python 3.12 venv
 uv pip install --python venv/Scripts/python.exe -r requirements.txt
 
 cd dbt && ../venv/Scripts/dbt.exe deps --profiles-dir .
-          ../venv/Scripts/dbt.exe build --profiles-dir .   # 28 models, 153 tests
+          ../venv/Scripts/dbt.exe build --profiles-dir .   # 28 models, 154 tests
 cd .. &&  venv/Scripts/python.exe scripts/export_marts.py  # marts -> Parquet
 
 venv/Scripts/python.exe -m engine.run          # detect at the latest cursor
@@ -158,9 +158,13 @@ repo yet.
 
 **Accrual rule.** Delivered spend is media only, so platform media invoices and agency fees are
 kept apart.
-- `estimated_unbilled_accrual = MAX(delivered_spend − media_invoiced, 0)`. Only delivered media
+- **Before the final invoice:** `estimated_unbilled_accrual = MAX(delivered_spend − media_invoiced, 0)`
+  and `recognised_media_expense = GREATEST(delivered_spend, media_invoiced)`. Only delivered media
   that has not been invoiced is accrued.
-- `recognised_media_expense = GREATEST(delivered_spend, media_invoiced)`.
+- **After it (the true-up):** once a platform media invoice covering the whole month is received
+  (`is_media_final`), the invoice replaces the estimate. The accrual becomes 0 and
+  `recognised_media_expense = media_invoiced`, whether the invoice came in above or below
+  delivered spend. The recon `difference` is the size of the true-up.
 - `recognised_expense = recognised_media_expense + fee_invoiced`.
 - When delivered spend is unknown, the accrual is NULL and recognised expense is whatever has
   been invoiced, or NULL if nothing has.
@@ -207,9 +211,10 @@ venv/Scripts/python.exe -m streamlit run app.py                    # then open "
 - **Synthetic Finance inputs.** No conclusion about real budgets or vendors can be drawn from them.
 - **Channel grain only.** Invoices bill at account level and the orders carry no UTMs, so there are
   no campaign-level budgets.
-- **No GL, journal entries or true-ups.** When a final invoice comes in *below* delivered spend, the
-  difference stays accrued (Meta 2025-01: £27.30); a real close would release it. Fees are
-  recognised on receipt and never accrued.
+- **No GL or journal entries.** The true-up restates the month's figures once its final invoice
+  arrives; it does not post journals. A month invoiced in several partial-period invoices stays on
+  the estimate until a full-month invoice arrives (none exist in this data). Fees are recognised
+  on receipt and never accrued.
 - **Simple run-rate forecast.** Delivered to date + 7-day average × days left. It ignores
   seasonality and planned changes.
 - **No attribution or incrementality claims.** Budget variance says nothing about what the spend
@@ -224,7 +229,7 @@ venv/Scripts/python.exe -m streamlit run app.py                    # then open "
 |---|---|
 | `data/*.csv` | The seven source extracts. Synthetic, no PII |
 | `data/finance/` | **Synthetic** Finance inputs (budgets, invoice lines, allocations), seeded generator in `scripts/generate_finance_inputs.py` |
-| `dbt/` | The warehouse — 28 models, 153 tests, 3 macros |
+| `dbt/` | The warehouse — 28 models, 154 tests, 3 macros |
 | `engine/` | Layers 2 and 3 — detectors, simulation, backtest |
 | `config/` | Every threshold, in YAML rather than in code |
 | `app.py` | Streamlit: as-of slider, signals, simulated outcomes, backtest |

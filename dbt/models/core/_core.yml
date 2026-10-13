@@ -135,15 +135,17 @@ models:
     description: >
       SYNTHETIC Finance inputs against delivered spend. Month x channel, the
       single source of truth for delivered, invoiced, accrual and recognised
-      cost. Accrual rule: where delivered spend is known,
+      cost. Accrual rule, first match wins: once the final full-month
+      platform invoice is received (is_media_final), the invoice replaces the
+      estimate (accrual 0, recognised_media_expense = media_invoiced; the
+      true-up). Before that, where delivered spend is known,
       estimated_unbilled_accrual = MAX(delivered_spend - media_invoiced, 0)
-      and recognised_expense = GREATEST(delivered_spend, media_invoiced) +
-      fee_invoiced. Where delivered spend is NULL, accrual is NULL and
-      recognised_expense is invoiced_amount if any invoice exists, else NULL.
-      Only delivered-but-unrecorded media is accrued; fees are recognised on
-      receipt. No GL, no journal entries, no true-ups.
-      recognised_media_expense is the media part alone (GREATEST(delivered,
-      media_invoiced)), which the media budgets are compared against.
+      and recognised_media_expense = GREATEST(delivered_spend,
+      media_invoiced). Where delivered spend is NULL, accrual is NULL and
+      recognised expense is what has been invoiced, else NULL.
+      recognised_expense = recognised_media_expense + fee_invoiced. Only
+      delivered-but-unbilled media is accrued; fees are recognised on
+      receipt. No GL: the true-up restates figures, it posts no journals.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -159,6 +161,9 @@ models:
       - name: delivered_spend
         description: "NULL, never 0, where the channel has no cost source or no day is visible yet."
       - name: invoiced_amount
+        data_tests: [not_null]
+      - name: is_media_final
+        description: "A platform media invoice covering the whole service month has been received; the invoice then replaces the estimate."
         data_tests: [not_null]
       - name: data_status
         data_tests:
