@@ -148,3 +148,37 @@ select date_trunc('month', ad_date)::date as m, sum(spend) / sum(clicks) as cpc
 from main_core.fct_ad_spend_daily where platform = 'meta' group by 1 order by 1;
 -- 2024-07: 0.41715   2025-06: 1.01699   change +143.8%
 ```
+
+## Task 2 — CI
+
+Ruling: fix E1 and E2 (see Task 0) in the same commit as the workflow, because CI cannot pass
+without them. The user approved this.
+- **Keep pandas 3.0.5 and raise streamlit to 1.65.0.** Downgrading pandas would move the
+  existing models and the 50 tests onto a different pandas, which risks changing existing
+  output.
+- **Pin pyarrow at 25.0.1, not the latest 26.0.0.** streamlit 1.65.0 requires
+  `pyarrow<26`.
+- **Checks run:**
+  - `uv pip check`: all compatible.
+  - `app.py` under streamlit 1.65 via `streamlit.testing.v1.AppTest`: no exceptions.
+    `use_container_width` deprecation warnings only.
+
+Cost if wrong: the app relies on behaviour that changed between 1.50 and 1.65. The smoke test
+covers the first render only. Task 9 re-checks the app.
+
+Ruling: CI runs `scripts/export_marts.py` between `dbt build` and `pytest`. The 20 integration
+tests skip when `data/marts/*.parquet` is absent. Before the export, pytest reported
+"30 passed, 20 skipped", which would let CI go green without them. Cost if wrong: one extra
+step of about 2 s.
+
+Clean-checkout proof: `git clone .` of commit 1249e13 into a scratch directory, a fresh
+Python 3.12 venv, and `pip install -r requirements.txt`. Then `dbt build` gives PASS=113 WARN=1
+ERROR=0 (20 models, 94 tests), the export writes 10 files, and pytest gives **50 passed**.
+- This matches Task 0.
+- No hidden dependency on untracked files.
+- One exception: this session cannot reach `hub.getdbt.com` (E3), so `dbt_packages/` was copied
+  in rather than fetched by `dbt deps`. `dbt deps` itself is proven only by the first GitHub
+  Actions run.
+
+Triggers are push to `main` and pull requests, as the plan says. A push to this feature branch
+therefore does not run CI. The first run happens when a PR is opened.
