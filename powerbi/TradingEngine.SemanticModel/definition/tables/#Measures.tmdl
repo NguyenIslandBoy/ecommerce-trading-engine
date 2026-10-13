@@ -70,7 +70,7 @@ table #Measures
 		displayFolder: 02 Acquisition
 		lineageTag: 01266562-0a23-4cea-a28c-63e58b9a710e
 
-	/// TIER A, platform-reported, needs no attribution. Meta rose 0.42 to 1.02 (+143%) from April 2025.
+	/// TIER A, platform-reported, needs no attribution. Meta rose 0.42 to 1.02 (+144%) from April 2025.
 	measure CPC = DIVIDE(SUM(FactAdSpendDaily[spend]), SUM(FactAdSpendDaily[clicks]))
 		formatString: \£#,0.000
 		displayFolder: 02 Acquisition
@@ -134,7 +134,7 @@ table #Measures
 		displayFolder: 03 Customer Value
 		lineageTag: 5be21bfd-0a20-4487-ba7e-b625d0658902
 
-	/// Unit economics headline. Fell 4.42x to 2.09x over twelve months - cost per customer +53% while value per customer -29%.
+	/// Unit economics headline. Fell 4.42x (2024-07 cohort) to 2.43x (2025-04, the last cohort whose 60-day window has closed) - cost per customer +29% while value per customer -29%.
 	/// 60-day margin LTV of a cohort divided by what it cost to acquire that cohort.
 	/// Both sides are cohort-scoped: dividing by [Blended CAC] instead would use the
 	/// all-period figure as the denominator and flatten the trend to a straight line.

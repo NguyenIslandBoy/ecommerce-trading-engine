@@ -1,9 +1,11 @@
 """Replay the engine across every cursor and score it against hand labels.
 
-The point-in-time reconstruction makes this cheap: ~104ms a cursor, so a full
-365-day replay takes under a minute, against roughly 3.5 hours if each cursor
-needed a real dbt rebuild. scripts/verify_pit.py is what makes that shortcut
-legitimate rather than convenient.
+The point-in-time reconstruction makes this cheap: roughly 0.1-0.3s a cursor
+depending on the machine, so the full replay -- 246 cursors, every day from the
+end of the warm-up to the default cursor -- takes about 25-70 seconds, against
+roughly 2.4 hours (246 x ~35s) if each cursor needed a real dbt rebuild.
+scripts/verify_pit.py is what makes that shortcut legitimate rather than
+convenient.
 
 What is scored:
 
