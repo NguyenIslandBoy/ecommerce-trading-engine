@@ -107,3 +107,70 @@ models:
         data_tests: [not_null]
       - name: week_start
         data_tests: [not_null]
+
+  # ---- Finance (SYNTHETIC inputs) -----------------------------------------
+
+  - name: stg_marketing_budget
+    description: "SYNTHETIC approved budgets. A version is visible from its approved_on date."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [budget_month, channel, budget_version]
+    columns:
+      - name: budget_id
+        data_tests: [unique, not_null]
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok']
+      - name: budget_version
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['original', 'revised']
+      - name: pacing_profile
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['linear', 'front_loaded']
+      - name: approved_amount
+        data_tests: [not_null]
+      - name: approved_on
+        data_tests: [not_null]
+
+  - name: stg_vendor_invoice_lines
+    description: "SYNTHETIC invoice lines. A line is visible from its received_date."
+    columns:
+      - name: invoice_line_id
+        data_tests: [unique, not_null]
+      - name: billed_channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'agency']
+      - name: cost_type
+        description: "media for platform lines (comparable to delivered spend), fee for agency lines."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['media', 'fee']
+      - name: amount
+        data_tests: [not_null]
+      - name: service_month
+        data_tests: [not_null]
+
+  - name: stg_invoice_line_allocations
+    description: "SYNTHETIC allocation of invoice lines to channels. Visibility follows the line, applied in fct_invoice_allocated."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [invoice_line_id, channel]
+    columns:
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok']
+      - name: allocation_pct
+        data_tests: [not_null]

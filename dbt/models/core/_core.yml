@@ -106,3 +106,60 @@ models:
               arguments:
                 min_value: 0
                 max_value: 1
+
+  - name: fct_invoice_allocated
+    description: >
+      SYNTHETIC inputs. Invoice line x channel. Each row is ROUND(amount *
+      allocation_pct, 2); the last row of a line takes the remainder so the
+      rows sum to the line amount to the penny. A line with no allocation rows
+      becomes one 'unallocated' row and is never dropped.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [invoice_line_id, channel]
+    columns:
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unallocated']
+      - name: allocation_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['allocated', 'unallocated']
+      - name: allocated_amount
+        data_tests: [not_null]
+
+  - name: fct_marketing_cost_monthly
+    description: >
+      SYNTHETIC Finance inputs against delivered spend. Month x channel, the
+      single source of truth for delivered, invoiced, accrual and recognised
+      cost. Accrual rule: where delivered spend is known,
+      estimated_unbilled_accrual = MAX(delivered_spend - media_invoiced, 0)
+      and recognised_expense = GREATEST(delivered_spend, media_invoiced) +
+      fee_invoiced. Where delivered spend is NULL, accrual is NULL and
+      recognised_expense is invoiced_amount if any invoice exists, else NULL.
+      Only delivered-but-unrecorded media is accrued; fees are recognised on
+      receipt. No GL, no journal entries, no true-ups.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month_start, channel]
+    columns:
+      - name: month_start
+        data_tests: [not_null]
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['meta', 'google', 'tiktok', 'unallocated']
+      - name: delivered_spend
+        description: "NULL, never 0, where the channel has no cost source or no day is visible yet."
+      - name: invoiced_amount
+        data_tests: [not_null]
+      - name: data_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['complete', 'partial_month', 'source_gap', 'no_cost_source', 'unallocated']
