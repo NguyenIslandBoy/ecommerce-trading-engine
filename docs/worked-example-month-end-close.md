@@ -42,9 +42,9 @@ where r.month_start = '2025-01-01';
 |---|---|---:|---:|---:|
 | Meta | Delivered spend | £8,805.35 | £8,805.35 | — |
 | | Media invoiced | £0.00 | £8,778.05 | +£8,778.05 |
-| | Estimated unbilled accrual | £8,805.35 | £27.30 | −£8,778.05 |
-| | Recognised media expense | £8,805.35 | £8,805.35 | £0.00 |
-| | Budget variance (budget £9,000) | −£194.65 | −£194.65 | £0.00 |
+| | Estimated unbilled accrual | £8,805.35 | £0.00 | −£8,805.35 |
+| | Recognised media expense | £8,805.35 | £8,778.05 | **−£27.30** |
+| | Budget variance (budget £9,000) | −£194.65 | −£221.95 | −£27.30 |
 | | Recon status | `unbilled` | `within_tolerance` (−0.31%) | |
 | Google | Delivered spend | £6,471.19 | £6,471.19 | — |
 | | Media invoiced | £0.00 | £6,476.36 | +£6,476.36 |
@@ -63,19 +63,17 @@ figure above.
 
 1. **At close, the estimate is the delivered spend.** With no platform invoice in hand, all of
    January's delivered media (£15,276.54) is carried as an estimated unbilled accrual. Recognised
-   media expense and the budget variance are already final-looking on 3 February. A reader
-   learns the month came in under budget without waiting for invoices.
+   media expense and the budget variance are known to within the invoice adjustments on
+   3 February, so a reader learns the month came in under budget without waiting for invoices.
 2. **The estimate was close.** The invoices landed within 0.31% of delivered spend, inside the
-   1.0% tolerance. The accrual estimate missed the final cost by £5.17 on Google. On Meta the
-   recognised figure did not move at all.
-3. **Where the rule stops: no true-ups.** Recognised media expense is
-   `GREATEST(delivered, media_invoiced)`.
-   - When the invoice comes in **above** delivered spend (Google), recognised expense rises to
-     the invoice.
-   - When it comes in **below** (Meta: £27.30 of credits), recognised expense stays at delivered
-     spend, and the £27.30 remains as an accrual indefinitely.
-   - A real close would treat the received final invoice as authoritative and release that
-     residue. This module has no GL, so it books no true-up. The residue is visible in
-     `estimated_unbilled_accrual` on a month whose recon status is `within_tolerance`.
+   1.0% tolerance. The month-end estimate missed the final cost by £5.17 on Google and £27.30 on
+   Meta.
+3. **The final invoice trues the month up, in both directions.** Once a full-month platform
+   invoice is received (`is_media_final`), it replaces the estimate. The accrual drops to £0.00 and
+   recognised media expense becomes the invoice.
+   - Google's invoice came in **above** delivered spend, so recognised expense rose £5.17.
+   - Meta's came in **below** (£27.30 of credits), so recognised expense fell £27.30.
+   - The size of each true-up is the recon `difference`.
+   - The module has no GL, so this restates the month's figures rather than posting a journal.
 4. **Missing stays missing.** TikTok's £1,500 budget never turns into a £1,500 underspend.
    With no cost source, its spend and variance stay NULL at both cursors.

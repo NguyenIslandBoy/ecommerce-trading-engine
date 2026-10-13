@@ -15,26 +15,36 @@
   invoiced_amount   media_invoiced + fee_invoiced. 0.00 means "no invoice
                     received yet", a known zero, not missing data.
 
-  Accrual rule (only delivered-but-unrecorded MEDIA cost is accrued):
-    delivered known:
+  is_media_final    A platform media invoice covering the WHOLE service
+                    month (service period = the calendar month) has been
+                    received. The final invoice is then the authority on what
+                    the month cost.
+
+  Accrual rule (only delivered-but-unbilled MEDIA cost is accrued), first
+  match wins:
+    final invoice received (is_media_final):
+      estimated_unbilled_accrual = 0
+      recognised_media_expense   = media_invoiced
+      -- the TRUE-UP: the month-end estimate is replaced by the invoice, in
+      -- both directions; the size of the true-up is the recon difference
+    delivered known, no final invoice yet:
       estimated_unbilled_accrual = MAX(delivered_spend - media_invoiced, 0)
-      recognised_expense         = media_invoiced + accrual + fee_invoiced
-                                 = GREATEST(delivered_spend, media_invoiced)
-                                   + fee_invoiced
+      recognised_media_expense   = GREATEST(delivered_spend, media_invoiced)
     delivered NULL:
       estimated_unbilled_accrual = NULL
-      recognised_expense         = invoiced_amount if any invoice line
-                                   exists, else NULL
+      recognised_media_expense   = media_invoiced if any media line exists,
+                                   else NULL
+  recognised_expense = recognised_media_expense + fee_invoiced (or, with no
+  media figure, invoiced_amount if any invoice line exists, else NULL).
 
-  recognised_media_expense is the media part alone: GREATEST(delivered_spend,
-  media_invoiced) where delivered is known, else media_invoiced if any media
-  line exists, else NULL. The synthetic budgets are MEDIA budgets, so budget
-  variance is measured against this, not against recognised_expense.
+  The synthetic budgets are MEDIA budgets, so budget variance is measured
+  against recognised_media_expense, not recognised_expense.
 
   Fees are compared with nothing: delivered spend is media only, so adding
   fees to the comparison would turn every month into a variance. A fee is
   recognised when its invoice is received; with no contract data it cannot
-  be accrued. There is no GL here: no journal entries and no true-ups.
+  be accrued. There is no GL here: the true-up restates the month's
+  figures, it does not post journal entries.
 
   data_status, first match wins:
     no_cost_source  the channel has no cost file (tiktok)
@@ -86,7 +96,11 @@ invoiced as (
         sum(allocated_amount) filter (where cost_type = 'fee')
                                                             as fee_invoiced,
         count(*)                                            as invoice_rows,
-        count(*) filter (where cost_type = 'media')         as media_rows
+        count(*) filter (where cost_type = 'media')         as media_rows,
+        count(*) filter (where cost_type = 'media'
+                           and service_period_start = service_month
+                           and service_period_end = last_day(service_month))
+                                                            as media_final_rows
     from {{ ref('fct_invoice_allocated') }}
     group by all
 
@@ -114,7 +128,9 @@ base as (
         cast(coalesce(i.media_invoiced, 0) as decimal(12,2)) as media_invoiced,
         cast(coalesce(i.fee_invoiced, 0) as decimal(12,2))  as fee_invoiced,
         coalesce(i.invoice_rows, 0)                         as invoice_rows,
-        coalesce(i.media_rows, 0)                           as media_rows
+        coalesce(i.media_rows, 0)                           as media_rows,
+        g.has_cost_source and coalesce(i.media_final_rows, 0) > 0
+                                                            as is_media_final
     from (select * from grid union all select * from unallocated_months) g
     left join delivered d
         on d.month_start = g.month_start and d.channel = g.channel
@@ -131,16 +147,23 @@ select
     media_invoiced,
     fee_invoiced,
     cast(media_invoiced + fee_invoiced as decimal(12,2))    as invoiced_amount,
-    cast(case when delivered_spend is not null
-              then greatest(delivered_spend - media_invoiced, 0)
-         end as decimal(12,2))                              as estimated_unbilled_accrual,
+    is_media_final,
     cast(case
+        when delivered_spend is null                        then null
+        when is_media_final                                 then 0
+        else greatest(delivered_spend - media_invoiced, 0)
+    end as decimal(12,2))                                   as estimated_unbilled_accrual,
+    cast(case
+        when is_media_final
+            then media_invoiced + fee_invoiced
         when delivered_spend is not null
             then greatest(delivered_spend, media_invoiced) + fee_invoiced
         when invoice_rows > 0
             then media_invoiced + fee_invoiced
     end as decimal(12,2))                                   as recognised_expense,
     cast(case
+        when is_media_final
+            then media_invoiced
         when delivered_spend is not null
             then greatest(delivered_spend, media_invoiced)
         when media_rows > 0

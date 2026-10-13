@@ -9,6 +9,8 @@
 
     difference      media_invoiced - delivered_spend (positive: billed more
                     than the platform extract shows)
+                    Once is_media_final, this is also the size of the true-up:
+                    the final invoice replaced the delivered-spend estimate.
     difference_pct  difference / delivered_spend
 
   recon_status, first match wins:
@@ -28,6 +30,7 @@ select
     fee_invoiced,
     invoiced_amount,
     estimated_unbilled_accrual,
+    is_media_final,
     cast(case when delivered_spend is not null and media_invoiced > 0
               then media_invoiced - delivered_spend end
          as decimal(12,2))                                  as difference,
