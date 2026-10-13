@@ -84,3 +84,67 @@ The baseline numbers below were taken with every requirement except streamlit in
   - It uses `ORDER BY ALL` for deterministic output.
   - It exits 1 if any export has zero rows.
   - Schemas are `main_marts` and `main_core`.
+
+## Task 1 — README inconsistencies
+
+The code is the authority, not the README.
+
+| Claim | Before | Measured | Action |
+|---|---|---|---|
+| Detector count | "ten" and "10" in two places, "all nine" in one | 10: ten keys under `detectors:` in `config/detectors.yml`, and ten `@register` calls in `engine/detectors/*.py` | "all nine" → "all ten" |
+| Backtest cursors | 246, 245 and 365 | **246**. `engine.backtest` prints "2024-10-29 to 2025-07-01 (246 cursors …)". The replay starts after the warm-up, not on day 1. | 245 → 246, and both "365" mentions → 246 |
+| Finding 1 | "LTV/CAC 4.42× → 2.43×. Cost +53%, value −29%" | 4.42× → 2.43× confirmed. Cost **+29%** (£9.68 → £12.47), value −29% (£42.81 → £30.24) | "+53%" → "+29%" |
+| Finding 3 | "Meta CPC £0.42 → £1.02 (+144%)" | £0.41715 → £1.01699 = **+143.8%** | No change. +144% is right. |
+
+Ruling: Finding 1 was a stale number, not a different definition. The +53% is
+£9.68 → £14.84, the June 2025 cohort's CAC. It belonged to an earlier draft whose headline ran to
+2.09× at the June 2025 cohort. That cohort's 60-day window has not closed, so `docs/spec.md`
+§1.6 already withdrew that endpoint. The endpoint moved to 2025-04 (2.43×), but the cost delta
+was never updated. The ratio is internally consistent only with +29%:
+4.42 × (0.706 / 1.288) = 2.42.
+- The finding's meaning is unchanged: the ratio is the same, and cost and value still both moved
+  against the business.
+- No STOP needed.
+
+Cost if wrong: the README understates the cost rise. The ratio, the spec and the measures all
+agree with +29%.
+
+Ruling: the plan's hint that the CPC change is "closer to +143%" comes from the rounded
+endpoints (1.02 / 0.42 = 2.429). The unrounded monthly CPCs give 2.438, so +144% stays.
+Cost if wrong: one percentage point in a headline.
+
+Out-of-scope inconsistencies found (not edited; `powerbi/` and `engine/` are off limits):
+- `powerbi/…/p1_note/visual.json`: "Acquisition got 53% more expensive … 4.42x to 2.43x". It has
+  the same stale +53%.
+- `powerbi/…/#Measures.tmdl`, the `LTV / CAC` measure description: "Fell 4.42x to 2.09x …
+  +53%". It quotes the withdrawn censored endpoint.
+- `engine/backtest.py` docstring: "a full 365-day replay". The run is 246 cursors.
+- Timing. The README says "~25s" for the backtest and "~100ms" per cursor. In this session it
+  measured 67.6 s and 275 ms per cursor. That depends on the machine, so the README is left as is.
+
+Queries (run from `dbt/`, against the default-cursor build):
+
+```sql
+-- Finding 1: cohort CAC uses the Power BI 'Cohort CAC' definition (complete-spend days only).
+-- LTV is the 60-day margin LTV over fully exposed cohorts.
+with cac as (
+    select date_trunc('month', date_day)::date as m,
+           sum(ad_spend)      filter (where ad_spend_is_complete) as spend,
+           sum(new_customers) filter (where ad_spend_is_complete) as nc
+    from main_marts.mart_daily_trading group by 1
+), ltv as (
+    select cohort_month as m, sum(cum_contribution_margin) / sum(cohort_size) as ltv60
+    from main_marts.mart_ltv
+    where horizon_days = 60 and has_full_exposure
+    group by 1
+)
+select l.m, round(c.spend / c.nc, 2) as cohort_cac, round(l.ltv60, 2) as ltv60,
+       round(l.ltv60 / (c.spend / c.nc), 2) as ltv_cac
+from ltv l join cac c using (m) order by 1;
+-- 2024-07: 9.68 / 42.81 / 4.42    2025-04: 12.47 / 30.24 / 2.43
+
+-- Finding 3: Meta CPC from summed components, by month.
+select date_trunc('month', ad_date)::date as m, sum(spend) / sum(clicks) as cpc
+from main_core.fct_ad_spend_daily where platform = 'meta' group by 1 order by 1;
+-- 2024-07: 0.41715   2025-06: 1.01699   change +143.8%
+```
